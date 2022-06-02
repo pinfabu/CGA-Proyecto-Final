@@ -1751,10 +1751,10 @@ void applicationLoop() {
 		modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
 			glm::vec3(0.001, 0.001, 0.001));
 		modelMatrixColliderCovid = glm::translate(modelMatrixColliderCovid,
-			CovidModelAnimate.getSbb().c
-		/*glm::vec3(CovidModelAnimate.getSbb().c.x,
-			CovidModelAnimate.getSbb().c.y + 50,
-			CovidModelAnimate.getSbb().c.z)*/);
+			//CovidModelAnimate.getSbb().c
+		glm::vec3(CovidModelAnimate.getSbb().c.x,
+			CovidModelAnimate.getSbb().c.y +31*100,
+			CovidModelAnimate.getSbb().c.z));
 		CovidCollider.c = glm::vec3(modelMatrixColliderCovid[3]);
 		CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.05;
 		addOrUpdateColliders(collidersSBB, "Covid", CovidCollider, modelMatrixCovid);
@@ -1971,8 +1971,15 @@ void applicationLoop() {
 				else {
 					/*if (jt->first.compare("mayow") == 0)
 						modelMatrixMayow = std::get<1>(jt->second);*/
-					if (jt->first.compare("Osmosis") == 0)
+					if (jt->first.compare("Osmosis") == 0) {
 						modelMatrixOsmosis = std::get<1>(jt->second);
+						modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
+							glm::vec3(0, 0, -3.0));
+					}
+						
+
+					/*if (jt->first.compare("Covid") == 0)
+						modelMatrixOsmosis = std::get<1>(jt->second);*/
 				}
 			}
 		}
