@@ -109,6 +109,8 @@ Model mayowModelAnimate;*/
 Model OsmosisModelAnimate;
 //Covid
 Model CovidModelAnimate;
+//Cubrebocas
+Model CubreBocasModelAnimate;
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap.png");
 
@@ -146,6 +148,7 @@ glm::mat4 matrixModelRock = glm::mat4(1.0);
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas = glm::mat4(1.0f);
 glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 
 int animationIndex = 1;
@@ -530,6 +533,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Covid
 	CovidModelAnimate.loadModel("../models/Covid/Covid.fbx");
 	CovidModelAnimate.setShader(&shaderMulLighting);
+
+	//Cubrebocas
+	CubreBocasModelAnimate.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -1093,6 +1100,7 @@ void destroy() {
 	//mayowModelAnimate.destroy();
 	OsmosisModelAnimate.destroy();
 	CovidModelAnimate.destroy();
+	CubreBocasModelAnimate.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1318,8 +1326,10 @@ void applicationLoop() {
 		glm::vec3(0, 1, 0));
 	
 	//Covid
-	modelMatrixCovid = glm::translate(modelMatrixCovid,
-		glm::vec3(15.0f, -20.5f, -20.0f));
+	modelMatrixCovid = glm::translate(modelMatrixCovid,	glm::vec3(15.0f, -20.5f, -20.0f));
+
+	//Cubrebocas
+	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(5.0f, 0.0f, 0.0f));
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,
 			glm::vec3(5.0, 0.0, -40.0));
@@ -1734,6 +1744,21 @@ void applicationLoop() {
 		CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.05;
 		addOrUpdateColliders(collidersSBB, "Covid", CovidCollider, modelMatrixCovid);
 
+		//Collider Cubrebocas
+		AbstractModel::OBB CubreCollider;
+		glm::mat4 modelmatrixColliderCubre = glm::mat4(modelMatrixCubrebocas);
+		modelmatrixColliderCubre = glm::rotate(modelmatrixColliderCubre, glm::radians(90.0f), glm::vec3(0, 1, 0));
+		// Set the orientation of collider before doing the scale
+		CubreCollider.u = glm::quat_cast(modelmatrixColliderCubre);
+		modelmatrixColliderCubre = glm::scale(modelmatrixColliderCubre, glm::vec3(0.1, 0.1, 0.1));
+		modelmatrixColliderCubre = glm::translate(modelmatrixColliderCubre,
+			glm::vec3(CubreBocasModelAnimate.getObb().c.x+2.5,
+				CubreBocasModelAnimate.getObb().c.y + 25,
+				CubreBocasModelAnimate.getObb().c.z));
+		CubreCollider.e = CubreBocasModelAnimate.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+		CubreCollider.c = glm::vec3(modelmatrixColliderCubre[3]);
+		addOrUpdateColliders(collidersOBB, "Cubre", CubreCollider, modelMatrixCubrebocas);
+
 		//Collider Osmosis
 		AbstractModel::OBB OsmosisCollider;
 		glm::mat4 modelmatrixColliderOsmosis = glm::mat4(modelMatrixOsmosis);
@@ -2082,6 +2107,9 @@ void prepareScene() {
 
 	//Covdi
 	CovidModelAnimate.setShader(&shaderMulLighting);
+
+	//Cubrebocas
+	CubreBocasModelAnimate.setShader(&shaderMulLighting);
 }
 
 void prepareDepthScene() {
@@ -2108,6 +2136,9 @@ void prepareDepthScene() {
 
 	//Covid
 	CovidModelAnimate.setShader(&shaderDepth);
+
+	//Cubrebocas
+	CubreBocasModelAnimate.setShader(&shaderDepth);
 }
 
 void renderScene(bool renderParticles) {
@@ -2230,6 +2261,12 @@ void renderScene(bool renderParticles) {
 	modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.02, 0.02, 0.02));
 	CovidModelAnimate.setAnimationIndex(0);
 	CovidModelAnimate.render(modelMatrixCovidBody);
+
+	modelMatrixCubrebocas[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas[3][0], modelMatrixCubrebocas[3][2]);
+	glm::mat4 modelMatrixCubreBody = glm::mat4(modelMatrixCubrebocas);
+	modelMatrixCubreBody = glm::scale(modelMatrixCubreBody, glm::vec3(0.02, 0.02, 0.02));
+	CubreBocasModelAnimate.setAnimationIndex(0);
+	CubreBocasModelAnimate.render(modelMatrixCubreBody);
 
 	/**********
 	 * Update the position with alpha objects
