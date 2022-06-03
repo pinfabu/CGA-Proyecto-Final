@@ -56,7 +56,8 @@
 #include <AL/alut.h>
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
-
+//Vida personaje
+int vida = 3;
 int screenWidth;
 int screenHeight;
 
@@ -81,7 +82,7 @@ Shader shaderViewDepth;
 Shader shaderDepth;
 
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromTarget = 7.0;
+float distanceFromTarget = 9.0;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -93,7 +94,6 @@ ShadowBox *shadowBox;
 
 // Models complex instances
 Model modelRock;
-Model modelAircraft;
 // Lamps
 Model modelLamp1;
 Model modelLamp2;
@@ -143,7 +143,6 @@ int lastMousePosY, offsetY = 0;
 
 // Model matrix definitions
 glm::mat4 matrixModelRock = glm::mat4(1.0);
-glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
@@ -168,8 +167,7 @@ std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24),
 std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
 
 // Blending model unsorted
-std::map<std::string, glm::vec3> blendingUnsorted = { { "aircraft", glm::vec3(
-		10.0, 0.0, -17.5) },
+std::map<std::string, glm::vec3> blendingUnsorted = {
 		{ "fountain", glm::vec3(5.0, 0.0, -40.0) }, { "fire", glm::vec3(0.0,
 				0.0, 7.0) } };
 
@@ -500,9 +498,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	modelRock.loadModel("../models/rock/rock.obj");
 	modelRock.setShader(&shaderMulLighting);
-
-	modelAircraft.loadModel("../models/Aircraft_obj/E 45 Aircraft_obj.obj");
-	modelAircraft.setShader(&shaderMulLighting);
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -1087,7 +1082,6 @@ void destroy() {
 	terrain.destroy();
 
 	// Custom objects Delete
-	modelAircraft.destroy();
 	modelRock.destroy();
 	modelLamp1.destroy();
 	modelLamp2.destroy();
@@ -1263,11 +1257,11 @@ bool processInput(bool continueApplication) {
 	}
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, 0.05));
+			glm::vec3(0, 0, 0.09));
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, -0.05));
+			glm::vec3(0, 0, -0.09));
 	}
 	//Movimiento mayow
 	/*if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -1313,17 +1307,13 @@ void applicationLoop() {
 
 	matrixModelRock = glm::translate(matrixModelRock,
 			glm::vec3(-3.0, 0.0, 2.0));
-
-	modelMatrixAircraft = glm::translate(modelMatrixAircraft,
-			glm::vec3(10.0, 2.0, -17.5));
-
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
 			glm::vec3(0, 1, 0));*/
 	//Ubicación Osmosis
 	modelMatrixOsmosis= glm::translate(modelMatrixOsmosis,
-		glm::vec3(20.0f, 0.0f, 4.0f));
+		glm::vec3(20.0f, 0.0f, -2.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
 		glm::vec3(0, 1, 0));
 	
@@ -1717,21 +1707,6 @@ void applicationLoop() {
 		 * Creacion de colliders
 		 * IMPORTANT do this before interpolations
 		 *******************************************/
-		
-		// Collider del aricraft
-		glm::mat4 modelMatrixColliderAircraft = glm::mat4(modelMatrixAircraft);
-		AbstractModel::OBB aircraftCollider;
-		// Set the orientation of collider before doing the scale
-		aircraftCollider.u = glm::quat_cast(modelMatrixAircraft);
-		modelMatrixColliderAircraft = glm::scale(modelMatrixColliderAircraft,
-				glm::vec3(1.0, 1.0, 1.0));
-		modelMatrixColliderAircraft = glm::translate(
-				modelMatrixColliderAircraft, modelAircraft.getObb().c);
-		aircraftCollider.c = glm::vec3(modelMatrixColliderAircraft[3]);
-		aircraftCollider.e = modelAircraft.getObb().e
-				* glm::vec3(1.0, 1.0, 1.0);
-		addOrUpdateColliders(collidersOBB, "aircraft", aircraftCollider,
-				modelMatrixAircraft);
 
 		//Collider del la rock
 		AbstractModel::SBB rockCollider;
@@ -1893,6 +1868,10 @@ void applicationLoop() {
 		/*******************************************
 		 * Test Colisions
 		 *******************************************/
+
+		//Variable de vida 
+
+		//Box  vs Box
 		for (std::map<std::string,
 				std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersOBB.begin(); it != collidersOBB.end(); it++) {
@@ -1911,7 +1890,7 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 					isCollision);
 		}
-
+		//Sphere vs Sphere
 		for (std::map<std::string,
 				std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersSBB.begin(); it != collidersSBB.end(); it++) {
@@ -1930,7 +1909,7 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 					isCollision);
 		}
-
+		//Sphere vs Box
 		for (std::map<std::string,
 				std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersSBB.begin(); it != collidersSBB.end(); it++) {
@@ -1950,8 +1929,10 @@ void applicationLoop() {
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 					isCollision);
+			
 		}
 
+		//Impedir que avance el modelo
 		std::map<std::string, bool>::iterator colIt;
 		for (colIt = collisionDetection.begin();
 				colIt != collisionDetection.end(); colIt++) {
@@ -1968,31 +1949,56 @@ void applicationLoop() {
 			if (jt != collidersOBB.end()) {
 				if (!colIt->second)
 					addOrUpdateColliders(collidersOBB, jt->first);
+
 				else {
 					/*if (jt->first.compare("mayow") == 0)
 						modelMatrixMayow = std::get<1>(jt->second);*/
 					if (jt->first.compare("Osmosis") == 0) {
 						modelMatrixOsmosis = std::get<1>(jt->second);
-						modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-							glm::vec3(0, 0, -3.0));
+						/*if (it->first == "Covid" && jt->first == "Osmosis") {
+							modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
+								glm::vec3(0, 0, -3.0));
+							vida -= 1;
+						}*/
+						//if (jt->first.compare("Covid") != 0) {
+							//std::cout << "Modelo: " << jt->second[0] << std::endl;
+							if (jt->first.compare("Covid") == 1) {
+								modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
+									glm::vec3(0, 0, -3.0));
+								vida -= 1;
+							}
+						//}
 					}
-						
-
 					/*if (jt->first.compare("Covid") == 0)
 						modelMatrixOsmosis = std::get<1>(jt->second);*/
 				}
 			}
 		}
-
+		
 		// Constantes de animaciones
 
 		/*******************************************
 		 * State machines
 		 *******************************************/
+		if (vida == 3) {
+			modelText->render("Vidas: 3", -.95, 0.9, 40, 0.0, 0.63, 0.16);
+			glfwSwapBuffers(window);
+		}
 
-		modelText->render("Texto en openGL", -1, 0);
-		glfwSwapBuffers(window);
+		if (vida == 2) {
+			modelText->render("Vidas: 2", -.95, 0.9, 40, 0.878, 0.866, 0.0);
+			glfwSwapBuffers(window);
+		}
 
+		if (vida == 1) {
+			modelText->render("Vidas: 1", -.95, 0.9, 40, 0.976, 0.396, 0.0);
+			glfwSwapBuffers(window);
+		}
+
+		if (vida == 0) {
+			modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
+			glfwSwapBuffers(window);
+		}
 		/****************************+
 		 * Open AL sound data
 		 */
@@ -2058,8 +2064,6 @@ void prepareScene() {
 
 	modelRock.setShader(&shaderMulLighting);
 
-	modelAircraft.setShader(&shaderMulLighting);
-
 	terrain.setShader(&shaderTerrain);
 
 	//Lamp models
@@ -2085,8 +2089,6 @@ void prepareDepthScene() {
 	skyboxSphere.setShader(&shaderDepth);
 
 	modelRock.setShader(&shaderDepth);
-
-	modelAircraft.setShader(&shaderDepth);
 
 	terrain.setShader(&shaderDepth);
 
@@ -2232,10 +2234,6 @@ void renderScene(bool renderParticles) {
 	/**********
 	 * Update the position with alpha objects
 	 */
-	// Update the aircraft
-	blendingUnsorted.find("aircraft")->second = glm::vec3(
-			modelMatrixAircraft[3]);
-	
 
 	/**********
 	 * Sorter with alpha objects
@@ -2258,15 +2256,7 @@ void renderScene(bool renderParticles) {
 	glDisable(GL_CULL_FACE);
 	for (std::map<float, std::pair<std::string, glm::vec3> >::reverse_iterator it =
 			blendingSorted.rbegin(); it != blendingSorted.rend(); it++) {
-		if (it->second.first.compare("aircraft") == 0) {
-			// Render for the aircraft model
-			glm::mat4 modelMatrixAircraftBlend = glm::mat4(modelMatrixAircraft);
-			modelMatrixAircraftBlend[3][1] = terrain.getHeightTerrain(
-					modelMatrixAircraftBlend[3][0],
-					modelMatrixAircraftBlend[3][2]) + 2.0;
-			modelAircraft.render(modelMatrixAircraftBlend);
-		
-		} else if (renderParticles
+		 if (renderParticles
 				&& it->second.first.compare("fountain") == 0) {
 			/**********
 			 * Init Render particles systems
@@ -2375,7 +2365,7 @@ void renderScene(bool renderParticles) {
 }
 
 int main(int argc, char **argv) {
-	init(800, 700, "Window GLFW", false);
+	init(800, 700, "Osmosis vs Covid", false);
 	applicationLoop();
 	destroy();
 	return 1;
