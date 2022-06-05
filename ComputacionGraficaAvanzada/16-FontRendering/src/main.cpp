@@ -58,6 +58,8 @@
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 //Vida personaje
 int vida = 3;
+int balas = 0;
+std::string cadena = "";
 int screenWidth;
 int screenHeight;
 
@@ -82,7 +84,7 @@ Shader shaderViewDepth;
 Shader shaderDepth;
 
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromTarget = 9.0;
+float distanceFromTarget = 20.0;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -538,7 +540,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	CubreBocasModelAnimate.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
 	CubreBocasModelAnimate.setShader(&shaderMulLighting);
 
-	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
+	camera->setPosition(glm::vec3(0.0, 5.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
 	camera->setSensitivity(1.0);
 
@@ -1234,10 +1236,11 @@ bool processInput(bool continueApplication) {
 		}
 	}
 
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	//Para que no pueda mover la camara el usuario
+	/*if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-		camera->mouseMoveCamera(0.0, offsetY, deltaTime);
+		camera->mouseMoveCamera(0.0, offsetY, deltaTime);*/
 	offsetX = 0;
 	offsetY = 0;
 
@@ -1894,8 +1897,6 @@ void applicationLoop() {
 		 * Test Colisions
 		 *******************************************/
 
-		//Variable de vida 
-
 		//Box  vs Box
 		for (std::map<std::string,
 				std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
@@ -1910,6 +1911,11 @@ void applicationLoop() {
 					std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
 					isCollision = true;
+					if (it->first == "Cubre") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+						}
+					}
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
@@ -1950,6 +1956,11 @@ void applicationLoop() {
 					isCollision = true;
 					addOrUpdateCollisionDetection(collisionDetection, jt->first,
 							isCollision);
+					if (it->first == "Covid") {
+						if (jt->first == "Osmosis") {
+							vida -= 1;
+						}
+					}
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
@@ -1990,7 +2001,7 @@ void applicationLoop() {
 							if (jt->first.compare("Covid") == 1) {
 								modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 									glm::vec3(0, 0, -3.0));
-								vida -= 1;
+								//vida -= 1;
 							}
 						//}
 					}
@@ -2005,25 +2016,16 @@ void applicationLoop() {
 		/*******************************************
 		 * State machines
 		 *******************************************/
-		if (vida == 3) {
-			modelText->render("Vidas: 3", -.95, 0.9, 40, 0.0, 0.63, 0.16);
+		cadena = "Vidas: " + std::to_string(vida) + " Balas: " + std::to_string(balas);
+		if (vida > 0) {
+			modelText->render(cadena, -.95, 0.9, 50, 0.0, 0.63, 0.16);
 			glfwSwapBuffers(window);
 		}
-
-		if (vida == 2) {
-			modelText->render("Vidas: 2", -.95, 0.9, 40, 0.878, 0.866, 0.0);
-			glfwSwapBuffers(window);
-		}
-
-		if (vida == 1) {
-			modelText->render("Vidas: 1", -.95, 0.9, 40, 0.976, 0.396, 0.0);
-			glfwSwapBuffers(window);
-		}
-
-		if (vida == 0) {
+		else {
 			modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
 			glfwSwapBuffers(window);
 		}
+
 		/****************************+
 		 * Open AL sound data
 		 */
