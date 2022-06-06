@@ -5,13 +5,13 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Archivos de encabezado">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Archivos de recursos">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -60,61 +60,61 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Headers\AbstractModel.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\AnimationUtils.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Bones.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Box.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Camera.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Cylinder.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\FirstPersonCamera.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\mathUtil.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Mesh.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Model.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Shader.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Sphere.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Terrain.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Texture.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\ThirdPersonCamera.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\TimeManager.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\Colisiones.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\ShadowBox.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="include\Headers\FontTypeRendering.h">
-      <Filter>Archivos de encabezado</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
