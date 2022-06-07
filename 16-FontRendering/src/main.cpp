@@ -1377,15 +1377,15 @@ void applicationLoop() {
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
 				(float) screenWidth / (float) screenHeight, 0.1f, 100.0f);
 
-		if (modelSelected == 0) {
-			axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
-			angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
-			target = modelMatrixOsmosis[3];
-		} else {
+		//if (modelSelected == 0) {
+		axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
+		angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
+		target = modelMatrixOsmosis[3];
+		//} else {
 			/*axis = glm::axis(glm::quat_cast(modelMatrixMayow));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixMayow));
 			target = modelMatrixMayow[3];*/
-		}
+		//}
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
