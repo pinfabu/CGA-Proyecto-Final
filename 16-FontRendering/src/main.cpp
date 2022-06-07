@@ -1349,7 +1349,7 @@ void applicationLoop() {
 			glm::vec3(0, 1, 0));*/
 			//Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-		glm::vec3(20.0f, 0.0f, -2.0f));
+		glm::vec3(0.0f, 0.0f, -2.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
 		glm::vec3(0, 1, 0));
 
