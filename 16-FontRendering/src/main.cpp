@@ -68,6 +68,14 @@ const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 GLFWwindow* window;
 //Desaparecer modelo
 float DisappearModelCubreBocas1 = true;
+float DisappearModelCubreBocas2 = true;
+float DisappearModelCubreBocas3 = true;
+float DisappearModelCubreBocas4 = true;
+float DisappearModelCubreBocas5 = true;
+float DisappearModelCubreBocas6 = true;
+float DisappearModelCubreBocas7 = true;
+float DisappearModelCubreBocas8 = true;
+
 float DisappearModelCovid1 = true;
 
 Shader shader;
@@ -115,8 +123,18 @@ Model OsmosisModelAnimate;
 Model MapTestModel;
 //Covid
 Model CovidModelAnimate;
+Model CovidModelAnimate2;
+Model CovidModelAnimate3;
+Model CovidModelAnimate4;
 //Cubrebocas
 Model CubreBocasModelAnimate;
+Model CubreBocasModelAnimate2;
+Model CubreBocasModelAnimate3;
+Model CubreBocasModelAnimate4;
+Model CubreBocasModelAnimate5;
+Model CubreBocasModelAnimate6;
+Model CubreBocasModelAnimate7;
+Model CubreBocasModelAnimate8;
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap.png");
 
@@ -155,7 +173,17 @@ glm::mat4 matrixModelRock = glm::mat4(1.0);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
+glm::mat4 modelMatrixCovid2 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCovid3 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCovid4 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas2 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas3 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas4 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas5 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas6 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas7 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCubrebocas8 = glm::mat4(1.0f);
 glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 
 int animationIndex = 1;
@@ -543,10 +571,30 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Covid
 	CovidModelAnimate.loadModel("../models/Covid/Covid.fbx");
 	CovidModelAnimate.setShader(&shaderMulLighting);
+	CovidModelAnimate2.loadModel("../models/Covid/Covid.fbx");
+	CovidModelAnimate2.setShader(&shaderMulLighting);
+	CovidModelAnimate3.loadModel("../models/Covid/Covid.fbx");
+	CovidModelAnimate3.setShader(&shaderMulLighting);
+	CovidModelAnimate4.loadModel("../models/Covid/Covid.fbx");
+	CovidModelAnimate4.setShader(&shaderMulLighting);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
 	CubreBocasModelAnimate.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate2.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate2.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate3.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate3.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate4.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate4.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate5.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate5.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate6.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate6.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate7.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate7.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate8.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+	CubreBocasModelAnimate8.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 5.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -1126,7 +1174,17 @@ void destroy() {
 	OsmosisModelAnimate.destroy();
 	MapTestModel.destroy();
 	CovidModelAnimate.destroy();
+	CovidModelAnimate2.destroy();
+	CovidModelAnimate3.destroy();
+	CovidModelAnimate4.destroy();
 	CubreBocasModelAnimate.destroy();
+	CubreBocasModelAnimate2.destroy();
+	CubreBocasModelAnimate3.destroy();
+	CubreBocasModelAnimate4.destroy();
+	CubreBocasModelAnimate5.destroy();
+	CubreBocasModelAnimate6.destroy();
+	CubreBocasModelAnimate7.destroy();
+	CubreBocasModelAnimate8.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1261,10 +1319,10 @@ bool processInput(bool continueApplication) {
 	}
 
 	//Para que no pueda mover la camara el usuario
-	/*if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-		camera->mouseMoveCamera(0.0, offsetY, deltaTime);*/
+		camera->mouseMoveCamera(0.0, offsetY, deltaTime);
 	offsetX = 0;
 	offsetY = 0;
 
@@ -1284,20 +1342,20 @@ bool processInput(bool continueApplication) {
 		enableCountSelected = true;
 	//Movimiento Osmosis
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(2.0f),
+		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f),
 			glm::vec3(0, 1, 0));
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-2.0f),
+		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-3.0f),
 			glm::vec3(0, 1, 0));
 	}
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, 0.09));
+			glm::vec3(0, 0, 0.19));
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, -0.09));
+			glm::vec3(0, 0, -0.19));
 	}
 	//Movimiento mayow
 	/*if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -1341,6 +1399,26 @@ void applicationLoop() {
 	glm::vec3 target;
 	float angleTarget;
 
+	float advanceCountCovid1 = 0.0;
+	int stateCovid1 = 0;
+	int numberAdvanceCovid1 = 0;
+	int maxAdvanceCovid1 = 0.0;
+
+	float advanceCountCovid2 = 0.0;
+	int stateCovid2 = 0;
+	int numberAdvanceCovid2 = 0;
+	int maxAdvanceCovid2 = 0.0;
+
+	float advanceCountCovid3 = 0.0;
+	int stateCovid3 = 0;
+	int numberAdvanceCovid3 = 0;
+	int maxAdvanceCovid3 = 0.0;
+
+	float advanceCountCovid4 = 0.0;
+	int stateCovid4 = 0;
+	int numberAdvanceCovid4 = 0;
+	int maxAdvanceCovid4 = 0.0;
+
 	matrixModelRock = glm::translate(matrixModelRock,
 		glm::vec3(-3.0, 0.0, 2.0));
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
@@ -1349,15 +1427,24 @@ void applicationLoop() {
 			glm::vec3(0, 1, 0));*/
 			//Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-		glm::vec3(20.0f, 0.0f, -2.0f));
+		glm::vec3(69.0f, 0.0f, -13.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
 		glm::vec3(0, 1, 0));
 
 	//Covid
-	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(15.0f, -20.5f, -20.0f));
-
+	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-69.0f, 0.1684f, 28.0f));
+	modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-69.0f, 0.1684f, -39.0f));
+	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 28.0f));
+	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -39.0f));
 	//Cubrebocas
-	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(5.0f, 0.0f, 0.0f));
+	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(0.0f, 0.0f, -39.0f));//Enmedio arriba
+	modelMatrixCubrebocas2 = glm::translate(modelMatrixCubrebocas2, glm::vec3(0.0f, 0.0f, 28.0f));//Enmedio abajo
+	modelMatrixCubrebocas3 = glm::translate(modelMatrixCubrebocas3, glm::vec3(-40.0f, 0.0f, -5.0f));//Segundo lado izquierdo enmedio
+	modelMatrixCubrebocas4 = glm::translate(modelMatrixCubrebocas4, glm::vec3(40.0f, 0.0f, -5.0f));//Segundo lado derecho enmedio
+	modelMatrixCubrebocas5 = glm::translate(modelMatrixCubrebocas5, glm::vec3(-69.0f, 0.0f, -6.0f));//Primero lado izquierdo enmedio
+	modelMatrixCubrebocas6 = glm::translate(modelMatrixCubrebocas6, glm::vec3(69.0f, 0.0f, -6.0f));//Último lado derecho enmedio
+	modelMatrixCubrebocas7 = glm::translate(modelMatrixCubrebocas7, glm::vec3(0.0f, 0.0f, -22.0f));//Segundo enmedio arriba
+	modelMatrixCubrebocas8 = glm::translate(modelMatrixCubrebocas8, glm::vec3(0.0f, 0.0f, 11.5f));//Segundo enmedio abajo
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,
 		glm::vec3(5.0, 0.0, -40.0));
@@ -1762,7 +1849,6 @@ void applicationLoop() {
 		//Collider Covid
 		AbstractModel::SBB CovidCollider;
 		glm::mat4 modelMatrixColliderCovid = glm::mat4(modelMatrixCovid);
-
 		if (DisappearModelCovid1) {
 			modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
 				glm::vec3(0.001, 0.001, 0.001));
@@ -1772,7 +1858,7 @@ void applicationLoop() {
 					CovidModelAnimate.getSbb().c.y + 31 * 100,
 					CovidModelAnimate.getSbb().c.z));
 			CovidCollider.c = glm::vec3(modelMatrixColliderCovid[3]);
-			CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.05;
+			CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.03;
 		}
 		else {
 			modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
@@ -1786,11 +1872,387 @@ void applicationLoop() {
 			CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.00;
 		}
 		addOrUpdateColliders(collidersSBB, "Covid", CovidCollider, modelMatrixCovid);
+		
+
+		//Covid 2
+		AbstractModel::SBB CovidCollider2;
+		glm::mat4 modelMatrixColliderCovid2 = glm::mat4(modelMatrixCovid2);
+		if (DisappearModelCovid1) {
+			modelMatrixColliderCovid2 = glm::scale(modelMatrixColliderCovid2,
+				glm::vec3(0.001, 0.001, 0.001));
+			modelMatrixColliderCovid2 = glm::translate(modelMatrixColliderCovid2,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate2.getSbb().c.x,
+					CovidModelAnimate2.getSbb().c.y + 31 * 100,
+					CovidModelAnimate2.getSbb().c.z));
+			CovidCollider2.c = glm::vec3(modelMatrixColliderCovid2[3]);
+			CovidCollider2.ratio = CovidModelAnimate2.getSbb().ratio * 0.03;
+		}
+		else {
+			modelMatrixColliderCovid2 = glm::scale(modelMatrixColliderCovid2,
+				glm::vec3(0.000, 0.000, 0.000));
+			modelMatrixColliderCovid2 = glm::translate(modelMatrixColliderCovid2,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate2.getSbb().c.x,
+					CovidModelAnimate2.getSbb().c.y + 31 * 100,
+					CovidModelAnimate2.getSbb().c.z));
+			CovidCollider2.c = glm::vec3(modelMatrixColliderCovid2[3]);
+			CovidCollider2.ratio = CovidModelAnimate2.getSbb().ratio * 0.00;
+		}
+		addOrUpdateColliders(collidersSBB, "Covid2", CovidCollider2, modelMatrixCovid2);
+
+		//Covid 3
+		AbstractModel::SBB CovidCollider3;
+		glm::mat4 modelMatrixColliderCovid3 = glm::mat4(modelMatrixCovid3);
+		if (DisappearModelCovid1) {
+			modelMatrixColliderCovid3 = glm::scale(modelMatrixColliderCovid3,
+				glm::vec3(0.001, 0.001, 0.001));
+			modelMatrixColliderCovid3 = glm::translate(modelMatrixColliderCovid3,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate3.getSbb().c.x,
+					CovidModelAnimate3.getSbb().c.y + 31 * 100,
+					CovidModelAnimate3.getSbb().c.z));
+			CovidCollider3.c = glm::vec3(modelMatrixColliderCovid3[3]);
+			CovidCollider3.ratio = CovidModelAnimate3.getSbb().ratio * 0.03;
+		}
+		else {
+			modelMatrixColliderCovid3 = glm::scale(modelMatrixColliderCovid3,
+				glm::vec3(0.000, 0.000, 0.000));
+			modelMatrixColliderCovid3 = glm::translate(modelMatrixColliderCovid3,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate3.getSbb().c.x,
+					CovidModelAnimate3.getSbb().c.y + 31 * 100,
+					CovidModelAnimate3.getSbb().c.z));
+			CovidCollider3.c = glm::vec3(modelMatrixColliderCovid3[3]);
+			CovidCollider3.ratio = CovidModelAnimate3.getSbb().ratio * 0.00;
+		}
+		addOrUpdateColliders(collidersSBB, "Covid3", CovidCollider3, modelMatrixCovid3);
+
+		//Covid 4
+		AbstractModel::SBB CovidCollider4;
+		glm::mat4 modelMatrixColliderCovid4 = glm::mat4(modelMatrixCovid4);
+		if (DisappearModelCovid1) {
+			modelMatrixColliderCovid4 = glm::scale(modelMatrixColliderCovid4,
+				glm::vec3(0.001, 0.001, 0.001));
+			modelMatrixColliderCovid4 = glm::translate(modelMatrixColliderCovid4,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate4.getSbb().c.x,
+					CovidModelAnimate4.getSbb().c.y + 23 * 100,
+					CovidModelAnimate4.getSbb().c.z));
+			CovidCollider4.c = glm::vec3(modelMatrixColliderCovid4[3]);
+			CovidCollider4.ratio = CovidModelAnimate4.getSbb().ratio * 0.03;
+		}
+		else {
+			modelMatrixColliderCovid4 = glm::scale(modelMatrixColliderCovid4,
+				glm::vec3(0.000, 0.000, 0.000));
+			modelMatrixColliderCovid4 = glm::translate(modelMatrixColliderCovid4,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate4.getSbb().c.x,
+					CovidModelAnimate4.getSbb().c.y + 31 * 100,
+					CovidModelAnimate4.getSbb().c.z));
+			CovidCollider4.c = glm::vec3(modelMatrixColliderCovid4[3]);
+			CovidCollider4.ratio = CovidModelAnimate4.getSbb().ratio * 0.00;
+		}
+		addOrUpdateColliders(collidersSBB, "Covid4", CovidCollider4, modelMatrixCovid4);
+
+		//Máquina covid esquina superior izquierda
+		switch (stateCovid1)
+		{
+		case 0:
+			if (numberAdvanceCovid1 == 0)
+			{
+				maxAdvanceCovid1 = 24.0f;
+			}
+			else if (numberAdvanceCovid1 == 1)
+			{
+				maxAdvanceCovid1 = 16.0f;
+			}
+			else if (numberAdvanceCovid1 == 2)
+			{
+				maxAdvanceCovid1 = 7.0f;
+			}
+			else if (numberAdvanceCovid1 == 3)
+			{
+				maxAdvanceCovid1 = 16.0f;
+			}
+			else if (numberAdvanceCovid1 == 4)
+			{
+				maxAdvanceCovid1 = 16.0f;
+			}
+			else if (numberAdvanceCovid1 == 5)
+			{
+				maxAdvanceCovid1 = 33.0f;
+			}
+
+			stateCovid1 = 1;
+			break;
+		case 1:
+			if (numberAdvanceCovid1 == 0) {
+				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Derecha
+				advanceCountCovid1 += 0.08;
+			}
+
+			else if (numberAdvanceCovid1 == 1) {
+				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
+				advanceCountCovid1 += 0.08;
+			}
+
+			else if (numberAdvanceCovid1 == 2) {
+				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
+				advanceCountCovid1 += 0.08;
+			}
+
+			else if (numberAdvanceCovid1 == 3) {
+				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
+				advanceCountCovid1 += 0.08;
+			}
+			else if (numberAdvanceCovid1 == 4) {
+				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq2
+				advanceCountCovid1 += 0.08;
+			}
+			else if (numberAdvanceCovid1 == 5) {
+				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
+				advanceCountCovid1 += 0.08;
+			}
+
+			if (advanceCountCovid1 > maxAdvanceCovid1)
+			{
+				advanceCountCovid1 = 0;
+				numberAdvanceCovid1++;
+				stateCovid1 = 0;
+				if (numberAdvanceCovid1 == 6) {
+					numberAdvanceCovid1 = 0;
+				}
+			}
+			break;
+		default:
+			break;
+		}
+
+		//Máquina covid esquina inferior izquierda
+		switch (stateCovid2)
+		{
+		case 0:
+			if (numberAdvanceCovid2 == 0)//Arriba
+			{
+				maxAdvanceCovid2 = 31.0f;
+			}
+			else if (numberAdvanceCovid2 == 1)//Der
+			{
+				maxAdvanceCovid2 = 16.0f;
+			}
+			else if (numberAdvanceCovid2 == 2)//Abajo
+			{
+				maxAdvanceCovid2 = 17.0f;
+			}
+			else if (numberAdvanceCovid2 == 3)//Der
+			{
+				maxAdvanceCovid2 = 7.0f;
+			}
+			else if (numberAdvanceCovid2 == 4)//Abajo2
+			{
+				maxAdvanceCovid2 = 16.0f;
+			}
+			else if (numberAdvanceCovid2 == 5)//Izq
+			{
+				maxAdvanceCovid2 = 23.0f;
+			}
+
+			stateCovid2 = 1;
+			break;
+		case 1:
+			if (numberAdvanceCovid2 == 0) {
+				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
+				advanceCountCovid2 += 0.08;
+			}
+
+			else if (numberAdvanceCovid2 == 1) {
+				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
+				advanceCountCovid2 += 0.08;
+			}
+
+			else if (numberAdvanceCovid2 == 2) {
+				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
+				advanceCountCovid2 += 0.08;
+			}
+
+			else if (numberAdvanceCovid2 == 3) {
+				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
+				advanceCountCovid2 += 0.08;
+			}
+			else if (numberAdvanceCovid2 == 4) {
+				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
+				advanceCountCovid2 += 0.08;
+			}
+			else if (numberAdvanceCovid2 == 5) {
+				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
+				advanceCountCovid2 += 0.08;
+			}
+
+			if (advanceCountCovid2 > maxAdvanceCovid2)
+			{
+				advanceCountCovid2 = 0;
+				numberAdvanceCovid2++;
+				stateCovid2 = 0;
+				if (numberAdvanceCovid2 == 6) {
+					numberAdvanceCovid2 = 0;
+				}
+			}
+			break;
+		default:
+			break;
+		}
+
+		//Máquina covid esquina superior derecha
+		switch (stateCovid3)
+		{
+		case 0:
+			if (numberAdvanceCovid3 == 0)//Izq
+			{
+				maxAdvanceCovid3 = 24.0f;
+			}
+			else if (numberAdvanceCovid3 == 1)//Abajo
+			{
+				maxAdvanceCovid3 = 16.0f;
+			}
+			else if (numberAdvanceCovid3 == 2)//Der
+			{
+				maxAdvanceCovid3 = 7.0f;
+			}
+			else if (numberAdvanceCovid3 == 3)//Abajo2
+			{
+				maxAdvanceCovid3 = 16.0f;
+			}
+			else if (numberAdvanceCovid3 == 4)//Der2
+			{
+				maxAdvanceCovid3 = 17.3f;
+			}
+			else if (numberAdvanceCovid3 == 5)//Arriba
+			{
+				maxAdvanceCovid3 = 33.5f;
+			}
+
+			stateCovid3 = 1;
+			break;
+		case 1:
+			if (numberAdvanceCovid3 == 0) {
+				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
+				advanceCountCovid3 += 0.08;
+			}
+
+			else if (numberAdvanceCovid3 == 1) {
+				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
+				advanceCountCovid3 += 0.08;
+			}
+
+			else if (numberAdvanceCovid3 == 2) {
+				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
+				advanceCountCovid3 += 0.08;
+			}
+
+			else if (numberAdvanceCovid3 == 3) {
+				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
+				advanceCountCovid3 += 0.08;
+			}
+			else if (numberAdvanceCovid3 == 4) {
+				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der2
+				advanceCountCovid3 += 0.08;
+			}
+			else if (numberAdvanceCovid3 == 5) {
+				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
+				advanceCountCovid3 += 0.08;
+			}
+
+			if (advanceCountCovid3 > maxAdvanceCovid3)
+			{
+				advanceCountCovid3 = 0;
+				numberAdvanceCovid3++;
+				stateCovid3 = 0;
+				if (numberAdvanceCovid3 == 6) {
+					numberAdvanceCovid3 = 0;
+				}
+			}
+			break;
+		default:
+			break;
+		}
+
+		//Máquina covid esquina inferior derecha
+		switch (stateCovid4)
+		{
+		case 0:
+			if (numberAdvanceCovid4 == 0)//Arriba
+			{
+				maxAdvanceCovid4 = 31.0f;
+			}
+			else if (numberAdvanceCovid4 == 1)//Izq
+			{
+				maxAdvanceCovid4 = 16.0f;
+			}
+			else if (numberAdvanceCovid4 == 2)//Abajo
+			{
+				maxAdvanceCovid4 = 17.0f;
+			}
+			else if (numberAdvanceCovid4 == 3)//Izq2
+			{
+				maxAdvanceCovid4 = 7.0f;
+			}
+			else if (numberAdvanceCovid4 == 4)//Abajo2
+			{
+				maxAdvanceCovid4 = 16.0f;
+			}
+			else if (numberAdvanceCovid4 == 5)//Der
+			{
+				maxAdvanceCovid4 = 23.0f;
+			}
+
+			stateCovid4 = 1;
+			break;
+		case 1:
+			if (numberAdvanceCovid4 == 0) {
+				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
+				advanceCountCovid4 += 0.08;
+			}
+
+			else if (numberAdvanceCovid4 == 1) {
+				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
+				advanceCountCovid4 += 0.08;
+			}
+
+			else if (numberAdvanceCovid4 == 2) {
+				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
+				advanceCountCovid4 += 0.08;
+			}
+
+			else if (numberAdvanceCovid4 == 3) {
+				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq2
+				advanceCountCovid4 += 0.08;
+			}
+			else if (numberAdvanceCovid4 == 4) {
+				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
+				advanceCountCovid4 += 0.08;
+			}
+			else if (numberAdvanceCovid4 == 5) {
+				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
+				advanceCountCovid4 += 0.08;
+			}
+
+			if (advanceCountCovid4 > maxAdvanceCovid4)
+			{
+				advanceCountCovid4 = 0;
+				numberAdvanceCovid4++;
+				stateCovid4 = 0;
+				if (numberAdvanceCovid4 == 6) {
+					numberAdvanceCovid4 = 0;
+				}
+			}
+			break;
+		default:
+			break;
+		}
 
 		//Collider Cubrebocas
 		AbstractModel::OBB CubreCollider;
-
-
 		if (DisappearModelCubreBocas1) {
 			glm::mat4 modelmatrixColliderCubre = glm::mat4(modelMatrixCubrebocas);
 			modelmatrixColliderCubre = glm::rotate(modelmatrixColliderCubre, glm::radians(90.0f), glm::vec3(0, 1, 0));
@@ -1819,6 +2281,223 @@ void applicationLoop() {
 
 		}
 		addOrUpdateColliders(collidersOBB, "Cubre", CubreCollider, modelMatrixCubrebocas);
+
+		//Collider Cubrebocas2
+		AbstractModel::OBB CubreCollider2;
+		if (DisappearModelCubreBocas2) {
+			glm::mat4 modelmatrixColliderCubre2 = glm::mat4(modelMatrixCubrebocas2);
+			modelmatrixColliderCubre2 = glm::rotate(modelmatrixColliderCubre2, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider2.u = glm::quat_cast(modelmatrixColliderCubre2);
+			modelmatrixColliderCubre2 = glm::scale(modelmatrixColliderCubre2, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre2 = glm::translate(modelmatrixColliderCubre2,
+				glm::vec3(CubreBocasModelAnimate2.getObb().c.x + 2.5,
+					CubreBocasModelAnimate2.getObb().c.y + 25,
+					CubreBocasModelAnimate2.getObb().c.z));
+			CubreCollider2.e = CubreBocasModelAnimate2.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider2.c = glm::vec3(modelmatrixColliderCubre2[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre2 = glm::mat4(modelMatrixCubrebocas2);
+			modelmatrixColliderCubre2 = glm::rotate(modelmatrixColliderCubre2, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider2.u = glm::quat_cast(modelmatrixColliderCubre2);
+			modelmatrixColliderCubre2 = glm::scale(modelmatrixColliderCubre2, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre2 = glm::translate(modelmatrixColliderCubre2,
+				glm::vec3(CubreBocasModelAnimate2.getObb().c.x + 2.5,
+					CubreBocasModelAnimate2.getObb().c.y + 25,
+					CubreBocasModelAnimate2.getObb().c.z));
+			CubreCollider2.e = CubreBocasModelAnimate2.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider2.c = glm::vec3(modelmatrixColliderCubre2[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre2", CubreCollider2, modelMatrixCubrebocas2);
+
+		//Collider Cubrebocas3
+		AbstractModel::OBB CubreCollider3;
+		if (DisappearModelCubreBocas3) {
+			glm::mat4 modelmatrixColliderCubre3 = glm::mat4(modelMatrixCubrebocas3);
+			modelmatrixColliderCubre3 = glm::rotate(modelmatrixColliderCubre3, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider3.u = glm::quat_cast(modelmatrixColliderCubre3);
+			modelmatrixColliderCubre3 = glm::scale(modelmatrixColliderCubre3, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre3 = glm::translate(modelmatrixColliderCubre3,
+				glm::vec3(CubreBocasModelAnimate3.getObb().c.x + 2.5,
+					CubreBocasModelAnimate3.getObb().c.y + 25,
+					CubreBocasModelAnimate3.getObb().c.z));
+			CubreCollider3.e = CubreBocasModelAnimate3.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider3.c = glm::vec3(modelmatrixColliderCubre3[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre3 = glm::mat4(modelMatrixCubrebocas3);
+			modelmatrixColliderCubre3 = glm::rotate(modelmatrixColliderCubre3, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider3.u = glm::quat_cast(modelmatrixColliderCubre3);
+			modelmatrixColliderCubre3 = glm::scale(modelmatrixColliderCubre3, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre3 = glm::translate(modelmatrixColliderCubre3,
+				glm::vec3(CubreBocasModelAnimate3.getObb().c.x + 2.5,
+					CubreBocasModelAnimate3.getObb().c.y + 25,
+					CubreBocasModelAnimate3.getObb().c.z));
+			CubreCollider3.e = CubreBocasModelAnimate3.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider3.c = glm::vec3(modelmatrixColliderCubre3[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre3", CubreCollider3, modelMatrixCubrebocas3);
+
+		//Collider Cubrebocas4
+		AbstractModel::OBB CubreCollider4;
+		if (DisappearModelCubreBocas4) {
+			glm::mat4 modelmatrixColliderCubre4 = glm::mat4(modelMatrixCubrebocas4);
+			modelmatrixColliderCubre4 = glm::rotate(modelmatrixColliderCubre4, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider4.u = glm::quat_cast(modelmatrixColliderCubre4);
+			modelmatrixColliderCubre4 = glm::scale(modelmatrixColliderCubre4, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre4 = glm::translate(modelmatrixColliderCubre4,
+				glm::vec3(CubreBocasModelAnimate4.getObb().c.x + 2.5,
+					CubreBocasModelAnimate4.getObb().c.y + 25,
+					CubreBocasModelAnimate4.getObb().c.z));
+			CubreCollider4.e = CubreBocasModelAnimate4.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider4.c = glm::vec3(modelmatrixColliderCubre4[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre4 = glm::mat4(modelMatrixCubrebocas4);
+			modelmatrixColliderCubre4 = glm::rotate(modelmatrixColliderCubre4, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider4.u = glm::quat_cast(modelmatrixColliderCubre4);
+			modelmatrixColliderCubre4 = glm::scale(modelmatrixColliderCubre4, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre4 = glm::translate(modelmatrixColliderCubre4,
+				glm::vec3(CubreBocasModelAnimate4.getObb().c.x + 2.5,
+					CubreBocasModelAnimate4.getObb().c.y + 25,
+					CubreBocasModelAnimate4.getObb().c.z));
+			CubreCollider4.e = CubreBocasModelAnimate4.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider4.c = glm::vec3(modelmatrixColliderCubre4[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre4", CubreCollider4, modelMatrixCubrebocas4);
+
+		//Collider Cubrebocas5
+		AbstractModel::OBB CubreCollider5;
+		if (DisappearModelCubreBocas5) {
+			glm::mat4 modelmatrixColliderCubre5 = glm::mat4(modelMatrixCubrebocas5);
+			modelmatrixColliderCubre5 = glm::rotate(modelmatrixColliderCubre5, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider5.u = glm::quat_cast(modelmatrixColliderCubre5);
+			modelmatrixColliderCubre5 = glm::scale(modelmatrixColliderCubre5, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre5 = glm::translate(modelmatrixColliderCubre5,
+				glm::vec3(CubreBocasModelAnimate5.getObb().c.x + 2.5,
+					CubreBocasModelAnimate5.getObb().c.y + 25,
+					CubreBocasModelAnimate5.getObb().c.z));
+			CubreCollider5.e = CubreBocasModelAnimate5.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider5.c = glm::vec3(modelmatrixColliderCubre5[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre5 = glm::mat4(modelMatrixCubrebocas5);
+			modelmatrixColliderCubre5 = glm::rotate(modelmatrixColliderCubre5, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider5.u = glm::quat_cast(modelmatrixColliderCubre5);
+			modelmatrixColliderCubre5 = glm::scale(modelmatrixColliderCubre5, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre5 = glm::translate(modelmatrixColliderCubre5,
+				glm::vec3(CubreBocasModelAnimate5.getObb().c.x + 2.5,
+					CubreBocasModelAnimate5.getObb().c.y + 25,
+					CubreBocasModelAnimate5.getObb().c.z));
+			CubreCollider5.e = CubreBocasModelAnimate5.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider5.c = glm::vec3(modelmatrixColliderCubre5[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre5", CubreCollider5, modelMatrixCubrebocas5);
+
+		//Collider Cubrebocas6
+		AbstractModel::OBB CubreCollider6;
+		if (DisappearModelCubreBocas6) {
+			glm::mat4 modelmatrixColliderCubre6 = glm::mat4(modelMatrixCubrebocas6);
+			modelmatrixColliderCubre6 = glm::rotate(modelmatrixColliderCubre6, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider6.u = glm::quat_cast(modelmatrixColliderCubre6);
+			modelmatrixColliderCubre6 = glm::scale(modelmatrixColliderCubre6, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre6 = glm::translate(modelmatrixColliderCubre6,
+				glm::vec3(CubreBocasModelAnimate6.getObb().c.x + 2.5,
+					CubreBocasModelAnimate6.getObb().c.y + 25,
+					CubreBocasModelAnimate6.getObb().c.z));
+			CubreCollider6.e = CubreBocasModelAnimate6.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider6.c = glm::vec3(modelmatrixColliderCubre6[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre6 = glm::mat4(modelMatrixCubrebocas6);
+			modelmatrixColliderCubre6 = glm::rotate(modelmatrixColliderCubre6, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider6.u = glm::quat_cast(modelmatrixColliderCubre6);
+			modelmatrixColliderCubre6 = glm::scale(modelmatrixColliderCubre6, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre6 = glm::translate(modelmatrixColliderCubre6,
+				glm::vec3(CubreBocasModelAnimate6.getObb().c.x + 2.5,
+					CubreBocasModelAnimate6.getObb().c.y + 25,
+					CubreBocasModelAnimate6.getObb().c.z));
+			CubreCollider6.e = CubreBocasModelAnimate6.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider6.c = glm::vec3(modelmatrixColliderCubre6[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre6", CubreCollider6, modelMatrixCubrebocas6);
+
+		//Collider Cubrebocas7
+		AbstractModel::OBB CubreCollider7;
+		if (DisappearModelCubreBocas7) {
+			glm::mat4 modelmatrixColliderCubre7 = glm::mat4(modelMatrixCubrebocas7);
+			modelmatrixColliderCubre7 = glm::rotate(modelmatrixColliderCubre7, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider7.u = glm::quat_cast(modelmatrixColliderCubre7);
+			modelmatrixColliderCubre7 = glm::scale(modelmatrixColliderCubre7, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre7 = glm::translate(modelmatrixColliderCubre7,
+				glm::vec3(CubreBocasModelAnimate7.getObb().c.x + 2.5,
+					CubreBocasModelAnimate7.getObb().c.y + 25,
+					CubreBocasModelAnimate7.getObb().c.z));
+			CubreCollider7.e = CubreBocasModelAnimate7.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider7.c = glm::vec3(modelmatrixColliderCubre7[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre7 = glm::mat4(modelMatrixCubrebocas7);
+			modelmatrixColliderCubre7 = glm::rotate(modelmatrixColliderCubre7, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider7.u = glm::quat_cast(modelmatrixColliderCubre7);
+			modelmatrixColliderCubre7 = glm::scale(modelmatrixColliderCubre7, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre7 = glm::translate(modelmatrixColliderCubre7,
+				glm::vec3(CubreBocasModelAnimate7.getObb().c.x + 2.5,
+					CubreBocasModelAnimate7.getObb().c.y + 25,
+					CubreBocasModelAnimate7.getObb().c.z));
+			CubreCollider7.e = CubreBocasModelAnimate7.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider7.c = glm::vec3(modelmatrixColliderCubre7[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre7", CubreCollider7, modelMatrixCubrebocas7);
+
+		//Collider Cubrebocas8
+		AbstractModel::OBB CubreCollider8;
+		if (DisappearModelCubreBocas8) {
+			glm::mat4 modelmatrixColliderCubre8 = glm::mat4(modelMatrixCubrebocas8);
+			modelmatrixColliderCubre8 = glm::rotate(modelmatrixColliderCubre8, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider8.u = glm::quat_cast(modelmatrixColliderCubre8);
+			modelmatrixColliderCubre8 = glm::scale(modelmatrixColliderCubre8, glm::vec3(0.1, 0.1, 0.1));
+			modelmatrixColliderCubre8 = glm::translate(modelmatrixColliderCubre8,
+				glm::vec3(CubreBocasModelAnimate8.getObb().c.x + 2.5,
+					CubreBocasModelAnimate8.getObb().c.y + 25,
+					CubreBocasModelAnimate8.getObb().c.z));
+			CubreCollider8.e = CubreBocasModelAnimate8.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider8.c = glm::vec3(modelmatrixColliderCubre8[3]);
+		}
+		else {
+			glm::mat4 modelmatrixColliderCubre8 = glm::mat4(modelMatrixCubrebocas8);
+			modelmatrixColliderCubre8 = glm::rotate(modelmatrixColliderCubre8, glm::radians(90.0f), glm::vec3(0, 1, 0));
+			// Set the orientation of collider before doing the scale
+			CubreCollider8.u = glm::quat_cast(modelmatrixColliderCubre8);
+			modelmatrixColliderCubre8 = glm::scale(modelmatrixColliderCubre8, glm::vec3(0.0, 0.0, 0.0));
+			modelmatrixColliderCubre8 = glm::translate(modelmatrixColliderCubre8,
+				glm::vec3(CubreBocasModelAnimate8.getObb().c.x + 2.5,
+					CubreBocasModelAnimate8.getObb().c.y + 25,
+					CubreBocasModelAnimate8.getObb().c.z));
+			CubreCollider8.e = CubreBocasModelAnimate8.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
+			CubreCollider8.c = glm::vec3(modelmatrixColliderCubre8[3]);
+
+		}
+		addOrUpdateColliders(collidersOBB, "Cubre8", CubreCollider8, modelMatrixCubrebocas8);
 
 		//Collider Osmosis
 		AbstractModel::OBB OsmosisCollider;
@@ -1975,6 +2654,48 @@ void applicationLoop() {
 							DisappearModelCubreBocas1 = !DisappearModelCubreBocas1;
 						}
 					}
+					if (it->first == "Cubre2") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas2 = !DisappearModelCubreBocas2;
+						}
+					}
+					if (it->first == "Cubre3") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas3 = !DisappearModelCubreBocas3;
+						}
+					}
+					if (it->first == "Cubre4") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas4 = !DisappearModelCubreBocas4;
+						}
+					}
+					if (it->first == "Cubre5") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas5 = !DisappearModelCubreBocas5;
+						}
+					}
+					if (it->first == "Cubre6") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas6 = !DisappearModelCubreBocas6;
+						}
+					}
+					if (it->first == "Cubre7") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas7 = !DisappearModelCubreBocas7;
+						}
+					}
+					if (it->first == "Cubre8") {
+						if (jt->first == "Osmosis") {
+							balas += 1;
+							DisappearModelCubreBocas8 = !DisappearModelCubreBocas8;
+						}
+					}
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
@@ -2020,6 +2741,7 @@ void applicationLoop() {
 							vida -= 1;
 							DisappearModelCovid1 = !DisappearModelCovid1;
 						}
+
 					}
 				}
 			}
@@ -2157,9 +2879,19 @@ void prepareScene() {
 
 	//Covdi
 	CovidModelAnimate.setShader(&shaderMulLighting);
+	CovidModelAnimate2.setShader(&shaderMulLighting);
+	CovidModelAnimate3.setShader(&shaderMulLighting);
+	CovidModelAnimate4.setShader(&shaderMulLighting);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate2.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate3.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate4.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate5.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate6.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate7.setShader(&shaderMulLighting);
+	CubreBocasModelAnimate8.setShader(&shaderMulLighting);
 }
 
 void prepareDepthScene() {
@@ -2188,9 +2920,19 @@ void prepareDepthScene() {
 
 	//Covid
 	CovidModelAnimate.setShader(&shaderDepth);
+	CovidModelAnimate2.setShader(&shaderDepth);
+	CovidModelAnimate3.setShader(&shaderDepth);
+	CovidModelAnimate4.setShader(&shaderDepth);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.setShader(&shaderDepth);
+	CubreBocasModelAnimate2.setShader(&shaderDepth);
+	CubreBocasModelAnimate3.setShader(&shaderDepth);
+	CubreBocasModelAnimate4.setShader(&shaderDepth);
+	CubreBocasModelAnimate5.setShader(&shaderDepth);
+	CubreBocasModelAnimate6.setShader(&shaderDepth);
+	CubreBocasModelAnimate7.setShader(&shaderDepth);
+	CubreBocasModelAnimate8.setShader(&shaderDepth);
 }
 
 void renderScene(bool renderParticles) {
@@ -2313,22 +3055,106 @@ void renderScene(bool renderParticles) {
 	//modelMatrixMapTestMain = glm::scale(modelMatrixMapTestMain, glm::vec3(0.004, 0.004, 0.004));
 	//MapTestModel.setAnimationIndex(0);
 	MapTestModel.render(modelMatrixMapTestMain);
-
+	//Covid
 	modelMatrixCovid[3][1] = terrain.getHeightTerrain(modelMatrixCovid[3][0], modelMatrixCovid[3][2]);
 	glm::mat4 modelMatrixCovidBody = glm::mat4(modelMatrixCovid);
-	modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.02, 0.02, 0.02));
+	modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.015, 0.015, 0.015));
 	CovidModelAnimate.setAnimationIndex(0);
 	if (DisappearModelCovid1) {
 		CovidModelAnimate.render(modelMatrixCovidBody);
 	}
+	//Covid2
+	modelMatrixCovid2[3][1] = terrain.getHeightTerrain(modelMatrixCovid2[3][0], modelMatrixCovid2[3][2]);
+	glm::mat4 modelMatrixCovid2Body = glm::mat4(modelMatrixCovid2);
+	modelMatrixCovid2Body = glm::scale(modelMatrixCovid2Body, glm::vec3(0.015, 0.015, 0.015));
+	CovidModelAnimate2.setAnimationIndex(0);
+	//if (DisappearModelCovid1) {
+		CovidModelAnimate2.render(modelMatrixCovid2Body);
+	//}
 
+	//Covid3
+	modelMatrixCovid3[3][1] = terrain.getHeightTerrain(modelMatrixCovid3[3][0], modelMatrixCovid3[3][2]);
+	glm::mat4 modelMatrixCovid3Body = glm::mat4(modelMatrixCovid3);
+	modelMatrixCovid3Body = glm::scale(modelMatrixCovid3Body, glm::vec3(0.015, 0.015, 0.015));
+	CovidModelAnimate3.setAnimationIndex(0);
+	//if (DisappearModelCovid1) {
+		CovidModelAnimate3.render(modelMatrixCovid3Body);
+	//}
+
+	//Covid4
+	modelMatrixCovid4[3][1] = terrain.getHeightTerrain(modelMatrixCovid4[3][0], modelMatrixCovid4[3][2]);
+	glm::mat4 modelMatrixCovid4Body = glm::mat4(modelMatrixCovid4);
+	modelMatrixCovid4Body = glm::scale(modelMatrixCovid4Body, glm::vec3(0.015, 0.015, 0.015));
+	CovidModelAnimate4.setAnimationIndex(0);
+	//if (DisappearModelCovid1) {
+		CovidModelAnimate4.render(modelMatrixCovid4Body);
+	//}
+	//Cubrebocas
 	modelMatrixCubrebocas[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas[3][0], modelMatrixCubrebocas[3][2]);
 	glm::mat4 modelMatrixCubreBody = glm::mat4(modelMatrixCubrebocas);
-	modelMatrixCubreBody = glm::scale(modelMatrixCubreBody, glm::vec3(0.02, 0.02, 0.02));
+	modelMatrixCubreBody = glm::scale(modelMatrixCubreBody, glm::vec3(0.015, 0.015, 0.015));
 	CubreBocasModelAnimate.setAnimationIndex(0);
 	if (DisappearModelCubreBocas1) {
 		CubreBocasModelAnimate.render(modelMatrixCubreBody);
 	}
+	//Cubrebocas2
+	modelMatrixCubrebocas2[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas2[3][0], modelMatrixCubrebocas2[3][2]);
+	glm::mat4 modelMatrixCubreBody2 = glm::mat4(modelMatrixCubrebocas2);
+	modelMatrixCubreBody2 = glm::scale(modelMatrixCubreBody2, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate2.setAnimationIndex(0);
+	if (DisappearModelCubreBocas2) {
+		CubreBocasModelAnimate2.render(modelMatrixCubreBody2);
+	}
+	//Cubrebocas3
+	modelMatrixCubrebocas3[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas3[3][0], modelMatrixCubrebocas3[3][2]);
+	glm::mat4 modelMatrixCubreBody3 = glm::mat4(modelMatrixCubrebocas3);
+	modelMatrixCubreBody3 = glm::scale(modelMatrixCubreBody3, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate3.setAnimationIndex(0);
+	if (DisappearModelCubreBocas3) {
+		CubreBocasModelAnimate3.render(modelMatrixCubreBody3);
+	}
+	//Cubrebocas4
+	modelMatrixCubrebocas4[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas4[3][0], modelMatrixCubrebocas4[3][2]);
+	glm::mat4 modelMatrixCubreBody4 = glm::mat4(modelMatrixCubrebocas4);
+	modelMatrixCubreBody4 = glm::scale(modelMatrixCubreBody4, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate4.setAnimationIndex(0);
+	if (DisappearModelCubreBocas4) {
+		CubreBocasModelAnimate4.render(modelMatrixCubreBody4);
+	}
+	//Cubrebocas5
+	modelMatrixCubrebocas5[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas5[3][0], modelMatrixCubrebocas5[3][2]);
+	glm::mat4 modelMatrixCubreBody5 = glm::mat4(modelMatrixCubrebocas5);
+	modelMatrixCubreBody5 = glm::scale(modelMatrixCubreBody5, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate5.setAnimationIndex(0);
+	if (DisappearModelCubreBocas5) {
+		CubreBocasModelAnimate5.render(modelMatrixCubreBody5);
+	}
+	//Cubrebocas6
+	modelMatrixCubrebocas6[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas6[3][0], modelMatrixCubrebocas6[3][2]);
+	glm::mat4 modelMatrixCubreBody6 = glm::mat4(modelMatrixCubrebocas6);
+	modelMatrixCubreBody6 = glm::scale(modelMatrixCubreBody6, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate6.setAnimationIndex(0);
+	if (DisappearModelCubreBocas6) {
+		CubreBocasModelAnimate6.render(modelMatrixCubreBody6);
+	}
+	//Cubrebocas7
+	modelMatrixCubrebocas7[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas7[3][0], modelMatrixCubrebocas7[3][2]);
+	glm::mat4 modelMatrixCubreBody7 = glm::mat4(modelMatrixCubrebocas7);
+	modelMatrixCubreBody7 = glm::scale(modelMatrixCubreBody7, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate7.setAnimationIndex(0);
+	if (DisappearModelCubreBocas7) {
+		CubreBocasModelAnimate7.render(modelMatrixCubreBody7);
+	}
+	//Cubrebocas8
+	modelMatrixCubrebocas8[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas8[3][0], modelMatrixCubrebocas8[3][2]);
+	glm::mat4 modelMatrixCubreBody8 = glm::mat4(modelMatrixCubrebocas8);
+	modelMatrixCubreBody8 = glm::scale(modelMatrixCubreBody8, glm::vec3(0.015, 0.015, 0.015));
+	CubreBocasModelAnimate8.setAnimationIndex(0);
+	if (DisappearModelCubreBocas8) {
+		CubreBocasModelAnimate8.render(modelMatrixCubreBody8);
+	}
+
+	
 
 	/**********
 	 * Update the position with alpha objects
