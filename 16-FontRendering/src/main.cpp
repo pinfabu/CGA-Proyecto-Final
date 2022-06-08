@@ -1446,16 +1446,9 @@ void applicationLoop() {
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
 			glm::vec3(0, 1, 0));*/
-			//Ubicación Osmosis
-<<<<<<< HEAD
+	//Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(30.0f, 0.0f, -2.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f), glm::vec3(0, 1, 0));
-=======
-	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-		glm::vec3(0.0f, 0.0f, -2.0f));
-	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
-		glm::vec3(0, 1, 0));
->>>>>>> b3c4eb70e8316479dc2c40eeeb58d42718da1a0e
 
 	//Covid
 	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(15.0f, -20.5f, -20.0f));
