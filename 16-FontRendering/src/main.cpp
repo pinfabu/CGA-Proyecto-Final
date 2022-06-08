@@ -71,20 +71,26 @@ const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
 GLFWwindow* window;
 //Desaparecer modelo
-float DisappearModelCubreBocas1 = true;
-float DisappearModelCubreBocas2 = true;
-float DisappearModelCubreBocas3 = true;
-float DisappearModelCubreBocas4 = true;
-float DisappearModelCubreBocas5 = true;
-float DisappearModelCubreBocas6 = true;
-float DisappearModelCubreBocas7 = true;
-float DisappearModelCubreBocas8 = true;
+bool DisappearModelCubreBocas1 = true;
+bool DisappearModelCubreBocas2 = true;
+bool DisappearModelCubreBocas3 = true;
+bool DisappearModelCubreBocas4 = true;
+bool DisappearModelCubreBocas5 = true;
+bool DisappearModelCubreBocas6 = true;
+bool DisappearModelCubreBocas7 = true;
+bool DisappearModelCubreBocas8 = true;
 
-float DisappearModelCovid1 = true;
-float DisappearModelCovid2 = true;
-float DisappearModelCovid3 = true;
-float DisappearModelCovid4 = true;
-float DisappearModelCovid5 = true;
+bool DisappearModelCovid1 = true;
+bool DisappearModelCovid2 = true;
+bool DisappearModelCovid3 = true;
+bool DisappearModelCovid4 = true;
+bool DisappearModelCovid5 = true;
+
+bool toqueCovid = true;
+bool toqueCovid2 = true;
+bool toqueCovid3 = true;
+bool toqueCovid4 = true;
+bool toqueCovid5 = true;
 
 Shader shader;
 //Shader con skybox
@@ -118,8 +124,8 @@ ShadowBox* shadowBox;
 // Models complex instances
 //Model modelRock;
 // Lamps
-//Model modelLamp1;
-//Model modelLamp2;
+Model modelLamp1;
+Model modelLamp2;
 //Model modelLampPost2;
 // Hierba
 Model modelGrass;
@@ -589,11 +595,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.setPosition(glm::vec3(100, 0, 100));
 
 	//Lamp models
-	/*modelLamp1.loadModel("../models/Street-Lamp-Black/objLamp.obj");
+	modelLamp1.loadModel("../models/Lamps/PointLamp/PointLamp.fbx");
 	modelLamp1.setShader(&shaderMulLighting);
-	modelLamp2.loadModel("../models/Street_Light/Lamp.obj");
+	modelLamp2.loadModel("../models/Lamps/SpotLamp/SpotLamp2.fbx");
 	modelLamp2.setShader(&shaderMulLighting);
-	modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
+	/*modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
 	modelLampPost2.setShader(&shaderMulLighting);*/
 
 	//Grass
@@ -1230,9 +1236,9 @@ void destroy() {
 
 	// Custom objects Delete
 	//modelRock.destroy();
-	/*modelLamp1.destroy();
+	modelLamp1.destroy();
 	modelLamp2.destroy();
-	modelLampPost2.destroy();*/
+	//modelLampPost2.destroy();
 	modelGrass.destroy();
 	modelFountain.destroy();
 
@@ -1322,8 +1328,8 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 	//Camara en tercera persona
-	/*distanceFromTarget -= yoffset;
-	camera->setDistanceFromTarget(distanceFromTarget);*/
+	distanceFromTarget -= yoffset;
+	camera->setDistanceFromTarget(distanceFromTarget);
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod) {
@@ -2040,7 +2046,7 @@ void applicationLoop() {
 		//Covid 2
 		AbstractModel::SBB CovidCollider2;
 		glm::mat4 modelMatrixColliderCovid2 = glm::mat4(modelMatrixCovid2);
-		if (DisappearModelCovid1) {
+		if (DisappearModelCovid2) {
 			modelMatrixColliderCovid2 = glm::scale(modelMatrixColliderCovid2,
 				glm::vec3(0.001, 0.001, 0.001));
 			modelMatrixColliderCovid2 = glm::translate(modelMatrixColliderCovid2,
@@ -2067,7 +2073,7 @@ void applicationLoop() {
 		//Covid 3
 		AbstractModel::SBB CovidCollider3;
 		glm::mat4 modelMatrixColliderCovid3 = glm::mat4(modelMatrixCovid3);
-		if (DisappearModelCovid1) {
+		if (DisappearModelCovid3) {
 			modelMatrixColliderCovid3 = glm::scale(modelMatrixColliderCovid3,
 				glm::vec3(0.001, 0.001, 0.001));
 			modelMatrixColliderCovid3 = glm::translate(modelMatrixColliderCovid3,
@@ -2094,7 +2100,7 @@ void applicationLoop() {
 		//Covid 4
 		AbstractModel::SBB CovidCollider4;
 		glm::mat4 modelMatrixColliderCovid4 = glm::mat4(modelMatrixCovid4);
-		if (DisappearModelCovid1) {
+		if (DisappearModelCovid4) {
 			modelMatrixColliderCovid4 = glm::scale(modelMatrixColliderCovid4,
 				glm::vec3(0.001, 0.001, 0.001));
 			modelMatrixColliderCovid4 = glm::translate(modelMatrixColliderCovid4,
@@ -2935,42 +2941,57 @@ void applicationLoop() {
 						isCollision);
 					if (it->first == "Covid") {
 						if (jt->first == "Osmosis") {
-							vida -= 1;
-							DisappearModelCovid1 = !DisappearModelCovid1;
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
+							if (toqueCovid){
+								vida -= 1;
+								DisappearModelCovid1 = !DisappearModelCovid1;
+								std::cout << "Colision " << it->first << " with "
+									<< jt->first << std::endl;
+								toqueCovid = false;
+							}
 						}
 					}
 					if (it->first == "Covid2") {
 						if (jt->first == "Osmosis") {
-							vida -= 1;
-							DisappearModelCovid2 = !DisappearModelCovid2;
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
+							if (toqueCovid2) {
+								vida -= 1;
+								DisappearModelCovid2 = !DisappearModelCovid2;
+								std::cout << "Colision " << it->first << " with "
+									<< jt->first << std::endl;
+								toqueCovid2 = false;
+							}
 						}
 					}
 					if (it->first == "Covid3") {
 						if (jt->first == "Osmosis") {
-							vida -= 1;
-							DisappearModelCovid3 = !DisappearModelCovid3;
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
+							if (toqueCovid3) {
+								vida -= 1;
+								DisappearModelCovid3 = !DisappearModelCovid3;
+								std::cout << "Colision " << it->first << " with "
+									<< jt->first << std::endl;
+								toqueCovid3 = false;
+							}
 						}
 					}
 					if (it->first == "Covid4") {
 						if (jt->first == "Osmosis") {
-							vida -= 1;
-							DisappearModelCovid4 = !DisappearModelCovid4;
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
+							if (toqueCovid4) {
+								vida -= 1;
+								DisappearModelCovid4 = !DisappearModelCovid4;
+								std::cout << "Colision " << it->first << " with "
+									<< jt->first << std::endl;
+								toqueCovid4 = false;
+							}
 						}
 					}
 					if (it->first == "Covid5") {
 						if (jt->first == "Osmosis") {
-							vida -= 1;
-							DisappearModelCovid5 = !DisappearModelCovid5;
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
+							if (toqueCovid5) {
+								vida -= 1;
+								DisappearModelCovid5 = !DisappearModelCovid5;
+								std::cout << "Colision " << it->first << " with "
+									<< jt->first << std::endl;
+								toqueCovid5 = false;
+							}
 						}
 					}
 				}
@@ -3095,9 +3116,9 @@ void prepareScene() {
 	terrain.setShader(&shaderTerrain);
 
 	//Lamp models
-	/*modelLamp1.setShader(&shaderMulLighting);
+	modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.setShader(&shaderMulLighting);
-	modelLampPost2.setShader(&shaderMulLighting);*/
+	//modelLampPost2.setShader(&shaderMulLighting);
 
 	//Grass
 	modelGrass.setShader(&shaderMulLighting);
@@ -3143,9 +3164,9 @@ void prepareDepthScene() {
 	terrain.setShader(&shaderDepth);
 
 	//Lamp models
-	/*modelLamp1.setShader(&shaderDepth);
+	modelLamp1.setShader(&shaderDepth);
 	modelLamp2.setShader(&shaderDepth);
-	modelLampPost2.setShader(&shaderDepth);*/
+	//modelLampPost2.setShader(&shaderDepth);
 
 	//Grass
 	modelGrass.setShader(&shaderDepth);
@@ -3246,6 +3267,15 @@ void renderScene(bool renderParticles) {
 		modelLampPost2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLampPost2.render();
 	}*/
+	glm::mat4 modelMatrixBodyLamp1 = glm::mat4(1.0);
+	modelMatrixBodyLamp1 = glm::translate(modelMatrixBodyLamp1,glm::vec3(69.0f, 10.0f, -13.0f));
+	modelMatrixBodyLamp1 = glm::rotate(modelMatrixBodyLamp1, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	modelLamp1.render(modelMatrixBodyLamp1);
+
+	glm::mat4 modelMatrixBodyLamp2 = glm::mat4(1.0);
+	modelMatrixBodyLamp2 = glm::translate(modelMatrixBodyLamp2, glm::vec3(69.0f, 10.0f, -19.0f));
+	modelMatrixBodyLamp2 = glm::rotate(modelMatrixBodyLamp2, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	modelLamp2.render(modelMatrixBodyLamp2);
 
 	// Grass
 	glDisable(GL_CULL_FACE);
