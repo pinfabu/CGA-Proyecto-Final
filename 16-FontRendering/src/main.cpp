@@ -219,7 +219,6 @@ int lastMousePosX, offsetX = 0;
 int lastMousePosY, offsetY = 0;
 
 // Model matrix definitions
-glm::mat4 matrixModelRock = glm::mat4(1.0);
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
@@ -1583,8 +1582,6 @@ void applicationLoop() {
 	int numberAdvanceCovid4 = 0;
 	int maxAdvanceCovid4 = 0.0;
 
-	matrixModelRock = glm::translate(matrixModelRock,
-		glm::vec3(-3.0, 0.0, 2.0));
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
@@ -1592,24 +1589,24 @@ void applicationLoop() {
 
 	//Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-		glm::vec3(69.0f, 0.0f, -13.0f));
+		glm::vec3(0.0f, 0.0f, 0.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
 		glm::vec3(0, 1, 0));
 
 	//Covid
-	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-69.0f, 0.1684f, 28.0f));
-	modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-69.0f, 0.1684f, -39.0f));
-	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 28.0f));
-	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -39.0f));
+	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-69.0f, 0.1684f, 35.0f));//Covid esquina inferior izquierda
+	modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-69.0f, 0.1684f, -32.0f));//Covid esquina superior izquierda
+	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 35.0f));//Covid esquina inferior derecha
+	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -32.0f));//Covid esquina superior derecha
 	//Cubrebocas
-	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(0.0f, 0.0f, -39.0f));//Enmedio arriba
-	modelMatrixCubrebocas2 = glm::translate(modelMatrixCubrebocas2, glm::vec3(0.0f, 0.0f, 28.0f));//Enmedio abajo
-	modelMatrixCubrebocas3 = glm::translate(modelMatrixCubrebocas3, glm::vec3(-40.0f, 0.0f, -5.0f));//Segundo lado izquierdo enmedio
-	modelMatrixCubrebocas4 = glm::translate(modelMatrixCubrebocas4, glm::vec3(40.0f, 0.0f, -5.0f));//Segundo lado derecho enmedio
-	modelMatrixCubrebocas5 = glm::translate(modelMatrixCubrebocas5, glm::vec3(-69.0f, 0.0f, -6.0f));//Primero lado izquierdo enmedio
-	modelMatrixCubrebocas6 = glm::translate(modelMatrixCubrebocas6, glm::vec3(69.0f, 0.0f, -6.0f));//Último lado derecho enmedio
-	modelMatrixCubrebocas7 = glm::translate(modelMatrixCubrebocas7, glm::vec3(0.0f, 0.0f, -22.0f));//Segundo enmedio arriba
-	modelMatrixCubrebocas8 = glm::translate(modelMatrixCubrebocas8, glm::vec3(0.0f, 0.0f, 11.5f));//Segundo enmedio abajo
+	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(0.0f, 0.0f, -32.0f));//Enmedio arriba
+	modelMatrixCubrebocas2 = glm::translate(modelMatrixCubrebocas2, glm::vec3(0.0f, 0.0f, 35.0f));//Enmedio abajo
+	modelMatrixCubrebocas3 = glm::translate(modelMatrixCubrebocas3, glm::vec3(-40.0f, 0.0f, 2.0f));//Segundo lado izquierdo 
+	modelMatrixCubrebocas4 = glm::translate(modelMatrixCubrebocas4, glm::vec3(40.0f, 0.0f, 2.0f));//Segundo lado derecho 
+	modelMatrixCubrebocas5 = glm::translate(modelMatrixCubrebocas5, glm::vec3(-69.0f, 0.0f, 1.0f));//Primero lado izquierdo 
+	modelMatrixCubrebocas6 = glm::translate(modelMatrixCubrebocas6, glm::vec3(69.0f, 0.0f, 1.0f));//Primero lado derecho 
+	modelMatrixCubrebocas7 = glm::translate(modelMatrixCubrebocas7, glm::vec3(12.0f, 0.0f, 1.0f));//Enmedio
+	modelMatrixCubrebocas8 = glm::translate(modelMatrixCubrebocas8, glm::vec3(0.0f, 0.0f, 18.5f));//Segundo enmedio abajo
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,
 		glm::vec3(5.0, 0.0, -40.0));
@@ -2128,29 +2125,29 @@ void applicationLoop() {
 		switch (stateCovid1)
 		{
 		case 0:
-			if (numberAdvanceCovid1 == 0)
+			if (numberAdvanceCovid1 == 0)//Derecha
 			{
 				maxAdvanceCovid1 = 24.0f;
 			}
-			else if (numberAdvanceCovid1 == 1)
+			else if (numberAdvanceCovid1 == 1)//Mov Abajo
 			{
-				maxAdvanceCovid1 = 16.0f;
+				maxAdvanceCovid1 = 17.0f;
 			}
-			else if (numberAdvanceCovid1 == 2)
+			else if (numberAdvanceCovid1 == 2)//Mov Izq
 			{
 				maxAdvanceCovid1 = 7.0f;
 			}
-			else if (numberAdvanceCovid1 == 3)
+			else if (numberAdvanceCovid1 == 3)//Mov Abajo2
 			{
-				maxAdvanceCovid1 = 16.0f;
+				maxAdvanceCovid1 = 13.0f;
 			}
-			else if (numberAdvanceCovid1 == 4)
+			else if (numberAdvanceCovid1 == 4)//Mov Izq2
 			{
-				maxAdvanceCovid1 = 16.0f;
+				maxAdvanceCovid1 = 17.0f;
 			}
-			else if (numberAdvanceCovid1 == 5)
+			else if (numberAdvanceCovid1 == 5)//Mov Arriba
 			{
-				maxAdvanceCovid1 = 33.0f;
+				maxAdvanceCovid1 = 30.0f;
 			}
 
 			stateCovid1 = 1;
@@ -2198,21 +2195,21 @@ void applicationLoop() {
 			break;
 		}
 
-		//Máquina covid esquina inferior izquierda
+		////Máquina covid esquina inferior izquierda
 		switch (stateCovid2)
 		{
 		case 0:
 			if (numberAdvanceCovid2 == 0)//Arriba
 			{
-				maxAdvanceCovid2 = 31.0f;
+				maxAdvanceCovid2 = 30.0f;
 			}
 			else if (numberAdvanceCovid2 == 1)//Der
 			{
-				maxAdvanceCovid2 = 16.0f;
+				maxAdvanceCovid2 = 17.0f;
 			}
 			else if (numberAdvanceCovid2 == 2)//Abajo
 			{
-				maxAdvanceCovid2 = 17.0f;
+				maxAdvanceCovid2 = 13.0f;
 			}
 			else if (numberAdvanceCovid2 == 3)//Der
 			{
@@ -2220,11 +2217,11 @@ void applicationLoop() {
 			}
 			else if (numberAdvanceCovid2 == 4)//Abajo2
 			{
-				maxAdvanceCovid2 = 16.0f;
+				maxAdvanceCovid2 = 17.0f;
 			}
 			else if (numberAdvanceCovid2 == 5)//Izq
 			{
-				maxAdvanceCovid2 = 23.0f;
+				maxAdvanceCovid2 = 24.0f;
 			}
 
 			stateCovid2 = 1;
@@ -2282,7 +2279,7 @@ void applicationLoop() {
 			}
 			else if (numberAdvanceCovid3 == 1)//Abajo
 			{
-				maxAdvanceCovid3 = 16.0f;
+				maxAdvanceCovid3 = 17.0f;
 			}
 			else if (numberAdvanceCovid3 == 2)//Der
 			{
@@ -2290,15 +2287,15 @@ void applicationLoop() {
 			}
 			else if (numberAdvanceCovid3 == 3)//Abajo2
 			{
-				maxAdvanceCovid3 = 16.0f;
+				maxAdvanceCovid3 = 13.0f;
 			}
 			else if (numberAdvanceCovid3 == 4)//Der2
 			{
-				maxAdvanceCovid3 = 17.3f;
+				maxAdvanceCovid3 = 17.0f;
 			}
 			else if (numberAdvanceCovid3 == 5)//Arriba
 			{
-				maxAdvanceCovid3 = 33.5f;
+				maxAdvanceCovid3 = 30.0f;
 			}
 
 			stateCovid3 = 1;
@@ -2352,15 +2349,15 @@ void applicationLoop() {
 		case 0:
 			if (numberAdvanceCovid4 == 0)//Arriba
 			{
-				maxAdvanceCovid4 = 31.0f;
+				maxAdvanceCovid4 = 30.0f;
 			}
 			else if (numberAdvanceCovid4 == 1)//Izq
 			{
-				maxAdvanceCovid4 = 16.0f;
+				maxAdvanceCovid4 = 17.0f;
 			}
 			else if (numberAdvanceCovid4 == 2)//Abajo
 			{
-				maxAdvanceCovid4 = 17.0f;
+				maxAdvanceCovid4 = 13.0f;
 			}
 			else if (numberAdvanceCovid4 == 3)//Izq2
 			{
@@ -2368,11 +2365,11 @@ void applicationLoop() {
 			}
 			else if (numberAdvanceCovid4 == 4)//Abajo2
 			{
-				maxAdvanceCovid4 = 16.0f;
+				maxAdvanceCovid4 = 17.0f;
 			}
 			else if (numberAdvanceCovid4 == 5)//Der
 			{
-				maxAdvanceCovid4 = 23.0f;
+				maxAdvanceCovid4 = 24.0f;
 			}
 
 			stateCovid4 = 1;
