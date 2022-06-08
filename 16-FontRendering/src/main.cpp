@@ -110,13 +110,46 @@ Model modelFountain;
 // Model animate instance
 /*// Mayow
 Model mayowModelAnimate;*/
-//Osmosis
+// Osmosis
 Model OsmosisModelAnimate;
-Model MapTestModel;
-//Covid
+// Covid
 Model CovidModelAnimate;
-//Cubrebocas
+// Cubrebocas
 Model CubreBocasModelAnimate;
+// Map
+Model modelMapTest;
+//Model modelMapRef;
+Model mapArray[27];
+std::string mapDirs[27] = {
+	"../models/Map/L_HortBackLeft.obj",		//0
+	"../models/Map/L_HortBackRight.obj",	//1
+	"../models/Map/L_HortFrontLeft.obj",	//2
+	"../models/Map/L_HortFrontRight.obj",	//3
+	"../models/Map/L_VertBackLeft.obj",		//4
+	"../models/Map/L_VertBackRight.obj",	//5
+	"../models/Map/L_VertFrontLeft.obj",
+	"../models/Map/L_VertFrontRight.obj",
+	"../models/Map/Small_BackLeft.obj",
+	"../models/Map/Small_BackRight.obj",
+	"../models/Map/Small_FrontLeft.obj",	//10
+	"../models/Map/Small_FrontRight.obj",
+	"../models/Map/Square_FrontLeft.obj",
+	"../models/Map/Square_FrontRight.obj",
+	"../models/Map/Square_Left.obj",
+	"../models/Map/Square_Middle.obj",		//15
+	"../models/Map/Square_Right.obj",
+	"../models/Map/Wall_InBackLeft.obj",
+	"../models/Map/Wall_InBackMiddle.obj",
+	"../models/Map/Wall_InBackRight.obj",
+	"../models/Map/Wall_InFrontLeft.obj",	//20
+	"../models/Map/Wall_InFrontMiddle.obj",
+	"../models/Map/Wall_InFrontRight.obj",
+	"../models/Map/Wall_OutBack.obj",
+	"../models/Map/Wall_OutFront.obj",
+	"../models/Map/Wall_OutLeft.obj",		//25
+	"../models/Map/Wall_OutRight.obj"
+};
+
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap.png");
 
@@ -153,9 +186,11 @@ int lastMousePosY, offsetY = 0;
 glm::mat4 matrixModelRock = glm::mat4(1.0);
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
-glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas = glm::mat4(1.0f);
+glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
+//glm::mat4 modelMatrixMapRef = glm::mat4(1.0f);
+glm::mat4 modelMatrixMap = glm::mat4(1.0f);
 glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 
 int animationIndex = 1;
@@ -537,8 +572,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	OsmosisModelAnimate.loadModel("../models/Osmosis/OsmosisPose.fbx");
 	OsmosisModelAnimate.setShader(&shaderMulLighting);
 
-	MapTestModel.loadModel("../models/Map/Map.obj");
-	MapTestModel.setShader(&shaderMulLighting);
+	//Map
+	modelMapTest.loadModel("../models/Map/Map.obj");
+	modelMapTest.setShader(&shaderMulLighting);
+
+	//modelMapRef.loadModel("../models/Map/Reference.obj");
+	//modelMapRef.setShader(&shaderMulLighting);
+
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].loadModel(mapDirs[i]);
+		mapArray[i].setShader(&shaderMulLighting);
+	}
 
 	//Covid
 	CovidModelAnimate.loadModel("../models/Covid/Covid.fbx");
@@ -1124,9 +1169,15 @@ void destroy() {
 	// Custom objects animate
 	//mayowModelAnimate.destroy();
 	OsmosisModelAnimate.destroy();
-	MapTestModel.destroy();
 	CovidModelAnimate.destroy();
 	CubreBocasModelAnimate.destroy();
+	modelMapTest.destroy();
+	//modelMapRef.destroy();
+	//modelMapSquareFL.destroy();
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].destroy();
+	}
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1347,7 +1398,8 @@ void applicationLoop() {
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
 			glm::vec3(0, 1, 0));*/
-			//Ubicación Osmosis
+
+	//Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 		glm::vec3(0.0f, 0.0f, -2.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
@@ -1356,7 +1408,7 @@ void applicationLoop() {
 	//Covid
 	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(15.0f, -20.5f, -20.0f));
 
-	//Cubrebocas
+	//Cubrebocassource
 	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(5.0f, 0.0f, 0.0f));
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,
@@ -1365,6 +1417,10 @@ void applicationLoop() {
 		modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
 	modelMatrixFountain = glm::scale(modelMatrixFountain,
 		glm::vec3(10.0f, 10.0f, 10.0f));
+
+	//Map
+	//modelMatrixMapSquareFL = glm::translate(modelMatrixMapSquareFL,
+	//	glm::vec3(-15.1655f, 16.93653f, 4.13053f));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1789,8 +1845,6 @@ void applicationLoop() {
 
 		//Collider Cubrebocas
 		AbstractModel::OBB CubreCollider;
-
-
 		if (DisappearModelCubreBocas1) {
 			glm::mat4 modelmatrixColliderCubre = glm::mat4(modelMatrixCubrebocas);
 			modelmatrixColliderCubre = glm::rotate(modelmatrixColliderCubre, glm::radians(90.0f), glm::vec3(0, 1, 0));
@@ -1834,6 +1888,25 @@ void applicationLoop() {
 		OsmosisCollider.e = OsmosisModelAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
 		OsmosisCollider.c = glm::vec3(modelmatrixColliderOsmosis[3]);
 		addOrUpdateColliders(collidersOBB, "Osmosis", OsmosisCollider, modelMatrixOsmosis);
+
+		// Map colliders
+		//AbstractModel::OBB mapColliders[27];
+		for (unsigned int i = 0; i < 27; i++)
+		{
+			AbstractModel::OBB mapCollider;
+			glm::mat4 modelMatrixColliderMap = glm::mat4(1.0f);
+			addOrUpdateColliders(collidersOBB, "map-" + std::to_string(i),
+				mapCollider, modelMatrixColliderMap);
+			mapCollider.u = glm::quat_cast(modelMatrixColliderMap);
+			//modelMatrixColliderMap = glm::scale(modelMatrixColliderMap,
+			//	glm::vec3(1.1, 1.1, 1.1));
+			modelMatrixColliderMap = glm::translate(modelMatrixColliderMap,
+				mapArray[i].getObb().c);
+			mapCollider.c = glm::vec3(modelMatrixColliderMap[3]);
+			mapCollider.e = mapArray[i].getObb().e;
+			std::get<0>(collidersOBB.find("map-" + std::to_string(i))->second) =
+				mapCollider;
+		}
 
 		// Lamps1 colliders
 		for (int i = 0; i < lamp1Position.size(); i++) {
@@ -1955,7 +2028,7 @@ void applicationLoop() {
 		  * Test Colisions
 		  *******************************************/
 
-		  //Box  vs Box
+		//Box  vs Box
 		for (std::map<std::string,
 			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersOBB.begin(); it != collidersOBB.end(); it++) {
@@ -1965,7 +2038,9 @@ void applicationLoop() {
 				collidersOBB.begin(); jt != collidersOBB.end(); jt++) {
 				if (it != jt
 					&& testOBBOBB(std::get<0>(it->second),
-						std::get<0>(jt->second))) {
+						std::get<0>(jt->second))
+					&& !(it->first.substr(0, 3) == "map"
+					&& jt->first.substr(0, 3) == "map")) {
 					std::cout << "Colision " << it->first << " with "
 						<< jt->first << std::endl;
 					isCollision = true;
@@ -1980,6 +2055,7 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 				isCollision);
 		}
+
 		//Sphere vs Sphere
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
@@ -2152,14 +2228,20 @@ void prepareScene() {
 	//Osmosis
 	OsmosisModelAnimate.setShader(&shaderMulLighting);
 
-	//Osmosis
-	MapTestModel.setShader(&shaderMulLighting);
-
-	//Covdi
+	//Covid
 	CovidModelAnimate.setShader(&shaderMulLighting);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.setShader(&shaderMulLighting);
+
+	//Map
+	modelMapTest.setShader(&shaderMulLighting);
+	//modelMapRef.setShader(&shaderMulLighting);
+	//modelMapSquareFL.setShader(&shaderMulLighting);
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].setShader(&shaderMulLighting);
+	}
 }
 
 void prepareDepthScene() {
@@ -2184,13 +2266,20 @@ void prepareDepthScene() {
 	//Osmosis
 	OsmosisModelAnimate.setShader(&shaderDepth);
 
-	MapTestModel.setShader(&shaderDepth);
-
 	//Covid
 	CovidModelAnimate.setShader(&shaderDepth);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.setShader(&shaderDepth);
+
+	//Map
+	modelMapTest.setShader(&shaderDepth);
+	//modelMapRef.setShader(&shaderDepth);
+	//modelMapSquareFL.setShader(&shaderDepth);
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].setShader(&shaderDepth);
+	}
 }
 
 void renderScene(bool renderParticles) {
@@ -2308,12 +2397,26 @@ void renderScene(bool renderParticles) {
 	OsmosisModelAnimate.setAnimationIndex(0);
 	OsmosisModelAnimate.render(modelMatrixOsmosisBody);
 
-	modelMatrixMapTest[3][1] = terrain.getHeightTerrain(modelMatrixMapTest[3][0], modelMatrixMapTest[3][2]) + 0.2f;
-	glm::mat4 modelMatrixMapTestMain = glm::mat4(modelMatrixMapTest);
-	//modelMatrixMapTestMain = glm::scale(modelMatrixMapTestMain, glm::vec3(0.004, 0.004, 0.004));
-	//MapTestModel.setAnimationIndex(0);
-	MapTestModel.render(modelMatrixMapTestMain);
 
+	// Map
+	modelMatrixMapTest[3][1] = terrain.getHeightTerrain(modelMatrixMapTest[3][0], modelMatrixMapTest[3][2]) + 0.2f;
+	//glm::mat4 modelMatrixMapTestMain = glm::mat4(modelMatrixMapTest);
+	//modelMapTest.render(modelMatrixMapTest);
+
+	//modelMatrixMapRef[3][1] = terrain.getHeightTerrain(modelMatrixMapRef[3][0], modelMatrixMapRef[3][2]) + 1.0f;
+	//modelMapRef.render(modelMatrixMapRef);
+
+	//modelMatrixMapSquareFL[3][1] = terrain.getHeightTerrain(modelMatrixMapSquareFL[3][0], modelMatrixMapSquareFL[3][2]);
+	//glm::mat4 modelMatrixMapSquareFLMain = glm::mat4(modelMatrixMapSquareFL);
+	//modelMapSquareFL.render(modelMatrixMapSquareFL);
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		modelMatrixMap[3][1] = terrain.getHeightTerrain(modelMatrixMap[3][0], modelMatrixMap[3][2]);
+		mapArray[i].render(modelMatrixMap);
+	}
+
+
+	// Covid
 	modelMatrixCovid[3][1] = terrain.getHeightTerrain(modelMatrixCovid[3][0], modelMatrixCovid[3][2]);
 	glm::mat4 modelMatrixCovidBody = glm::mat4(modelMatrixCovid);
 	modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.02, 0.02, 0.02));
