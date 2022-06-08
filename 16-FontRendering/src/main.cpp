@@ -60,8 +60,12 @@
 int vida = 3;
 int balas = 0;
 std::string cadena = "";
+std::string cadena1 = "";
+std::string cadena2 = "Recarga";
+std::string cadena3 = "";
 int screenWidth;
 int screenHeight;
+bool recarga = false;
 
 const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
@@ -94,8 +98,10 @@ Shader shaderViewDepth;
 //Shader para dibujar el buffer de profunidad
 Shader shaderDepth;
 
+//std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromTarget = 20.0;
+float distanceFromTarget = 5;
+bool banderaDisparo = true;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -118,10 +124,9 @@ Model modelFountain;
 // Model animate instance
 /*// Mayow
 Model mayowModelAnimate;*/
-//Osmosis
+// Osmosis
 Model OsmosisModelAnimate;
-Model MapTestModel;
-//Covid
+// Covid
 Model CovidModelAnimate;
 Model CovidModelAnimate2;
 Model CovidModelAnimate3;
@@ -135,8 +140,42 @@ Model CubreBocasModelAnimate5;
 Model CubreBocasModelAnimate6;
 Model CubreBocasModelAnimate7;
 Model CubreBocasModelAnimate8;
+// Map
+Model modelMapTest;
+//Model modelMapRef;
+Model mapArray[27];
+std::string mapDirs[27] = {
+	"../models/Map/L_HortBackLeft.obj",		//0
+	"../models/Map/L_HortBackRight.obj",	//1
+	"../models/Map/L_HortFrontLeft.obj",	//2
+	"../models/Map/L_HortFrontRight.obj",	//3
+	"../models/Map/L_VertBackLeft.obj",		//4
+	"../models/Map/L_VertBackRight.obj",	//5
+	"../models/Map/L_VertFrontLeft.obj",
+	"../models/Map/L_VertFrontRight.obj",
+	"../models/Map/Small_BackLeft.obj",
+	"../models/Map/Small_BackRight.obj",
+	"../models/Map/Small_FrontLeft.obj",	//10
+	"../models/Map/Small_FrontRight.obj",
+	"../models/Map/Square_FrontLeft.obj",
+	"../models/Map/Square_FrontRight.obj",
+	"../models/Map/Square_Left.obj",
+	"../models/Map/Square_Middle.obj",		//15
+	"../models/Map/Square_Right.obj",
+	"../models/Map/Wall_InBackLeft.obj",
+	"../models/Map/Wall_InBackMiddle.obj",
+	"../models/Map/Wall_InBackRight.obj",
+	"../models/Map/Wall_InFrontLeft.obj",	//20
+	"../models/Map/Wall_InFrontMiddle.obj",
+	"../models/Map/Wall_InFrontRight.obj",
+	"../models/Map/Wall_OutBack.obj",
+	"../models/Map/Wall_OutFront.obj",
+	"../models/Map/Wall_OutLeft.obj",		//25
+	"../models/Map/Wall_OutRight.obj"
+};
+
 // Terrain model instance
-Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap.png");
+Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap2.png");
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID,
 textureLandingPadID;
@@ -147,6 +186,8 @@ GLuint skyboxTextureID;
 
 // Modelo para el redener de texto
 FontTypeRendering::FontTypeRendering* modelText;
+FontTypeRendering::FontTypeRendering* modelText2;
+FontTypeRendering::FontTypeRendering* modelText3;
 
 GLenum types[6] = {
 GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -171,7 +212,6 @@ int lastMousePosY, offsetY = 0;
 glm::mat4 matrixModelRock = glm::mat4(1.0);
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
-glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid2 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid3 = glm::mat4(1.0f);
@@ -184,6 +224,9 @@ glm::mat4 modelMatrixCubrebocas5 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas6 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas7 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas8 = glm::mat4(1.0f);
+glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
+//glm::mat4 modelMatrixMapRef = glm::mat4(1.0f);
+glm::mat4 modelMatrixMap = glm::mat4(1.0f);
 glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 
 int animationIndex = 1;
@@ -562,11 +605,21 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	mayowModelAnimate.setShader(&shaderMulLighting);*/
 
 	//Osmosis
-	OsmosisModelAnimate.loadModel("../models/Osmosis/OsmosisPose.fbx");
+	OsmosisModelAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
 	OsmosisModelAnimate.setShader(&shaderMulLighting);
 
-	MapTestModel.loadModel("../models/Map/Map.obj");
-	MapTestModel.setShader(&shaderMulLighting);
+	//Map
+	modelMapTest.loadModel("../models/Map/Map.obj");
+	modelMapTest.setShader(&shaderMulLighting);
+
+	//modelMapRef.loadModel("../models/Map/Reference.obj");
+	//modelMapRef.setShader(&shaderMulLighting);
+
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].loadModel(mapDirs[i]);
+		mapArray[i].setShader(&shaderMulLighting);
+	}
 
 	//Covid
 	CovidModelAnimate.loadModel("../models/Covid/Covid.fbx");
@@ -596,6 +649,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	CubreBocasModelAnimate8.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
 	CubreBocasModelAnimate8.setShader(&shaderMulLighting);
 
+	//Camara en primera persona
+	//cameraFP->setPosition(glm::vec3(30.0f, 7.0f, -2.0f));
+
+	//Camara en tercera persona
 	camera->setPosition(glm::vec3(0.0, 5.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
 	camera->setSensitivity(1.0);
@@ -1135,6 +1192,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelText = new FontTypeRendering::FontTypeRendering(screenWidth,
 		screenHeight);
 	modelText->Initialize();
+	modelText2 = new FontTypeRendering::FontTypeRendering(screenWidth,
+		screenHeight);
+	modelText2->Initialize();
+	modelText3 = new FontTypeRendering::FontTypeRendering(screenWidth,
+		screenHeight);
+	modelText3->Initialize();
 }
 
 void destroy() {
@@ -1172,7 +1235,6 @@ void destroy() {
 	// Custom objects animate
 	//mayowModelAnimate.destroy();
 	OsmosisModelAnimate.destroy();
-	MapTestModel.destroy();
 	CovidModelAnimate.destroy();
 	CovidModelAnimate2.destroy();
 	CovidModelAnimate3.destroy();
@@ -1185,6 +1247,13 @@ void destroy() {
 	CubreBocasModelAnimate6.destroy();
 	CubreBocasModelAnimate7.destroy();
 	CubreBocasModelAnimate8.destroy();
+	modelMapTest.destroy();
+	//modelMapRef.destroy();
+	//modelMapSquareFL.destroy();
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].destroy();
+	}
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1248,8 +1317,9 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-	distanceFromTarget -= yoffset;
-	camera->setDistanceFromTarget(distanceFromTarget);
+	//Camara en tercera persona
+	/*distanceFromTarget -= yoffset;
+	camera->setDistanceFromTarget(distanceFromTarget);*/
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod) {
@@ -1275,46 +1345,130 @@ bool processInput(bool continueApplication) {
 	}
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
-		std::cout << "Esta presente el joystick" << std::endl;
+		//std::cout << "Esta presente el joystick" << std::endl;
 		int axesCount, buttonCount;
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-		std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
+		/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
 		std::cout << "Left Stick X axis: " << axes[0] << std::endl;
 		std::cout << "Left Stick Y axis: " << axes[1] << std::endl;
-		std::cout << "Left Trigger/L2: " << axes[2] << std::endl;
+		std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
 		std::cout << "Right Stick X axis: " << axes[3] << std::endl;
-		std::cout << "Right Stick Y axis: " << axes[4] << std::endl;
-		std::cout << "Right Trigger/R2: " << axes[5] << std::endl;
+		std::cout << "Right Stick Y axis: " << axes[2] << std::endl;
+		std::cout << "Right Trigger/RT: " << axes[5] << std::endl;*/
 
-		if (fabs(axes[1]) > 0.2) {
-			/*modelMatrixMayow = glm::translate(modelMatrixMayow,
-					glm::vec3(0, 0, -axes[1] * 0.1));*/
-			animationIndex = 0;
-		}
-		if (fabs(axes[0]) > 0.2) {
-			/*modelMatrixMayow = glm::rotate(modelMatrixMayow,
-					glm::radians(-axes[0] * 0.5f), glm::vec3(0, 1, 0));*/
-			animationIndex = 0;
+		//Mover Adelante Atras
+		if (fabs(axes[1]) != 0.0) {
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,	glm::vec3(0, 0, axes[1] * 0.2));
+			animationIndex = 1;
 		}
 
-		if (fabs(axes[3]) > 0.2) {
-			camera->mouseMoveCamera(axes[3], 0.0, deltaTime);
+		//Mover Izquierda Derecha
+		if (fabs(axes[0]) != 0.0) {
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(-axes[0] * 0.2,0,0));
+			animationIndex = 1;
 		}
-		if (fabs(axes[4]) > 0.2) {
+
+		//Girar Izquierda Derecha
+		if (fabs(axes[2]) != 0.0) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-axes[2] * 2), glm::vec3(0, 1, 0));
+			//camera->mouseMoveCamera(axes[2], 0, deltaTime);
+			animationIndex = 1;
+		}
+
+		if (axes[5] > 0) {
+			if (banderaDisparo) {
+				//aqui lo del disparo
+				std::cout << "Disparo" << std::endl;
+				if (balas > 0) {
+					balas -= 1;
+					banderaDisparo = false;
+					recarga = true;
+				}
+			}
+			animationIndex = 1;
+		}
+			
+		/*if (fabs(axes[3]) > 0.2) {
+			camera->mouseMoveCamera(0.0, axes[3], deltaTime);
+		}*/
+		/*if (fabs(axes[4]) > 0.2) {
 			camera->mouseMoveCamera(0.0, axes[4], deltaTime);
-		}
+		}*/
 
 		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
 			&buttonCount);
-		std::cout << "Número de botones disponibles :=>" << buttonCount
-			<< std::endl;
+		//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
 		if (buttons[0] == GLFW_PRESS)
-			std::cout << "Se presiona x" << std::endl;
+			std::cout << "Se presiona A" << std::endl;
+		if (buttons[1] == GLFW_PRESS)
+			std::cout << "Se presiona B" << std::endl;
+		if (buttons[2] == GLFW_PRESS) {
+			std::cout << "Se presiona X" << std::endl;
+			std::cout << "Recargas" << std::endl;
+			if (balas != 0) {
+				banderaDisparo = true;
+				recarga = false;
+			}
+		}
+		if (buttons[3] == GLFW_PRESS)
+			std::cout << "Se presiona Y" << std::endl;
+		if (buttons[4] == GLFW_PRESS)
+			std::cout << "LB" << std::endl;
+		if (buttons[5] == GLFW_PRESS)
+			std::cout << "RB" << std::endl;
+		if (buttons[6] == GLFW_PRESS)
+			std::cout << "Back" << std::endl;
+		if (buttons[7] == GLFW_PRESS)
+			std::cout << "Start" << std::endl;
+		if (buttons[8] == GLFW_PRESS)
+			std::cout << "Stick Izquierdo" << std::endl;
+		if (buttons[9] == GLFW_PRESS)
+			std::cout << "Stick Derecho" << std::endl;
+		if (buttons[10] == GLFW_PRESS)
+			std::cout << "Cruceta Arriba" << std::endl;
+		if (buttons[11] == GLFW_PRESS)
+			std::cout << "Cruceta Derecha" << std::endl;
+		if (buttons[12] == GLFW_PRESS)
+			std::cout << "Cruceta Abajo" << std::endl;
+		if (buttons[13] == GLFW_PRESS)
+			std::cout << "Cruceta Izquierda" << std::endl;
 
 		if (!isJump && buttons[0] == GLFW_PRESS) {
 			isJump = true;
 			startTimeJump = currTime;
 			tmv = 0;
+		}
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, 0.2));
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, -0.2));
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(2.0f), glm::vec3(0, 1, 0));
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-2.0f), glm::vec3(0, 1, 0));
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		if (banderaDisparo) {
+			//aqui lo del disparo
+			std::cout << "Disparo" << std::endl;
+			if (balas > 0) {
+				balas -= 1;
+				banderaDisparo = false;
+				recarga = true;
+			}
+		}
+		animationIndex = 1;
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+		std::cout << "Recargas" << std::endl;
+		if (balas != 0) {
+			banderaDisparo = true;
+			recarga = false;
 		}
 	}
 
@@ -1351,11 +1505,11 @@ bool processInput(bool continueApplication) {
 	}
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, 0.19));
+			glm::vec3(0, 0, 0.2));
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, -0.19));
+			glm::vec3(0, 0, -0.2));
 	}
 	//Movimiento mayow
 	/*if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -1425,7 +1579,8 @@ void applicationLoop() {
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
 			glm::vec3(0, 1, 0));*/
-			//Ubicación Osmosis
+
+	//Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 		glm::vec3(69.0f, 0.0f, -13.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
@@ -1452,6 +1607,10 @@ void applicationLoop() {
 		modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
 	modelMatrixFountain = glm::scale(modelMatrixFountain,
 		glm::vec3(10.0f, 10.0f, 10.0f));
+
+	//Map
+	//modelMatrixMapSquareFL = glm::translate(modelMatrixMapSquareFL,
+	//	glm::vec3(-15.1655f, 16.93653f, 4.13053f));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1489,7 +1648,7 @@ void applicationLoop() {
 		if (modelSelected == 0) {
 			axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
-			target = modelMatrixOsmosis[3];
+			target = glm::vec3 (modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
 		}
 		else {
 			/*axis = glm::axis(glm::quat_cast(modelMatrixMayow));
@@ -2507,12 +2666,31 @@ void applicationLoop() {
 		OsmosisCollider.u = glm::quat_cast(modelmatrixColliderOsmosis);
 		modelmatrixColliderOsmosis = glm::scale(modelmatrixColliderOsmosis, glm::vec3(0.1, 0.1, 0.1));
 		modelmatrixColliderOsmosis = glm::translate(modelmatrixColliderOsmosis,
-			glm::vec3(OsmosisModelAnimate.getObb().c.x - 10,
+			glm::vec3(OsmosisModelAnimate.getObb().c.x - 12.5,
 				OsmosisModelAnimate.getObb().c.y + 22,
 				OsmosisModelAnimate.getObb().c.z + 2));
 		OsmosisCollider.e = OsmosisModelAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
 		OsmosisCollider.c = glm::vec3(modelmatrixColliderOsmosis[3]);
 		addOrUpdateColliders(collidersOBB, "Osmosis", OsmosisCollider, modelMatrixOsmosis);
+
+		// Map colliders
+		//AbstractModel::OBB mapColliders[27];
+		for (unsigned int i = 0; i < 27; i++)
+		{
+			AbstractModel::OBB mapCollider;
+			glm::mat4 modelMatrixColliderMap = glm::mat4(1.0f);
+			addOrUpdateColliders(collidersOBB, "map-" + std::to_string(i),
+				mapCollider, modelMatrixColliderMap);
+			mapCollider.u = glm::quat_cast(modelMatrixColliderMap);
+			//modelMatrixColliderMap = glm::scale(modelMatrixColliderMap,
+			//	glm::vec3(1.1, 1.1, 1.1));
+			modelMatrixColliderMap = glm::translate(modelMatrixColliderMap,
+				mapArray[i].getObb().c);
+			mapCollider.c = glm::vec3(modelMatrixColliderMap[3]);
+			mapCollider.e = mapArray[i].getObb().e;
+			std::get<0>(collidersOBB.find("map-" + std::to_string(i))->second) =
+				mapCollider;
+		}
 
 		// Lamps1 colliders
 		for (int i = 0; i < lamp1Position.size(); i++) {
@@ -2634,7 +2812,7 @@ void applicationLoop() {
 		  * Test Colisions
 		  *******************************************/
 
-		  //Box  vs Box
+		//Box  vs Box
 		for (std::map<std::string,
 			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersOBB.begin(); it != collidersOBB.end(); it++) {
@@ -2644,7 +2822,9 @@ void applicationLoop() {
 				collidersOBB.begin(); jt != collidersOBB.end(); jt++) {
 				if (it != jt
 					&& testOBBOBB(std::get<0>(it->second),
-						std::get<0>(jt->second))) {
+						std::get<0>(jt->second))
+					&& !(it->first.substr(0, 3) == "map"
+					&& jt->first.substr(0, 3) == "map")) {
 					std::cout << "Colision " << it->first << " with "
 						<< jt->first << std::endl;
 					isCollision = true;
@@ -2701,6 +2881,7 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 				isCollision);
 		}
+
 		//Sphere vs Sphere
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
@@ -2783,9 +2964,13 @@ void applicationLoop() {
 		/*******************************************
 		 * State machines
 		 *******************************************/
-		cadena = "Vidas: " + std::to_string(vida) + " Balas: " + std::to_string(balas);
+		cadena = "Vidas: " + std::to_string(vida);
+		cadena1 = " Balas: " + std::to_string(balas);
 		if (vida > 0) {
 			modelText->render(cadena, -.95, 0.9, 50, 0.0, 0.63, 0.16);
+			modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
+			if (recarga)
+				modelText3->render(cadena2, .65, 0.9, 50, 0.0, 0.9, 0.9);
 			glfwSwapBuffers(window);
 		}
 		else {
@@ -2874,10 +3059,7 @@ void prepareScene() {
 	//Osmosis
 	OsmosisModelAnimate.setShader(&shaderMulLighting);
 
-	//Osmosis
-	MapTestModel.setShader(&shaderMulLighting);
-
-	//Covdi
+	//Covid
 	CovidModelAnimate.setShader(&shaderMulLighting);
 	CovidModelAnimate2.setShader(&shaderMulLighting);
 	CovidModelAnimate3.setShader(&shaderMulLighting);
@@ -2892,6 +3074,15 @@ void prepareScene() {
 	CubreBocasModelAnimate6.setShader(&shaderMulLighting);
 	CubreBocasModelAnimate7.setShader(&shaderMulLighting);
 	CubreBocasModelAnimate8.setShader(&shaderMulLighting);
+
+	//Map
+	modelMapTest.setShader(&shaderMulLighting);
+	//modelMapRef.setShader(&shaderMulLighting);
+	//modelMapSquareFL.setShader(&shaderMulLighting);
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].setShader(&shaderMulLighting);
+	}
 }
 
 void prepareDepthScene() {
@@ -2916,8 +3107,6 @@ void prepareDepthScene() {
 	//Osmosis
 	OsmosisModelAnimate.setShader(&shaderDepth);
 
-	MapTestModel.setShader(&shaderDepth);
-
 	//Covid
 	CovidModelAnimate.setShader(&shaderDepth);
 	CovidModelAnimate2.setShader(&shaderDepth);
@@ -2933,6 +3122,15 @@ void prepareDepthScene() {
 	CubreBocasModelAnimate6.setShader(&shaderDepth);
 	CubreBocasModelAnimate7.setShader(&shaderDepth);
 	CubreBocasModelAnimate8.setShader(&shaderDepth);
+
+	//Map
+	modelMapTest.setShader(&shaderDepth);
+	//modelMapRef.setShader(&shaderDepth);
+	//modelMapSquareFL.setShader(&shaderDepth);
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].setShader(&shaderDepth);
+	}
 }
 
 void renderScene(bool renderParticles) {
@@ -3047,15 +3245,29 @@ void renderScene(bool renderParticles) {
 	modelMatrixOsmosis[3][1] = terrain.getHeightTerrain(modelMatrixOsmosis[3][0], modelMatrixOsmosis[3][2]);
 	glm::mat4 modelMatrixOsmosisBody = glm::mat4(modelMatrixOsmosis);
 	modelMatrixOsmosisBody = glm::scale(modelMatrixOsmosisBody, glm::vec3(0.004, 0.004, 0.004));
-	OsmosisModelAnimate.setAnimationIndex(0);
+	OsmosisModelAnimate.setAnimationIndex(animationIndex);
 	OsmosisModelAnimate.render(modelMatrixOsmosisBody);
 
+
+	// Map
 	modelMatrixMapTest[3][1] = terrain.getHeightTerrain(modelMatrixMapTest[3][0], modelMatrixMapTest[3][2]) + 0.2f;
-	glm::mat4 modelMatrixMapTestMain = glm::mat4(modelMatrixMapTest);
-	//modelMatrixMapTestMain = glm::scale(modelMatrixMapTestMain, glm::vec3(0.004, 0.004, 0.004));
-	//MapTestModel.setAnimationIndex(0);
-	MapTestModel.render(modelMatrixMapTestMain);
-	//Covid
+	//glm::mat4 modelMatrixMapTestMain = glm::mat4(modelMatrixMapTest);
+	//modelMapTest.render(modelMatrixMapTest);
+
+	//modelMatrixMapRef[3][1] = terrain.getHeightTerrain(modelMatrixMapRef[3][0], modelMatrixMapRef[3][2]) + 1.0f;
+	//modelMapRef.render(modelMatrixMapRef);
+
+	//modelMatrixMapSquareFL[3][1] = terrain.getHeightTerrain(modelMatrixMapSquareFL[3][0], modelMatrixMapSquareFL[3][2]);
+	//glm::mat4 modelMatrixMapSquareFLMain = glm::mat4(modelMatrixMapSquareFL);
+	//modelMapSquareFL.render(modelMatrixMapSquareFL);
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		modelMatrixMap[3][1] = terrain.getHeightTerrain(modelMatrixMap[3][0], modelMatrixMap[3][2]);
+		mapArray[i].render(modelMatrixMap);
+	}
+
+
+	// Covid
 	modelMatrixCovid[3][1] = terrain.getHeightTerrain(modelMatrixCovid[3][0], modelMatrixCovid[3][2]);
 	glm::mat4 modelMatrixCovidBody = glm::mat4(modelMatrixCovid);
 	modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.015, 0.015, 0.015));
