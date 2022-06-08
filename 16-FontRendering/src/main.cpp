@@ -81,6 +81,10 @@ float DisappearModelCubreBocas7 = true;
 float DisappearModelCubreBocas8 = true;
 
 float DisappearModelCovid1 = true;
+float DisappearModelCovid2 = true;
+float DisappearModelCovid3 = true;
+float DisappearModelCovid4 = true;
+float DisappearModelCovid5 = true;
 
 Shader shader;
 //Shader con skybox
@@ -112,11 +116,11 @@ Box boxLightViewBox;
 ShadowBox* shadowBox;
 
 // Models complex instances
-Model modelRock;
+//Model modelRock;
 // Lamps
-Model modelLamp1;
-Model modelLamp2;
-Model modelLampPost2;
+//Model modelLamp1;
+//Model modelLamp2;
+//Model modelLampPost2;
 // Hierba
 Model modelGrass;
 // Fountain
@@ -577,20 +581,20 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	boxLightViewBox.init();
 	boxLightViewBox.setShader(&shaderViewDepth);
 
-	modelRock.loadModel("../models/rock/rock.obj");
-	modelRock.setShader(&shaderMulLighting);
+	/*modelRock.loadModel("../models/rock/rock.obj");
+	modelRock.setShader(&shaderMulLighting);*/
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
 	terrain.setPosition(glm::vec3(100, 0, 100));
 
 	//Lamp models
-	modelLamp1.loadModel("../models/Street-Lamp-Black/objLamp.obj");
+	/*modelLamp1.loadModel("../models/Street-Lamp-Black/objLamp.obj");
 	modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.loadModel("../models/Street_Light/Lamp.obj");
 	modelLamp2.setShader(&shaderMulLighting);
 	modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
-	modelLampPost2.setShader(&shaderMulLighting);
+	modelLampPost2.setShader(&shaderMulLighting);*/
 
 	//Grass
 	modelGrass.loadModel("../models/grass/grassModel.obj");
@@ -1225,10 +1229,10 @@ void destroy() {
 	terrain.destroy();
 
 	// Custom objects Delete
-	modelRock.destroy();
-	modelLamp1.destroy();
+	//modelRock.destroy();
+	/*modelLamp1.destroy();
 	modelLamp2.destroy();
-	modelLampPost2.destroy();
+	modelLampPost2.destroy();*/
 	modelGrass.destroy();
 	modelFountain.destroy();
 
@@ -1993,17 +1997,17 @@ void applicationLoop() {
 		   * IMPORTANT do this before interpolations
 		   *******************************************/
 
-		   //Collider del la rock
-		AbstractModel::SBB rockCollider;
-		glm::mat4 modelMatrixColliderRock = glm::mat4(matrixModelRock);
-		modelMatrixColliderRock = glm::scale(modelMatrixColliderRock,
-			glm::vec3(1.0, 1.0, 1.0));
-		modelMatrixColliderRock = glm::translate(modelMatrixColliderRock,
-			modelRock.getSbb().c);
-		rockCollider.c = glm::vec3(modelMatrixColliderRock[3]);
-		rockCollider.ratio = modelRock.getSbb().ratio * 1.0;
-		addOrUpdateColliders(collidersSBB, "rock", rockCollider,
-			matrixModelRock);
+		//   //Collider del la rock
+		//AbstractModel::SBB rockCollider;
+		//glm::mat4 modelMatrixColliderRock = glm::mat4(matrixModelRock);
+		//modelMatrixColliderRock = glm::scale(modelMatrixColliderRock,
+		//	glm::vec3(1.0, 1.0, 1.0));
+		//modelMatrixColliderRock = glm::translate(modelMatrixColliderRock,
+		//	modelRock.getSbb().c);
+		//rockCollider.c = glm::vec3(modelMatrixColliderRock[3]);
+		//rockCollider.ratio = modelRock.getSbb().ratio * 1.0;
+		//addOrUpdateColliders(collidersSBB, "rock", rockCollider,
+		//	matrixModelRock);
 
 		//Collider Covid
 		AbstractModel::SBB CovidCollider;
@@ -2693,49 +2697,49 @@ void applicationLoop() {
 		}
 
 		// Lamps1 colliders
-		for (int i = 0; i < lamp1Position.size(); i++) {
-			AbstractModel::OBB lampCollider;
-			glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
-			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
-				lamp1Position[i]);
-			modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp,
-				glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
-			addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i),
-				lampCollider, modelMatrixColliderLamp);
-			// Set the orientation of collider before doing the scale
-			lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
-			modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp,
-				glm::vec3(0.5, 0.5, 0.5));
-			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
-				modelLamp1.getObb().c);
-			lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
-			std::get<0>(collidersOBB.find("lamp1-" + std::to_string(i))->second) =
-				lampCollider;
-		}
+		//for (int i = 0; i < lamp1Position.size(); i++) {
+		//	AbstractModel::OBB lampCollider;
+		//	glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
+		//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
+		//		lamp1Position[i]);
+		//	modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp,
+		//		glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
+		//	addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i),
+		//		lampCollider, modelMatrixColliderLamp);
+		//	// Set the orientation of collider before doing the scale
+		//	lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
+		//	modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp,
+		//		glm::vec3(0.5, 0.5, 0.5));
+		//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
+		//		modelLamp1.getObb().c);
+		//	lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
+		//	lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
+		//	std::get<0>(collidersOBB.find("lamp1-" + std::to_string(i))->second) =
+		//		lampCollider;
+		//}
 
-		// Lamps2 colliders
-		for (int i = 0; i < lamp2Position.size(); i++) {
-			AbstractModel::OBB lampCollider;
-			glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
-			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
-				lamp2Position[i]);
-			modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp,
-				glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
-			addOrUpdateColliders(collidersOBB, "lamp2-" + std::to_string(i),
-				lampCollider, modelMatrixColliderLamp);
-			// Set the orientation of collider before doing the scale
-			lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
-			modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp,
-				glm::vec3(1.0, 1.0, 1.0));
-			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
-				modelLampPost2.getObb().c);
-			lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			lampCollider.e = modelLampPost2.getObb().e
-				* glm::vec3(1.0, 1.0, 1.0);
-			std::get<0>(collidersOBB.find("lamp2-" + std::to_string(i))->second) =
-				lampCollider;
-		}
+		//// Lamps2 colliders
+		//for (int i = 0; i < lamp2Position.size(); i++) {
+		//	AbstractModel::OBB lampCollider;
+		//	glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
+		//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
+		//		lamp2Position[i]);
+		//	modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp,
+		//		glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
+		//	addOrUpdateColliders(collidersOBB, "lamp2-" + std::to_string(i),
+		//		lampCollider, modelMatrixColliderLamp);
+		//	// Set the orientation of collider before doing the scale
+		//	lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
+		//	modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp,
+		//		glm::vec3(1.0, 1.0, 1.0));
+		//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
+		//		modelLampPost2.getObb().c);
+		//	lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
+		//	lampCollider.e = modelLampPost2.getObb().e
+		//		* glm::vec3(1.0, 1.0, 1.0);
+		//	std::get<0>(collidersOBB.find("lamp2-" + std::to_string(i))->second) =
+		//		lampCollider;
+		//}
 
 		// Collider de mayow
 		//AbstractModel::OBB mayowCollider;
@@ -2825,55 +2829,69 @@ void applicationLoop() {
 						std::get<0>(jt->second))
 					&& !(it->first.substr(0, 3) == "map"
 					&& jt->first.substr(0, 3) == "map")) {
-					std::cout << "Colision " << it->first << " with "
-						<< jt->first << std::endl;
 					isCollision = true;
 					if (it->first == "Cubre") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas1 = !DisappearModelCubreBocas1;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre2") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas2 = !DisappearModelCubreBocas2;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre3") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas3 = !DisappearModelCubreBocas3;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre4") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas4 = !DisappearModelCubreBocas4;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre5") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas5 = !DisappearModelCubreBocas5;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre6") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas6 = !DisappearModelCubreBocas6;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre7") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas7 = !DisappearModelCubreBocas7;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 					if (it->first == "Cubre8") {
 						if (jt->first == "Osmosis") {
 							balas += 1;
 							DisappearModelCubreBocas8 = !DisappearModelCubreBocas8;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
 					}
 				}
@@ -2912,8 +2930,6 @@ void applicationLoop() {
 			for (; jt != collidersOBB.end(); jt++) {
 				if (testSphereOBox(std::get<0>(it->second),
 					std::get<0>(jt->second))) {
-					std::cout << "Colision " << it->first << " with "
-						<< jt->first << std::endl;
 					isCollision = true;
 					addOrUpdateCollisionDetection(collisionDetection, jt->first,
 						isCollision);
@@ -2921,8 +2937,41 @@ void applicationLoop() {
 						if (jt->first == "Osmosis") {
 							vida -= 1;
 							DisappearModelCovid1 = !DisappearModelCovid1;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
 						}
-
+					}
+					if (it->first == "Covid2") {
+						if (jt->first == "Osmosis") {
+							vida -= 1;
+							DisappearModelCovid2 = !DisappearModelCovid2;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
+						}
+					}
+					if (it->first == "Covid3") {
+						if (jt->first == "Osmosis") {
+							vida -= 1;
+							DisappearModelCovid3 = !DisappearModelCovid3;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
+						}
+					}
+					if (it->first == "Covid4") {
+						if (jt->first == "Osmosis") {
+							vida -= 1;
+							DisappearModelCovid4 = !DisappearModelCovid4;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
+						}
+					}
+					if (it->first == "Covid5") {
+						if (jt->first == "Osmosis") {
+							vida -= 1;
+							DisappearModelCovid5 = !DisappearModelCovid5;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
+						}
 					}
 				}
 			}
@@ -3041,14 +3090,14 @@ void prepareScene() {
 
 	skyboxSphere.setShader(&shaderSkybox);
 
-	modelRock.setShader(&shaderMulLighting);
+	//modelRock.setShader(&shaderMulLighting);
 
 	terrain.setShader(&shaderTerrain);
 
 	//Lamp models
-	modelLamp1.setShader(&shaderMulLighting);
+	/*modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.setShader(&shaderMulLighting);
-	modelLampPost2.setShader(&shaderMulLighting);
+	modelLampPost2.setShader(&shaderMulLighting);*/
 
 	//Grass
 	modelGrass.setShader(&shaderMulLighting);
@@ -3089,14 +3138,14 @@ void prepareDepthScene() {
 
 	skyboxSphere.setShader(&shaderDepth);
 
-	modelRock.setShader(&shaderDepth);
+	//modelRock.setShader(&shaderDepth);
 
 	terrain.setShader(&shaderDepth);
 
 	//Lamp models
-	modelLamp1.setShader(&shaderDepth);
+	/*modelLamp1.setShader(&shaderDepth);
 	modelLamp2.setShader(&shaderDepth);
-	modelLampPost2.setShader(&shaderDepth);
+	modelLampPost2.setShader(&shaderDepth);*/
 
 	//Grass
 	modelGrass.setShader(&shaderDepth);
@@ -3169,14 +3218,14 @@ void renderScene(bool renderParticles) {
 	 * Custom objects obj
 	 *******************************************/
 	 //Rock render
-	matrixModelRock[3][1] = terrain.getHeightTerrain(matrixModelRock[3][0],
+	/*matrixModelRock[3][1] = terrain.getHeightTerrain(matrixModelRock[3][0],
 		matrixModelRock[3][2]);
-	modelRock.render(matrixModelRock);
+	modelRock.render(matrixModelRock);*/
 	// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
 	glActiveTexture(GL_TEXTURE0);
 
 	// Render the lamps
-	for (int i = 0; i < lamp1Position.size(); i++) {
+	/*for (int i = 0; i < lamp1Position.size(); i++) {
 		lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x,
 			lamp1Position[i].z);
 		modelLamp1.setPosition(lamp1Position[i]);
@@ -3196,7 +3245,7 @@ void renderScene(bool renderParticles) {
 		modelLampPost2.setScale(glm::vec3(1.0, 1.0, 1.0));
 		modelLampPost2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLampPost2.render();
-	}
+	}*/
 
 	// Grass
 	glDisable(GL_CULL_FACE);
@@ -3280,27 +3329,27 @@ void renderScene(bool renderParticles) {
 	glm::mat4 modelMatrixCovid2Body = glm::mat4(modelMatrixCovid2);
 	modelMatrixCovid2Body = glm::scale(modelMatrixCovid2Body, glm::vec3(0.015, 0.015, 0.015));
 	CovidModelAnimate2.setAnimationIndex(0);
-	//if (DisappearModelCovid1) {
+	if (DisappearModelCovid2) {
 		CovidModelAnimate2.render(modelMatrixCovid2Body);
-	//}
+	}
 
 	//Covid3
 	modelMatrixCovid3[3][1] = terrain.getHeightTerrain(modelMatrixCovid3[3][0], modelMatrixCovid3[3][2]);
 	glm::mat4 modelMatrixCovid3Body = glm::mat4(modelMatrixCovid3);
 	modelMatrixCovid3Body = glm::scale(modelMatrixCovid3Body, glm::vec3(0.015, 0.015, 0.015));
 	CovidModelAnimate3.setAnimationIndex(0);
-	//if (DisappearModelCovid1) {
+	if (DisappearModelCovid3) {
 		CovidModelAnimate3.render(modelMatrixCovid3Body);
-	//}
+	}
 
 	//Covid4
 	modelMatrixCovid4[3][1] = terrain.getHeightTerrain(modelMatrixCovid4[3][0], modelMatrixCovid4[3][2]);
 	glm::mat4 modelMatrixCovid4Body = glm::mat4(modelMatrixCovid4);
 	modelMatrixCovid4Body = glm::scale(modelMatrixCovid4Body, glm::vec3(0.015, 0.015, 0.015));
 	CovidModelAnimate4.setAnimationIndex(0);
-	//if (DisappearModelCovid1) {
+	if (DisappearModelCovid4) {
 		CovidModelAnimate4.render(modelMatrixCovid4Body);
-	//}
+	}
 	//Cubrebocas
 	modelMatrixCubrebocas[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas[3][0], modelMatrixCubrebocas[3][2]);
 	glm::mat4 modelMatrixCubreBody = glm::mat4(modelMatrixCubrebocas);
