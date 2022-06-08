@@ -84,7 +84,7 @@ bool DisappearModelCovid1 = true;
 bool DisappearModelCovid2 = true;
 bool DisappearModelCovid3 = true;
 bool DisappearModelCovid4 = true;
-bool DisappearModelCovid5 = true;
+bool DisappearModelCovid5 = false;
 
 bool toqueCovid = true;
 bool toqueCovid2 = true;
@@ -141,6 +141,7 @@ Model CovidModelAnimate;
 Model CovidModelAnimate2;
 Model CovidModelAnimate3;
 Model CovidModelAnimate4;
+Model CovidModelAnimate5;
 //Cubrebocas
 Model CubreBocasModelAnimate;
 Model CubreBocasModelAnimate2;
@@ -225,6 +226,7 @@ glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid2 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid3 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid4 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCovid5 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas2 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCubrebocas3 = glm::mat4(1.0f);
@@ -639,6 +641,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	CovidModelAnimate3.setShader(&shaderMulLighting);
 	CovidModelAnimate4.loadModel("../models/Covid/Covid.fbx");
 	CovidModelAnimate4.setShader(&shaderMulLighting);
+	CovidModelAnimate5.loadModel("../models/Covid/Covid.fbx");
+	CovidModelAnimate5.setShader(&shaderMulLighting);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
@@ -1248,6 +1252,7 @@ void destroy() {
 	CovidModelAnimate2.destroy();
 	CovidModelAnimate3.destroy();
 	CovidModelAnimate4.destroy();
+	CovidModelAnimate5.destroy();
 	CubreBocasModelAnimate.destroy();
 	CubreBocasModelAnimate2.destroy();
 	CubreBocasModelAnimate3.destroy();
@@ -1582,6 +1587,11 @@ void applicationLoop() {
 	int numberAdvanceCovid4 = 0;
 	int maxAdvanceCovid4 = 0.0;
 
+	float advanceCountCovid5 = 0.0;
+	int stateCovid5 = 0;
+	int numberAdvanceCovid5 = 0;
+	int maxAdvanceCovid5 = 0.0;
+
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
@@ -1598,6 +1608,7 @@ void applicationLoop() {
 	modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-69.0f, 0.1684f, -32.0f));//Covid esquina superior izquierda
 	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 35.0f));//Covid esquina inferior derecha
 	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -32.0f));//Covid esquina superior derecha
+	modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(-30.0f, 0.1684f, -15.0f));//Covid enmedio
 	//Cubrebocas
 	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(0.0f, 0.0f, -32.0f));//Enmedio arriba
 	modelMatrixCubrebocas2 = glm::translate(modelMatrixCubrebocas2, glm::vec3(0.0f, 0.0f, 35.0f));//Enmedio abajo
@@ -2121,6 +2132,33 @@ void applicationLoop() {
 		}
 		addOrUpdateColliders(collidersSBB, "Covid4", CovidCollider4, modelMatrixCovid4);
 
+		//Collider Covid5
+		AbstractModel::SBB CovidCollider5;
+		glm::mat4 modelMatrixColliderCovid5 = glm::mat4(modelMatrixCovid5);
+		if (DisappearModelCovid5) {
+			modelMatrixColliderCovid5 = glm::scale(modelMatrixColliderCovid5,
+				glm::vec3(0.001, 0.001, 0.001));
+			modelMatrixColliderCovid5 = glm::translate(modelMatrixColliderCovid5,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate5.getSbb().c.x,
+					CovidModelAnimate5.getSbb().c.y + 31 * 100,
+					CovidModelAnimate.getSbb().c.z));
+			CovidCollider5.c = glm::vec3(modelMatrixColliderCovid5[3]);
+			CovidCollider5.ratio = CovidModelAnimate5.getSbb().ratio * 0.03;
+		}
+		else {
+			modelMatrixColliderCovid5 = glm::scale(modelMatrixColliderCovid5,
+				glm::vec3(0.000, 0.000, 0.000));
+			modelMatrixColliderCovid5 = glm::translate(modelMatrixColliderCovid5,
+				//CovidModelAnimate.getSbb().c
+				glm::vec3(CovidModelAnimate5.getSbb().c.x,
+					CovidModelAnimate5.getSbb().c.y + 31 * 100,
+					CovidModelAnimate5.getSbb().c.z));
+			CovidCollider5.c = glm::vec3(modelMatrixColliderCovid5[3]);
+			CovidCollider5.ratio = CovidModelAnimate5.getSbb().ratio * 0.00;
+		}
+		addOrUpdateColliders(collidersSBB, "Covid5", CovidCollider5, modelMatrixCovid5);
+
 		//Máquina covid esquina superior izquierda
 		switch (stateCovid1)
 		{
@@ -2410,6 +2448,66 @@ void applicationLoop() {
 				stateCovid4 = 0;
 				if (numberAdvanceCovid4 == 6) {
 					numberAdvanceCovid4 = 0;
+				}
+			}
+			break;
+		default:
+			break;
+		}
+
+		//Máquina covid en medio
+		switch (stateCovid5)
+		{
+		case 0:
+			if (numberAdvanceCovid5 == 0)//Mov Derecha
+			{
+				maxAdvanceCovid5 = 60.0f;
+			}
+			else if (numberAdvanceCovid5 == 1)//Mov Abajo
+			{
+				maxAdvanceCovid5 = 34.0f;
+			}
+			else if (numberAdvanceCovid5 == 2)//Mov Izq
+			{
+				maxAdvanceCovid5 = 60.0f;
+			}
+			else if (numberAdvanceCovid5 == 3)//Mov Arriba
+			{
+				maxAdvanceCovid5 = 34.0f;
+			}
+			
+
+			stateCovid5 = 1;
+			break;
+		case 1:
+			if (numberAdvanceCovid5 == 0) {
+				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Derecha
+				advanceCountCovid5 += 0.08;
+			}
+
+			else if (numberAdvanceCovid5 == 1) {
+				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
+				advanceCountCovid5 += 0.08;
+			}
+
+			else if (numberAdvanceCovid5 == 2) {
+				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
+				advanceCountCovid5 += 0.08;
+			}
+
+			else if (numberAdvanceCovid5 == 3) {
+				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
+				advanceCountCovid5 += 0.08;
+			}
+			
+
+			if (advanceCountCovid5 > maxAdvanceCovid5)
+			{
+				advanceCountCovid5 = 0;
+				numberAdvanceCovid5++;
+				stateCovid5 = 0;
+				if (numberAdvanceCovid5 == 4) {
+					numberAdvanceCovid5 = 0;
 				}
 			}
 			break;
@@ -2941,6 +3039,7 @@ void applicationLoop() {
 							if (toqueCovid){
 								vida -= 1;
 								DisappearModelCovid1 = !DisappearModelCovid1;
+								DisappearModelCovid5 = !DisappearModelCovid5;
 								std::cout << "Colision " << it->first << " with "
 									<< jt->first << std::endl;
 								toqueCovid = false;
@@ -2952,6 +3051,7 @@ void applicationLoop() {
 							if (toqueCovid2) {
 								vida -= 1;
 								DisappearModelCovid2 = !DisappearModelCovid2;
+								DisappearModelCovid5 = !DisappearModelCovid5;
 								std::cout << "Colision " << it->first << " with "
 									<< jt->first << std::endl;
 								toqueCovid2 = false;
@@ -2963,6 +3063,7 @@ void applicationLoop() {
 							if (toqueCovid3) {
 								vida -= 1;
 								DisappearModelCovid3 = !DisappearModelCovid3;
+								DisappearModelCovid5 = !DisappearModelCovid5;
 								std::cout << "Colision " << it->first << " with "
 									<< jt->first << std::endl;
 								toqueCovid3 = false;
@@ -2974,6 +3075,7 @@ void applicationLoop() {
 							if (toqueCovid4) {
 								vida -= 1;
 								DisappearModelCovid4 = !DisappearModelCovid4;
+								DisappearModelCovid5 = !DisappearModelCovid5;
 								std::cout << "Colision " << it->first << " with "
 									<< jt->first << std::endl;
 								toqueCovid4 = false;
@@ -3131,6 +3233,7 @@ void prepareScene() {
 	CovidModelAnimate2.setShader(&shaderMulLighting);
 	CovidModelAnimate3.setShader(&shaderMulLighting);
 	CovidModelAnimate4.setShader(&shaderMulLighting);
+	CovidModelAnimate5.setShader(&shaderMulLighting);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.setShader(&shaderMulLighting);
@@ -3179,6 +3282,7 @@ void prepareDepthScene() {
 	CovidModelAnimate2.setShader(&shaderDepth);
 	CovidModelAnimate3.setShader(&shaderDepth);
 	CovidModelAnimate4.setShader(&shaderDepth);
+	CovidModelAnimate5.setShader(&shaderDepth);
 
 	//Cubrebocas
 	CubreBocasModelAnimate.setShader(&shaderDepth);
@@ -3376,6 +3480,14 @@ void renderScene(bool renderParticles) {
 	CovidModelAnimate4.setAnimationIndex(0);
 	if (DisappearModelCovid4) {
 		CovidModelAnimate4.render(modelMatrixCovid4Body);
+	}
+	// Covid5
+	modelMatrixCovid5[3][1] = terrain.getHeightTerrain(modelMatrixCovid5[3][0], modelMatrixCovid5[3][2]);
+	glm::mat4 modelMatrixCovidBody5 = glm::mat4(modelMatrixCovid5);
+	modelMatrixCovidBody5 = glm::scale(modelMatrixCovidBody5, glm::vec3(0.015, 0.015, 0.015));
+	CovidModelAnimate5.setAnimationIndex(0);
+	if (DisappearModelCovid5) {
+		CovidModelAnimate5.render(modelMatrixCovidBody5);
 	}
 	//Cubrebocas
 	modelMatrixCubrebocas[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas[3][0], modelMatrixCubrebocas[3][2]);
