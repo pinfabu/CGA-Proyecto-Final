@@ -58,7 +58,7 @@
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 //Vida personaje
 int vida = 3;
-int balas = 0;
+int bullets = 0;
 std::string cadena = "";
 std::string cadena1 = "";
 std::string cadena2 = "Recarga";
@@ -70,31 +70,6 @@ bool recarga = false;
 const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
 GLFWwindow* window;
-//Desaparecer modelo
-bool DisappearModelCubreBocas1 = true;
-bool DisappearModelCubreBocas2 = true;
-bool DisappearModelCubreBocas3 = true;
-bool DisappearModelCubreBocas4 = true;
-bool DisappearModelCubreBocas5 = true;
-bool DisappearModelCubreBocas6 = true;
-bool DisappearModelCubreBocas7 = true;
-bool DisappearModelCubreBocas8 = true;
-
-bool DisappearModelCovid1 = true;
-bool DisappearModelCovid2 = true;
-bool DisappearModelCovid3 = true;
-bool DisappearModelCovid4 = true;
-bool DisappearModelCovid5 = false;
-
-bool toqueCovid = true;
-bool toqueCovid2 = true;
-bool toqueCovid3 = true;
-bool toqueCovid4 = true;
-bool toqueCovid5 = true;
-
-glm::vec3 colorNeb = glm::vec3(0.0, 0.0, 0.0);
-glm::vec3 neblinaGris = glm::vec3(0.25, 0.25, 0.25);
-glm::vec3 neblinaRoja = glm::vec3(0.9, 0.2, 0.2);
 
 Shader shader;
 //Shader con skybox
@@ -115,7 +90,6 @@ Shader shaderDepth;
 //std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromTarget = 5;
-bool banderaDisparo = true;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -146,15 +120,8 @@ Model CovidModelAnimate2;
 Model CovidModelAnimate3;
 Model CovidModelAnimate4;
 Model CovidModelAnimate5;
-//Cubrebocas
-Model CubreBocasModelAnimate;
-Model CubreBocasModelAnimate2;
-Model CubreBocasModelAnimate3;
-Model CubreBocasModelAnimate4;
-Model CubreBocasModelAnimate5;
-Model CubreBocasModelAnimate6;
-Model CubreBocasModelAnimate7;
-Model CubreBocasModelAnimate8;
+// Masks
+Model maskArray[8];
 // Map
 Model modelMapTest;
 //Model modelMapRef;
@@ -232,14 +199,7 @@ glm::mat4 modelMatrixCovid2 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid3 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid4 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid5 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas2 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas3 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas4 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas5 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas6 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas7 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCubrebocas8 = glm::mat4(1.0f);
+glm::mat4 modelMatrixMask = glm::mat4(1.0f);
 glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 //glm::mat4 modelMatrixMapRef = glm::mat4(1.0f);
 glm::mat4 modelMatrixMap = glm::mat4(1.0f);
@@ -255,6 +215,27 @@ std::ofstream myfile;
 std::string fileName = "";
 bool record = false;
 
+// Rendering flags
+bool renderMask[8] = { true, true, true, true, true, true, true, true };
+
+bool DisappearModelCovid1 = true;
+bool DisappearModelCovid2 = true;
+bool DisappearModelCovid3 = true;
+bool DisappearModelCovid4 = true;
+bool DisappearModelCovid5 = true;
+
+bool toqueCovid = true;
+bool toqueCovid2 = true;
+bool toqueCovid3 = true;
+bool toqueCovid4 = true;
+bool toqueCovid5 = true;
+
+glm::vec3 colorNeb = glm::vec3(0.0, 0.0, 0.0);
+glm::vec3 neblinaGris = glm::vec3(0.25, 0.25, 0.25);
+glm::vec3 neblinaRoja = glm::vec3(0.9, 0.2, 0.2);
+
+bool banderaDisparo = true;
+
 glm::vec3 posOsmo = glm::vec3(69, 0.0, -13.0);
 
 // Lamps positions
@@ -264,6 +245,11 @@ std::vector<float> lamp1Orientation = { -17.0, -82.67, 23.70 };
 std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24),
 		glm::vec3(-52.73, 0, -3.90) };
 std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
+
+// Mask positions
+std::vector<glm::vec3> maskPositions = { glm::vec3(0.0f, 0.0f, -32.0f), glm::vec3(0.0f, 0.0f, 35.0f), glm::vec3(-40.0f, 0.0f, 2.0f),
+	glm::vec3(40.0f, 0.0f, 2.0f), glm::vec3(-69.0f, 0.0f, 1.0f), glm::vec3(69.0f, 0.0f, 1.0f), glm::vec3(12.0f, 0.0f, 1.0f),
+	glm::vec3(0.0f, 0.0f, 18.5f) };
 
 // Blending model unsorted
 std::map<std::string, glm::vec3> blendingUnsorted = {
@@ -652,23 +638,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	CovidModelAnimate5.loadModel("../models/Covid/Covid.fbx");
 	CovidModelAnimate5.setShader(&shaderMulLighting);
 
-	//Cubrebocas
-	CubreBocasModelAnimate.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate2.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate2.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate3.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate3.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate4.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate4.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate5.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate5.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate6.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate6.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate7.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate7.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate8.loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
-	CubreBocasModelAnimate8.setShader(&shaderMulLighting);
+	// Masks
+	for (unsigned int i = 0; i < 8; i++)
+	{
+		maskArray[i].loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
+		maskArray[i].setShader(&shaderMulLighting);
+	}
 
 	//Camara en primera persona
 	//cameraFP->setPosition(glm::vec3(30.0f, 7.0f, -2.0f));
@@ -1261,14 +1236,10 @@ void destroy() {
 	CovidModelAnimate3.destroy();
 	CovidModelAnimate4.destroy();
 	CovidModelAnimate5.destroy();
-	CubreBocasModelAnimate.destroy();
-	CubreBocasModelAnimate2.destroy();
-	CubreBocasModelAnimate3.destroy();
-	CubreBocasModelAnimate4.destroy();
-	CubreBocasModelAnimate5.destroy();
-	CubreBocasModelAnimate6.destroy();
-	CubreBocasModelAnimate7.destroy();
-	CubreBocasModelAnimate8.destroy();
+	for (unsigned int i = 0; i < 8; i++)
+	{
+		maskArray[i].destroy();
+	}
 	modelMapTest.destroy();
 	//modelMapRef.destroy();
 	//modelMapSquareFL.destroy();
@@ -1401,8 +1372,8 @@ bool processInput(bool continueApplication) {
 			if (banderaDisparo) {
 				//aqui lo del disparo
 				std::cout << "Disparo" << std::endl;
-				if (balas > 0) {
-					balas -= 1;
+				if (bullets > 0) {
+					bullets -= 1;
 					banderaDisparo = false;
 					recarga = true;
 				}
@@ -1427,7 +1398,7 @@ bool processInput(bool continueApplication) {
 		if (buttons[2] == GLFW_PRESS) {
 			std::cout << "Se presiona X" << std::endl;
 			std::cout << "Recargas" << std::endl;
-			if (balas != 0) {
+			if (bullets != 0) {
 				banderaDisparo = true;
 				recarga = false;
 			}
@@ -1478,8 +1449,8 @@ bool processInput(bool continueApplication) {
 		if (banderaDisparo) {
 			//aqui lo del disparo
 			std::cout << "Disparo" << std::endl;
-			if (balas > 0) {
-				balas -= 1;
+			if (bullets > 0) {
+				bullets -= 1;
 				banderaDisparo = false;
 				recarga = true;
 			}
@@ -1488,7 +1459,7 @@ bool processInput(bool continueApplication) {
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 		std::cout << "Recargas" << std::endl;
-		if (balas != 0) {
+		if (bullets != 0) {
 			banderaDisparo = true;
 			recarga = false;
 		}
@@ -1626,15 +1597,6 @@ void applicationLoop() {
 	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 35.0f));//Covid esquina inferior derecha
 	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -32.0f));//Covid esquina superior derecha
 	modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(-30.0f, 0.1684f, -15.0f));//Covid enmedio
-	//Cubrebocas
-	modelMatrixCubrebocas = glm::translate(modelMatrixCubrebocas, glm::vec3(0.0f, 0.0f, -32.0f));//Enmedio arriba
-	modelMatrixCubrebocas2 = glm::translate(modelMatrixCubrebocas2, glm::vec3(0.0f, 0.0f, 35.0f));//Enmedio abajo
-	modelMatrixCubrebocas3 = glm::translate(modelMatrixCubrebocas3, glm::vec3(-40.0f, 0.0f, 2.0f));//Segundo lado izquierdo 
-	modelMatrixCubrebocas4 = glm::translate(modelMatrixCubrebocas4, glm::vec3(40.0f, 0.0f, 2.0f));//Segundo lado derecho 
-	modelMatrixCubrebocas5 = glm::translate(modelMatrixCubrebocas5, glm::vec3(-69.0f, 0.0f, 1.0f));//Primero lado izquierdo 
-	modelMatrixCubrebocas6 = glm::translate(modelMatrixCubrebocas6, glm::vec3(69.0f, 0.0f, 1.0f));//Primero lado derecho 
-	modelMatrixCubrebocas7 = glm::translate(modelMatrixCubrebocas7, glm::vec3(12.0f, 0.0f, 1.0f));//Enmedio
-	modelMatrixCubrebocas8 = glm::translate(modelMatrixCubrebocas8, glm::vec3(0.0f, 0.0f, 18.5f));//Segundo enmedio abajo
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,glm::vec3(69, 0.0, -13.0));
 	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
@@ -1679,16 +1641,9 @@ void applicationLoop() {
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
 			(float)screenWidth / (float)screenHeight, 0.1f, 100.0f);
 
-		if (modelSelected == 0) {
-			axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
-			angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
-			target = glm::vec3 (modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
-		}
-		else {
-			/*axis = glm::axis(glm::quat_cast(modelMatrixMayow));
-			angleTarget = glm::angle(glm::quat_cast(modelMatrixMayow));
-			target = modelMatrixMayow[3];*/
-		}
+		axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
+		angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
+		target = glm::vec3 (modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
@@ -2536,253 +2491,39 @@ void applicationLoop() {
 			break;
 		}
 
-		//Collider Cubrebocas
-		AbstractModel::OBB CubreCollider;
-		if (DisappearModelCubreBocas1) {
-			glm::mat4 modelmatrixColliderCubre = glm::mat4(modelMatrixCubrebocas);
-			modelmatrixColliderCubre = glm::rotate(modelmatrixColliderCubre, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider.u = glm::quat_cast(modelmatrixColliderCubre);
-			modelmatrixColliderCubre = glm::scale(modelmatrixColliderCubre, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre = glm::translate(modelmatrixColliderCubre,
-				glm::vec3(CubreBocasModelAnimate.getObb().c.x + 2.5,
-					CubreBocasModelAnimate.getObb().c.y + 25,
-					CubreBocasModelAnimate.getObb().c.z));
-			CubreCollider.e = CubreBocasModelAnimate.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider.c = glm::vec3(modelmatrixColliderCubre[3]);
+		// Mask colliders
+		for (unsigned int i = 0; i < 8; i++)
+		{
+			glm::vec3 scale;
+			glm::vec3 position;
+			if (renderMask[i])
+			{
+				scale = glm::vec3(0.28, 0.30, 0.18);
+				position = glm::vec3(maskPositions[i].x - 0.8, maskPositions[i].y + 2.0, maskPositions[i].z - 0.2);
+			}
+			else
+			{
+				scale = glm::vec3(0.0, 0.0, 0.0);
+				position = glm::vec3(0.0f, -10.f * i, 0.0f);
+			}
+			AbstractModel::OBB maskCollider;
+			glm::mat4 modelMatrixColliderMask = glm::mat4(modelMatrixMask);
+			modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
+				position);
+			modelMatrixColliderMask = glm::rotate(modelMatrixColliderMask,
+				glm::radians(90.0f), glm::vec3(0, 1, 0));
+			addOrUpdateColliders(collidersOBB, "mask-" + std::to_string(i),
+				maskCollider, modelMatrixColliderMask);
+			maskCollider.u = glm::quat_cast(modelMatrixColliderMask);
+			//modelMatrixColliderMask = glm::scale(modelMatrixColliderMask, scale);
+			modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
+				glm::vec3(maskArray[i].getObb().c));
+			//maskCollider.e = mapArray[i].getObb().e;// * glm::vec3(2.25, 2.0, 2.5);
+			maskCollider.e = mapArray[i].getObb().e * scale;
+			maskCollider.c = glm::vec3(modelMatrixColliderMask[3]);
+			std::get<0>(collidersOBB.find("mask-" + std::to_string(i))->second) =
+				maskCollider;
 		}
-		else {
-			glm::mat4 modelmatrixColliderCubre = glm::mat4(modelMatrixCubrebocas);
-			modelmatrixColliderCubre = glm::rotate(modelmatrixColliderCubre, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider.u = glm::quat_cast(modelmatrixColliderCubre);
-			modelmatrixColliderCubre = glm::scale(modelmatrixColliderCubre, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre = glm::translate(modelmatrixColliderCubre,
-				glm::vec3(CubreBocasModelAnimate.getObb().c.x + 2.5,
-					CubreBocasModelAnimate.getObb().c.y + 25,
-					CubreBocasModelAnimate.getObb().c.z));
-			CubreCollider.e = CubreBocasModelAnimate.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider.c = glm::vec3(modelmatrixColliderCubre[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre", CubreCollider, modelMatrixCubrebocas);
-
-		//Collider Cubrebocas2
-		AbstractModel::OBB CubreCollider2;
-		if (DisappearModelCubreBocas2) {
-			glm::mat4 modelmatrixColliderCubre2 = glm::mat4(modelMatrixCubrebocas2);
-			modelmatrixColliderCubre2 = glm::rotate(modelmatrixColliderCubre2, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider2.u = glm::quat_cast(modelmatrixColliderCubre2);
-			modelmatrixColliderCubre2 = glm::scale(modelmatrixColliderCubre2, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre2 = glm::translate(modelmatrixColliderCubre2,
-				glm::vec3(CubreBocasModelAnimate2.getObb().c.x + 2.5,
-					CubreBocasModelAnimate2.getObb().c.y + 25,
-					CubreBocasModelAnimate2.getObb().c.z));
-			CubreCollider2.e = CubreBocasModelAnimate2.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider2.c = glm::vec3(modelmatrixColliderCubre2[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre2 = glm::mat4(modelMatrixCubrebocas2);
-			modelmatrixColliderCubre2 = glm::rotate(modelmatrixColliderCubre2, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider2.u = glm::quat_cast(modelmatrixColliderCubre2);
-			modelmatrixColliderCubre2 = glm::scale(modelmatrixColliderCubre2, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre2 = glm::translate(modelmatrixColliderCubre2,
-				glm::vec3(CubreBocasModelAnimate2.getObb().c.x + 2.5,
-					CubreBocasModelAnimate2.getObb().c.y + 25,
-					CubreBocasModelAnimate2.getObb().c.z));
-			CubreCollider2.e = CubreBocasModelAnimate2.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider2.c = glm::vec3(modelmatrixColliderCubre2[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre2", CubreCollider2, modelMatrixCubrebocas2);
-
-		//Collider Cubrebocas3
-		AbstractModel::OBB CubreCollider3;
-		if (DisappearModelCubreBocas3) {
-			glm::mat4 modelmatrixColliderCubre3 = glm::mat4(modelMatrixCubrebocas3);
-			modelmatrixColliderCubre3 = glm::rotate(modelmatrixColliderCubre3, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider3.u = glm::quat_cast(modelmatrixColliderCubre3);
-			modelmatrixColliderCubre3 = glm::scale(modelmatrixColliderCubre3, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre3 = glm::translate(modelmatrixColliderCubre3,
-				glm::vec3(CubreBocasModelAnimate3.getObb().c.x + 2.5,
-					CubreBocasModelAnimate3.getObb().c.y + 25,
-					CubreBocasModelAnimate3.getObb().c.z));
-			CubreCollider3.e = CubreBocasModelAnimate3.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider3.c = glm::vec3(modelmatrixColliderCubre3[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre3 = glm::mat4(modelMatrixCubrebocas3);
-			modelmatrixColliderCubre3 = glm::rotate(modelmatrixColliderCubre3, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider3.u = glm::quat_cast(modelmatrixColliderCubre3);
-			modelmatrixColliderCubre3 = glm::scale(modelmatrixColliderCubre3, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre3 = glm::translate(modelmatrixColliderCubre3,
-				glm::vec3(CubreBocasModelAnimate3.getObb().c.x + 2.5,
-					CubreBocasModelAnimate3.getObb().c.y + 25,
-					CubreBocasModelAnimate3.getObb().c.z));
-			CubreCollider3.e = CubreBocasModelAnimate3.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider3.c = glm::vec3(modelmatrixColliderCubre3[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre3", CubreCollider3, modelMatrixCubrebocas3);
-
-		//Collider Cubrebocas4
-		AbstractModel::OBB CubreCollider4;
-		if (DisappearModelCubreBocas4) {
-			glm::mat4 modelmatrixColliderCubre4 = glm::mat4(modelMatrixCubrebocas4);
-			modelmatrixColliderCubre4 = glm::rotate(modelmatrixColliderCubre4, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider4.u = glm::quat_cast(modelmatrixColliderCubre4);
-			modelmatrixColliderCubre4 = glm::scale(modelmatrixColliderCubre4, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre4 = glm::translate(modelmatrixColliderCubre4,
-				glm::vec3(CubreBocasModelAnimate4.getObb().c.x + 2.5,
-					CubreBocasModelAnimate4.getObb().c.y + 25,
-					CubreBocasModelAnimate4.getObb().c.z));
-			CubreCollider4.e = CubreBocasModelAnimate4.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider4.c = glm::vec3(modelmatrixColliderCubre4[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre4 = glm::mat4(modelMatrixCubrebocas4);
-			modelmatrixColliderCubre4 = glm::rotate(modelmatrixColliderCubre4, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider4.u = glm::quat_cast(modelmatrixColliderCubre4);
-			modelmatrixColliderCubre4 = glm::scale(modelmatrixColliderCubre4, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre4 = glm::translate(modelmatrixColliderCubre4,
-				glm::vec3(CubreBocasModelAnimate4.getObb().c.x + 2.5,
-					CubreBocasModelAnimate4.getObb().c.y + 25,
-					CubreBocasModelAnimate4.getObb().c.z));
-			CubreCollider4.e = CubreBocasModelAnimate4.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider4.c = glm::vec3(modelmatrixColliderCubre4[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre4", CubreCollider4, modelMatrixCubrebocas4);
-
-		//Collider Cubrebocas5
-		AbstractModel::OBB CubreCollider5;
-		if (DisappearModelCubreBocas5) {
-			glm::mat4 modelmatrixColliderCubre5 = glm::mat4(modelMatrixCubrebocas5);
-			modelmatrixColliderCubre5 = glm::rotate(modelmatrixColliderCubre5, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider5.u = glm::quat_cast(modelmatrixColliderCubre5);
-			modelmatrixColliderCubre5 = glm::scale(modelmatrixColliderCubre5, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre5 = glm::translate(modelmatrixColliderCubre5,
-				glm::vec3(CubreBocasModelAnimate5.getObb().c.x + 2.5,
-					CubreBocasModelAnimate5.getObb().c.y + 25,
-					CubreBocasModelAnimate5.getObb().c.z));
-			CubreCollider5.e = CubreBocasModelAnimate5.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider5.c = glm::vec3(modelmatrixColliderCubre5[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre5 = glm::mat4(modelMatrixCubrebocas5);
-			modelmatrixColliderCubre5 = glm::rotate(modelmatrixColliderCubre5, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider5.u = glm::quat_cast(modelmatrixColliderCubre5);
-			modelmatrixColliderCubre5 = glm::scale(modelmatrixColliderCubre5, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre5 = glm::translate(modelmatrixColliderCubre5,
-				glm::vec3(CubreBocasModelAnimate5.getObb().c.x + 2.5,
-					CubreBocasModelAnimate5.getObb().c.y + 25,
-					CubreBocasModelAnimate5.getObb().c.z));
-			CubreCollider5.e = CubreBocasModelAnimate5.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider5.c = glm::vec3(modelmatrixColliderCubre5[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre5", CubreCollider5, modelMatrixCubrebocas5);
-
-		//Collider Cubrebocas6
-		AbstractModel::OBB CubreCollider6;
-		if (DisappearModelCubreBocas6) {
-			glm::mat4 modelmatrixColliderCubre6 = glm::mat4(modelMatrixCubrebocas6);
-			modelmatrixColliderCubre6 = glm::rotate(modelmatrixColliderCubre6, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider6.u = glm::quat_cast(modelmatrixColliderCubre6);
-			modelmatrixColliderCubre6 = glm::scale(modelmatrixColliderCubre6, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre6 = glm::translate(modelmatrixColliderCubre6,
-				glm::vec3(CubreBocasModelAnimate6.getObb().c.x + 2.5,
-					CubreBocasModelAnimate6.getObb().c.y + 25,
-					CubreBocasModelAnimate6.getObb().c.z));
-			CubreCollider6.e = CubreBocasModelAnimate6.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider6.c = glm::vec3(modelmatrixColliderCubre6[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre6 = glm::mat4(modelMatrixCubrebocas6);
-			modelmatrixColliderCubre6 = glm::rotate(modelmatrixColliderCubre6, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider6.u = glm::quat_cast(modelmatrixColliderCubre6);
-			modelmatrixColliderCubre6 = glm::scale(modelmatrixColliderCubre6, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre6 = glm::translate(modelmatrixColliderCubre6,
-				glm::vec3(CubreBocasModelAnimate6.getObb().c.x + 2.5,
-					CubreBocasModelAnimate6.getObb().c.y + 25,
-					CubreBocasModelAnimate6.getObb().c.z));
-			CubreCollider6.e = CubreBocasModelAnimate6.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider6.c = glm::vec3(modelmatrixColliderCubre6[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre6", CubreCollider6, modelMatrixCubrebocas6);
-
-		//Collider Cubrebocas7
-		AbstractModel::OBB CubreCollider7;
-		if (DisappearModelCubreBocas7) {
-			glm::mat4 modelmatrixColliderCubre7 = glm::mat4(modelMatrixCubrebocas7);
-			modelmatrixColliderCubre7 = glm::rotate(modelmatrixColliderCubre7, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider7.u = glm::quat_cast(modelmatrixColliderCubre7);
-			modelmatrixColliderCubre7 = glm::scale(modelmatrixColliderCubre7, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre7 = glm::translate(modelmatrixColliderCubre7,
-				glm::vec3(CubreBocasModelAnimate7.getObb().c.x + 2.5,
-					CubreBocasModelAnimate7.getObb().c.y + 25,
-					CubreBocasModelAnimate7.getObb().c.z));
-			CubreCollider7.e = CubreBocasModelAnimate7.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider7.c = glm::vec3(modelmatrixColliderCubre7[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre7 = glm::mat4(modelMatrixCubrebocas7);
-			modelmatrixColliderCubre7 = glm::rotate(modelmatrixColliderCubre7, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider7.u = glm::quat_cast(modelmatrixColliderCubre7);
-			modelmatrixColliderCubre7 = glm::scale(modelmatrixColliderCubre7, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre7 = glm::translate(modelmatrixColliderCubre7,
-				glm::vec3(CubreBocasModelAnimate7.getObb().c.x + 2.5,
-					CubreBocasModelAnimate7.getObb().c.y + 25,
-					CubreBocasModelAnimate7.getObb().c.z));
-			CubreCollider7.e = CubreBocasModelAnimate7.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider7.c = glm::vec3(modelmatrixColliderCubre7[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre7", CubreCollider7, modelMatrixCubrebocas7);
-
-		//Collider Cubrebocas8
-		AbstractModel::OBB CubreCollider8;
-		if (DisappearModelCubreBocas8) {
-			glm::mat4 modelmatrixColliderCubre8 = glm::mat4(modelMatrixCubrebocas8);
-			modelmatrixColliderCubre8 = glm::rotate(modelmatrixColliderCubre8, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider8.u = glm::quat_cast(modelmatrixColliderCubre8);
-			modelmatrixColliderCubre8 = glm::scale(modelmatrixColliderCubre8, glm::vec3(0.1, 0.1, 0.1));
-			modelmatrixColliderCubre8 = glm::translate(modelmatrixColliderCubre8,
-				glm::vec3(CubreBocasModelAnimate8.getObb().c.x + 2.5,
-					CubreBocasModelAnimate8.getObb().c.y + 25,
-					CubreBocasModelAnimate8.getObb().c.z));
-			CubreCollider8.e = CubreBocasModelAnimate8.getObb().e * glm::vec3(2.25, 2.0, 2.5);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider8.c = glm::vec3(modelmatrixColliderCubre8[3]);
-		}
-		else {
-			glm::mat4 modelmatrixColliderCubre8 = glm::mat4(modelMatrixCubrebocas8);
-			modelmatrixColliderCubre8 = glm::rotate(modelmatrixColliderCubre8, glm::radians(90.0f), glm::vec3(0, 1, 0));
-			// Set the orientation of collider before doing the scale
-			CubreCollider8.u = glm::quat_cast(modelmatrixColliderCubre8);
-			modelmatrixColliderCubre8 = glm::scale(modelmatrixColliderCubre8, glm::vec3(0.0, 0.0, 0.0));
-			modelmatrixColliderCubre8 = glm::translate(modelmatrixColliderCubre8,
-				glm::vec3(CubreBocasModelAnimate8.getObb().c.x + 2.5,
-					CubreBocasModelAnimate8.getObb().c.y + 25,
-					CubreBocasModelAnimate8.getObb().c.z));
-			CubreCollider8.e = CubreBocasModelAnimate8.getObb().e * glm::vec3(0.0, 0.0, 0.0);//* glm::vec3(0.1, 0.1, 0.1) *;
-			CubreCollider8.c = glm::vec3(modelmatrixColliderCubre8[3]);
-
-		}
-		addOrUpdateColliders(collidersOBB, "Cubre8", CubreCollider8, modelMatrixCubrebocas8);
 
 		//Collider Osmosis
 		AbstractModel::OBB OsmosisCollider;
@@ -2952,70 +2693,76 @@ void applicationLoop() {
 					&& !(it->first.substr(0, 3) == "map"
 					&& jt->first.substr(0, 3) == "map")) {
 					isCollision = true;
-					if (it->first == "Cubre") {
+					if (it->first.substr(0, 4) == "mask" && jt->first == "Osmosis") {
+						bullets += 1;
+						int noMask = it->first.substr(5, 1)[0] - '0';
+						renderMask[noMask] = !renderMask[noMask];
+						std::cout << "EXTRACTED " << noMask << " TYPE " << typeid(noMask).name() << std::endl;
+					}
+					/*if (it->first == "mask-0") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas1 = !DisappearModelCubreBocas1;
+							bullets += 1;
+							
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre2") {
+					if (it->first == "mask-1") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas2 = !DisappearModelCubreBocas2;
+							bullets += 1;
+							renderMask[1] = !renderMask[1];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre3") {
+					if (it->first == "mask-2") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas3 = !DisappearModelCubreBocas3;
+							bullets += 1;
+							renderMask[2] = !renderMask[2];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre4") {
+					if (it->first == "mask-3") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas4 = !DisappearModelCubreBocas4;
+							bullets += 1;
+							renderMask[3] = !renderMask[3];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre5") {
+					if (it->first == "mask-4") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas5 = !DisappearModelCubreBocas5;
+							bullets += 1;
+							renderMask[4] = !renderMask[4];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre6") {
+					if (it->first == "mask-5") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas6 = !DisappearModelCubreBocas6;
+							bullets += 1;
+							renderMask[5] = !renderMask[5];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre7") {
+					if (it->first == "mask-6") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas7 = !DisappearModelCubreBocas7;
+							bullets += 1;
+							renderMask[6] = !renderMask[6];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
 					}
-					if (it->first == "Cubre8") {
+					if (it->first == "mask-7") {
 						if (jt->first == "Osmosis") {
-							balas += 1;
-							DisappearModelCubreBocas8 = !DisappearModelCubreBocas8;
+							bullets += 1;
+							renderMask[7] = !renderMask[7];
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 						}
-					}
+					}*/
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
@@ -3155,7 +2902,7 @@ void applicationLoop() {
 		 * State machines
 		 *******************************************/
 		cadena = "Vidas: " + std::to_string(vida);
-		cadena1 = " Balas: " + std::to_string(balas);
+		cadena1 = " Balas: " + std::to_string(bullets);
 		if (vida > 0) {
 			modelText->render(cadena, -.95, 0.9, 50, 0.0, 0.63, 0.16);
 			modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
@@ -3256,15 +3003,11 @@ void prepareScene() {
 	CovidModelAnimate4.setShader(&shaderMulLighting);
 	CovidModelAnimate5.setShader(&shaderMulLighting);
 
-	//Cubrebocas
-	CubreBocasModelAnimate.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate2.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate3.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate4.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate5.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate6.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate7.setShader(&shaderMulLighting);
-	CubreBocasModelAnimate8.setShader(&shaderMulLighting);
+	// Masks
+	for (unsigned int i = 0; i < 8; i++)
+	{
+		maskArray[i].setShader(&shaderMulLighting);
+	}
 
 	//Map
 	modelMapTest.setShader(&shaderMulLighting);
@@ -3305,15 +3048,11 @@ void prepareDepthScene() {
 	CovidModelAnimate4.setShader(&shaderDepth);
 	CovidModelAnimate5.setShader(&shaderDepth);
 
-	//Cubrebocas
-	CubreBocasModelAnimate.setShader(&shaderDepth);
-	CubreBocasModelAnimate2.setShader(&shaderDepth);
-	CubreBocasModelAnimate3.setShader(&shaderDepth);
-	CubreBocasModelAnimate4.setShader(&shaderDepth);
-	CubreBocasModelAnimate5.setShader(&shaderDepth);
-	CubreBocasModelAnimate6.setShader(&shaderDepth);
-	CubreBocasModelAnimate7.setShader(&shaderDepth);
-	CubreBocasModelAnimate8.setShader(&shaderDepth);
+	// Masks
+	for (unsigned int i = 0; i < 8; i++)
+	{
+		maskArray[i].setShader(&shaderDepth);
+	}
 
 	//Map
 	modelMapTest.setShader(&shaderDepth);
@@ -3510,71 +3249,19 @@ void renderScene(bool renderParticles) {
 	if (DisappearModelCovid5) {
 		CovidModelAnimate5.render(modelMatrixCovidBody5);
 	}
-	//Cubrebocas
-	modelMatrixCubrebocas[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas[3][0], modelMatrixCubrebocas[3][2]);
-	glm::mat4 modelMatrixCubreBody = glm::mat4(modelMatrixCubrebocas);
-	modelMatrixCubreBody = glm::scale(modelMatrixCubreBody, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate.setAnimationIndex(0);
-	if (DisappearModelCubreBocas1) {
-		CubreBocasModelAnimate.render(modelMatrixCubreBody);
-	}
-	//Cubrebocas2
-	modelMatrixCubrebocas2[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas2[3][0], modelMatrixCubrebocas2[3][2]);
-	glm::mat4 modelMatrixCubreBody2 = glm::mat4(modelMatrixCubrebocas2);
-	modelMatrixCubreBody2 = glm::scale(modelMatrixCubreBody2, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate2.setAnimationIndex(0);
-	if (DisappearModelCubreBocas2) {
-		CubreBocasModelAnimate2.render(modelMatrixCubreBody2);
-	}
-	//Cubrebocas3
-	modelMatrixCubrebocas3[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas3[3][0], modelMatrixCubrebocas3[3][2]);
-	glm::mat4 modelMatrixCubreBody3 = glm::mat4(modelMatrixCubrebocas3);
-	modelMatrixCubreBody3 = glm::scale(modelMatrixCubreBody3, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate3.setAnimationIndex(0);
-	if (DisappearModelCubreBocas3) {
-		CubreBocasModelAnimate3.render(modelMatrixCubreBody3);
-	}
-	//Cubrebocas4
-	modelMatrixCubrebocas4[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas4[3][0], modelMatrixCubrebocas4[3][2]);
-	glm::mat4 modelMatrixCubreBody4 = glm::mat4(modelMatrixCubrebocas4);
-	modelMatrixCubreBody4 = glm::scale(modelMatrixCubreBody4, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate4.setAnimationIndex(0);
-	if (DisappearModelCubreBocas4) {
-		CubreBocasModelAnimate4.render(modelMatrixCubreBody4);
-	}
-	//Cubrebocas5
-	modelMatrixCubrebocas5[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas5[3][0], modelMatrixCubrebocas5[3][2]);
-	glm::mat4 modelMatrixCubreBody5 = glm::mat4(modelMatrixCubrebocas5);
-	modelMatrixCubreBody5 = glm::scale(modelMatrixCubreBody5, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate5.setAnimationIndex(0);
-	if (DisappearModelCubreBocas5) {
-		CubreBocasModelAnimate5.render(modelMatrixCubreBody5);
-	}
-	//Cubrebocas6
-	modelMatrixCubrebocas6[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas6[3][0], modelMatrixCubrebocas6[3][2]);
-	glm::mat4 modelMatrixCubreBody6 = glm::mat4(modelMatrixCubrebocas6);
-	modelMatrixCubreBody6 = glm::scale(modelMatrixCubreBody6, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate6.setAnimationIndex(0);
-	if (DisappearModelCubreBocas6) {
-		CubreBocasModelAnimate6.render(modelMatrixCubreBody6);
-	}
-	//Cubrebocas7
-	modelMatrixCubrebocas7[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas7[3][0], modelMatrixCubrebocas7[3][2]);
-	glm::mat4 modelMatrixCubreBody7 = glm::mat4(modelMatrixCubrebocas7);
-	modelMatrixCubreBody7 = glm::scale(modelMatrixCubreBody7, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate7.setAnimationIndex(0);
-	if (DisappearModelCubreBocas7) {
-		CubreBocasModelAnimate7.render(modelMatrixCubreBody7);
-	}
-	//Cubrebocas8
-	modelMatrixCubrebocas8[3][1] = terrain.getHeightTerrain(modelMatrixCubrebocas8[3][0], modelMatrixCubrebocas8[3][2]);
-	glm::mat4 modelMatrixCubreBody8 = glm::mat4(modelMatrixCubrebocas8);
-	modelMatrixCubreBody8 = glm::scale(modelMatrixCubreBody8, glm::vec3(0.015, 0.015, 0.015));
-	CubreBocasModelAnimate8.setAnimationIndex(0);
-	if (DisappearModelCubreBocas8) {
-		CubreBocasModelAnimate8.render(modelMatrixCubreBody8);
-	}
 
+	// Render the masks
+	for (int i = 0; i < 8; i++) {
+		maskPositions[i].y = terrain.getHeightTerrain(maskPositions[i].x,
+			maskPositions[i].z);
+		maskArray[i].setPosition(maskPositions[i]);
+		maskArray[i].setScale(glm::vec3(0.015, 0.015, 0.015));
+		maskArray[i].setAnimationIndex(0);
+		if (renderMask[i])
+		{
+			maskArray[i].render();
+		}
+	}
 	
 
 	/**********
