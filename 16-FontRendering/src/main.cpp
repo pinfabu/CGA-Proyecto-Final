@@ -92,6 +92,10 @@ bool toqueCovid3 = true;
 bool toqueCovid4 = true;
 bool toqueCovid5 = true;
 
+glm::vec3 colorNeb = glm::vec3(0.0, 0.0, 0.0);
+glm::vec3 neblinaGris = glm::vec3(0.25, 0.25, 0.25);
+glm::vec3 neblinaRoja = glm::vec3(0.9, 0.2, 0.2);
+
 Shader shader;
 //Shader con skybox
 Shader shaderSkybox;
@@ -249,6 +253,8 @@ std::ofstream myfile;
 std::string fileName = "";
 bool record = false;
 
+glm::vec3 posOsmo = glm::vec3(69, 0.0, -13.0);
+
 // Lamps positions
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), glm::vec3(
 		24.41, 0, -34.57), glm::vec3(-10.15, 0, -54.10) };
@@ -259,8 +265,9 @@ std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
 
 // Blending model unsorted
 std::map<std::string, glm::vec3> blendingUnsorted = {
-		{ "fountain", glm::vec3(5.0, 0.0, -40.0) }, { "fire", glm::vec3(0.0,
-				0.0, 7.0) } };
+	{ "fountain", posOsmo }, 
+	{ "fire", glm::vec3(0.0, 0.0, 7.0) } 
+};
 
 double deltaTime;
 double currTime, lastTime;
@@ -366,11 +373,11 @@ void initParticleBuffers() {
 			((float)rand() / RAND_MAX));
 		phi = glm::mix(0.0f, glm::two_pi<float>(), ((float)rand() / RAND_MAX));
 
-		v.x = sinf(theta) * cosf(phi);
-		v.y = cosf(theta);
-		v.z = sinf(theta) * sinf(phi);
+		v.x = 5 * sinf(theta) * 5 * cosf(phi);
+		v.y = 5 * cosf(theta);
+		v.z = 5 * sinf(theta) * 5 * sinf(phi);
 
-		velocity = glm::mix(0.6f, 0.8f, ((float)rand() / RAND_MAX));
+		velocity = glm::mix(2.0f, 1.0f, ((float)rand() / RAND_MAX));
 		v = glm::normalize(v) * velocity;
 
 		data[3 * i] = v.x;
@@ -1019,7 +1026,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Libera la memoria de la textura
 	textureTerrainBlendMap.freeImage(bitmap);
 
-	Texture textureParticlesFountain("../Textures/bluewater.png");
+	Texture textureParticlesFountain("../Textures/blood.png");
 	bitmap = textureParticlesFountain.loadImage();
 	data = textureParticlesFountain.convertToData(bitmap, imageWidth,
 		imageHeight);
@@ -1583,6 +1590,13 @@ void applicationLoop() {
 	int numberAdvanceCovid4 = 0;
 	int maxAdvanceCovid4 = 0.0;
 
+	posOsmo = glm::vec3(modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
+
+	std::map<std::string, glm::vec3> blendingUnsorted = {
+	{ "fountain", posOsmo },
+	{ "fire", glm::vec3(0.0, 0.0, 7.0) }
+	};
+
 	matrixModelRock = glm::translate(matrixModelRock,
 		glm::vec3(-3.0, 0.0, 2.0));
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
@@ -1611,8 +1625,7 @@ void applicationLoop() {
 	modelMatrixCubrebocas7 = glm::translate(modelMatrixCubrebocas7, glm::vec3(0.0f, 0.0f, -22.0f));//Segundo enmedio arriba
 	modelMatrixCubrebocas8 = glm::translate(modelMatrixCubrebocas8, glm::vec3(0.0f, 0.0f, 11.5f));//Segundo enmedio abajo
 
-	modelMatrixFountain = glm::translate(modelMatrixFountain,
-		glm::vec3(5.0, 0.0, -40.0));
+	modelMatrixFountain = glm::translate(modelMatrixFountain,glm::vec3(69, 0.0, -13.0));
 	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
 		modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
 	modelMatrixFountain = glm::scale(modelMatrixFountain,
@@ -1733,12 +1746,17 @@ void applicationLoop() {
 		/*******************************************
 		 * Propiedades de neblina
 		 *******************************************/
-		shaderMulLighting.setVectorFloat3("fogColor",
-			glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
-		shaderTerrain.setVectorFloat3("fogColor",
-			glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
-		shaderSkybox.setVectorFloat3("fogColor",
-			glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+		if (vida <= 1)
+			colorNeb = neblinaRoja;
+		else
+			colorNeb = neblinaGris;
+		shaderMulLighting.setVectorFloat3("fogColor",glm::value_ptr(colorNeb));
+		shaderMulLighting.setFloat("density", 0.055);
+		shaderTerrain.setVectorFloat3("fogColor",glm::value_ptr(colorNeb));
+		shaderTerrain.setFloat("density", 0.08);
+		shaderSkybox.setVectorFloat3("fogColor",glm::value_ptr(colorNeb));
+		shaderSkybox.setFloat("density", 0.08);
+
 
 		/*******************************************
 		 * Propiedades Luz direccional
@@ -3472,21 +3490,17 @@ void renderScene(bool renderParticles) {
 	glDisable(GL_CULL_FACE);
 	for (std::map<float, std::pair<std::string, glm::vec3> >::reverse_iterator it =
 		blendingSorted.rbegin(); it != blendingSorted.rend(); it++) {
-		if (renderParticles
-			&& it->second.first.compare("fountain") == 0) {
+		if (renderParticles	&& it->second.first.compare("fountain") == 0) {
 			/**********
 			 * Init Render particles systems
 			 */
 			glm::mat4 modelMatrixParticlesFountain = glm::mat4(1.0);
-			modelMatrixParticlesFountain = glm::translate(
-				modelMatrixParticlesFountain, it->second.second);
-			modelMatrixParticlesFountain[3][1] = terrain.getHeightTerrain(
-				modelMatrixParticlesFountain[3][0],
+			modelMatrixParticlesFountain = glm::translate(modelMatrixParticlesFountain, it->second.second);
+			modelMatrixParticlesFountain[3][1] = terrain.getHeightTerrain(modelMatrixParticlesFountain[3][0],
 				modelMatrixParticlesFountain[3][2]) + 0.36 * 10.0;
-			modelMatrixParticlesFountain = glm::scale(
-				modelMatrixParticlesFountain, glm::vec3(3.0, 3.0, 3.0));
+			modelMatrixParticlesFountain = glm::scale(modelMatrixParticlesFountain, glm::vec3(3.0, 3.0, 3.0));
 			currTimeParticlesAnimation = TimeManager::Instance().GetTime();
-			if (currTimeParticlesAnimation - lastTimeParticlesAnimation > 10.0)
+			if (currTimeParticlesAnimation - lastTimeParticlesAnimation > 11.0)
 				lastTimeParticlesAnimation = currTimeParticlesAnimation;
 			//glDisable(GL_DEPTH_TEST);
 			glDepthMask(GL_FALSE);
@@ -3495,16 +3509,11 @@ void renderScene(bool renderParticles) {
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
 			shaderParticlesFountain.turnOn();
-			shaderParticlesFountain.setFloat("Time",
-				float(
-					currTimeParticlesAnimation
-					- lastTimeParticlesAnimation));
-			shaderParticlesFountain.setFloat("ParticleLifetime", 3.5f);
+			shaderParticlesFountain.setFloat("Time",float(currTimeParticlesAnimation - lastTimeParticlesAnimation));
+			shaderParticlesFountain.setFloat("ParticleLifetime", 1.0f);
 			shaderParticlesFountain.setInt("ParticleTex", 0);
-			shaderParticlesFountain.setVectorFloat3("Gravity",
-				glm::value_ptr(glm::vec3(0.0f, -0.3f, 0.0f)));
-			shaderParticlesFountain.setMatrix4("model", 1, false,
-				glm::value_ptr(modelMatrixParticlesFountain));
+			shaderParticlesFountain.setVectorFloat3("Gravity",glm::value_ptr(glm::vec3(0.0f, -0.9f, 0.0f)));
+			shaderParticlesFountain.setMatrix4("model", 1, false,glm::value_ptr(modelMatrixParticlesFountain));
 			glBindVertexArray(VAOParticles);
 			glDrawArrays(GL_POINTS, 0, nParticles);
 			glDepthMask(GL_TRUE);
@@ -3522,11 +3531,8 @@ void renderScene(bool renderParticles) {
 			currTimeParticlesAnimationFire = TimeManager::Instance().GetTime();
 
 			shaderParticlesFire.setInt("Pass", 1);
-			shaderParticlesFire.setFloat("Time",
-				currTimeParticlesAnimationFire);
-			shaderParticlesFire.setFloat("DeltaT",
-				currTimeParticlesAnimationFire
-				- lastTimeParticlesAnimationFire);
+			shaderParticlesFire.setFloat("Time",currTimeParticlesAnimationFire);
+			shaderParticlesFire.setFloat("DeltaT",currTimeParticlesAnimationFire - lastTimeParticlesAnimationFire);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_1D, texId);
@@ -3543,12 +3549,9 @@ void renderScene(bool renderParticles) {
 
 			shaderParticlesFire.setInt("Pass", 2);
 			glm::mat4 modelFireParticles = glm::mat4(1.0);
-			modelFireParticles = glm::translate(modelFireParticles,
-				it->second.second);
-			modelFireParticles[3][1] = terrain.getHeightTerrain(
-				modelFireParticles[3][0], modelFireParticles[3][2]);
-			shaderParticlesFire.setMatrix4("model", 1, false,
-				glm::value_ptr(modelFireParticles));
+			modelFireParticles = glm::translate(modelFireParticles,	it->second.second);
+			modelFireParticles[3][1] = terrain.getHeightTerrain(modelFireParticles[3][0], modelFireParticles[3][2]);
+			shaderParticlesFire.setMatrix4("model", 1, false,glm::value_ptr(modelFireParticles));
 
 			shaderParticlesFire.turnOn();
 			glActiveTexture(GL_TEXTURE0);
