@@ -120,8 +120,9 @@ Model CovidModelAnimate2;
 Model CovidModelAnimate3;
 Model CovidModelAnimate4;
 Model CovidModelAnimate5;
-// Masks
 Model maskArray[8];
+// Bullet
+Model modelBulletAnimate;
 // Map
 Model modelMapTest;
 //Model modelMapRef;
@@ -200,6 +201,7 @@ glm::mat4 modelMatrixCovid3 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid4 = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid5 = glm::mat4(1.0f);
 glm::mat4 modelMatrixMask = glm::mat4(1.0f);
+glm::mat4 modelMatrixBullet = glm::mat4(1.0f);
 glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 //glm::mat4 modelMatrixMapRef = glm::mat4(1.0f);
 glm::mat4 modelMatrixMap = glm::mat4(1.0f);
@@ -644,6 +646,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		maskArray[i].loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
 		maskArray[i].setShader(&shaderMulLighting);
 	}
+
+	//Bala
+	modelBulletAnimate.loadModel("../models/Osmosis/bala.fbx");
+	modelBulletAnimate.setShader(&shaderMulLighting);
 
 	//Camara en primera persona
 	//cameraFP->setPosition(glm::vec3(30.0f, 7.0f, -2.0f));
@@ -1240,6 +1246,7 @@ void destroy() {
 	{
 		maskArray[i].destroy();
 	}
+	modelBulletAnimate.destroy();
 	modelMapTest.destroy();
 	//modelMapRef.destroy();
 	//modelMapSquareFL.destroy();
@@ -1597,6 +1604,9 @@ void applicationLoop() {
 	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 35.0f));//Covid esquina inferior derecha
 	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -32.0f));//Covid esquina superior derecha
 	modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(-30.0f, 0.1684f, -15.0f));//Covid enmedio
+
+	//Bala
+	modelMatrixBullet = glm::translate(modelMatrixBullet, glm::vec3(-13.0f, 5.0f, 2.0f));
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,glm::vec3(69, 0.0, -13.0));
 	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
@@ -2540,6 +2550,8 @@ void applicationLoop() {
 		OsmosisCollider.c = glm::vec3(modelmatrixColliderOsmosis[3]);
 		addOrUpdateColliders(collidersOBB, "Osmosis", OsmosisCollider, modelMatrixOsmosis);
 
+
+
 		// Map colliders
 		//AbstractModel::OBB mapColliders[27];
 		for (unsigned int i = 0; i < 27; i++)
@@ -2558,6 +2570,20 @@ void applicationLoop() {
 			std::get<0>(collidersOBB.find("map-" + std::to_string(i))->second) =
 				mapCollider;
 		}
+
+		//Collider Bala
+		AbstractModel::SBB BalaCollider;
+		glm::mat4 modelmatrixColliderBala = glm::mat4(modelMatrixBullet);
+		modelmatrixColliderBala = glm::scale(modelmatrixColliderBala,
+		glm::vec3(0.01, 0.01, 0.01));
+		modelmatrixColliderBala = glm::translate(modelmatrixColliderBala,
+		//CovidModelAnimate.getSbb().c
+		glm::vec3(modelBulletAnimate.getSbb().c.x,
+			modelBulletAnimate.getSbb().c.y,
+			modelBulletAnimate.getSbb().c.z));
+		BalaCollider.c = glm::vec3(modelmatrixColliderBala[3]);
+		BalaCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.14;
+		addOrUpdateColliders(collidersSBB, "Bala", BalaCollider, modelMatrixBullet);
 
 		// Lamps1 colliders
 		//for (int i = 0; i < lamp1Position.size(); i++) {
@@ -3009,6 +3035,9 @@ void prepareScene() {
 		maskArray[i].setShader(&shaderMulLighting);
 	}
 
+	//Bala
+	modelBulletAnimate.setShader(&shaderMulLighting);
+
 	//Map
 	modelMapTest.setShader(&shaderMulLighting);
 	//modelMapRef.setShader(&shaderMulLighting);
@@ -3053,6 +3082,9 @@ void prepareDepthScene() {
 	{
 		maskArray[i].setShader(&shaderDepth);
 	}
+
+	//Bala
+	modelBulletAnimate.setShader(&shaderDepth);
 
 	//Map
 	modelMapTest.setShader(&shaderDepth);
@@ -3249,7 +3281,6 @@ void renderScene(bool renderParticles) {
 	if (DisappearModelCovid5) {
 		CovidModelAnimate5.render(modelMatrixCovidBody5);
 	}
-
 	// Render the masks
 	for (int i = 0; i < 8; i++) {
 		maskPositions[i].y = terrain.getHeightTerrain(maskPositions[i].x,
@@ -3262,6 +3293,11 @@ void renderScene(bool renderParticles) {
 			maskArray[i].render();
 		}
 	}
+	// Bullet
+	//modelMatrixBala[3][1] = terrain.getHeightTerrain(modelMatrixBala[3][0], modelMatrixBala[3][2]);
+	glm::mat4 modelMatrixBalaBody = glm::mat4(modelMatrixBullet);
+	modelMatrixBalaBody = glm::scale(modelMatrixBalaBody, glm::vec3(0.25, 0.25, 0.25));
+	modelBulletAnimate.render(modelMatrixBalaBody);
 	
 
 	/**********
