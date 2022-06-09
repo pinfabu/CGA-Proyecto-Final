@@ -3,8 +3,6 @@ layout (location = 0) in vec3 VertexPosition;
 layout (location = 1) in vec3 VertexVelocity;
 layout (location = 2) in float VertexAge;
 
-const float PI = 3.14159265359;
-
 // Output to fragment shader
 out float Transp;
 out vec2 TexCoord;
@@ -32,15 +30,19 @@ uniform mat4 view;
 uniform mat4 projection;
 
 vec3 randomInitialVelocity() {
-    float theta = mix(0.0, PI / 1.5, texelFetch(RandomTex, 3 * gl_VertexID, 0).r );
-    float phi = mix(0.0, 2.0 * PI, texelFetch(RandomTex, 3 * gl_VertexID + 1, 0).r);
-    float velocity = mix(0.1, 2.5, texelFetch(RandomTex, 3 * gl_VertexID + 2, 0).r );
-    vec3 v = vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi));
-    return normalize(EmitterBasis * v) * velocity;
+    float velocity = mix(0.1, 0.5, texelFetch(RandomTex, 2 * gl_VertexID, 0).r );
+    return EmitterBasis * vec3(0, velocity, 0);
+}
+
+vec3 randomInitialPosition() {
+    float offsetX = mix(-75.0, 75.0, texelFetch(RandomTex, 2 * gl_VertexID, 0).r);
+	float offsetZ = mix(-55.0, 55.0, texelFetch(RandomTex, 2 * gl_VertexID + 1, 0).r);
+    return Emitter + vec3(offsetX, 0, offsetZ);
 }
 
 // Offsets to the position in camera coordinates for each vertex of the particle's quad
-const vec3 offsets[] = vec3[](vec3(-0.5,-0.5,0), vec3(0.5,-0.5,0), vec3(0.5,0.5,0), vec3(-0.5,-0.5,0), vec3(0.5,0.5,0), vec3(-0.5,0.5,0) );
+const vec3 offsets[] = vec3[](vec3(-0.5,-0.5,0), vec3(0.5,-0.5,0), vec3(0.5,0.5,0),
+                              vec3(-0.5,-0.5,0), vec3(0.5,0.5,0), vec3(-0.5,0.5,0) );
 
 // Texture coordinates for each vertex of the particle's quad
 const vec2 texCoords[] = vec2[](vec2(0,0), vec2(1,0), vec2(1,1), vec2(0,0), vec2(1,1), vec2(0,1));
@@ -52,7 +54,7 @@ void main()
 
 	    if( VertexAge < 0 || VertexAge > ParticleLifetime ) {
 	        // The particle is past it's lifetime (or not born yet)
-	        Position = Emitter;
+	        Position = randomInitialPosition();
 	        Velocity = randomInitialVelocity();
 	        if(VertexAge > ParticleLifetime)
 	        	Age = (VertexAge - ParticleLifetime) + DeltaT;
