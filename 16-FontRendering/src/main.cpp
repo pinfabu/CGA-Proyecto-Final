@@ -90,7 +90,6 @@ Shader shaderParticlesSmoke;
 //Shader para las particulas de lluvia
 Shader shaderParticlesRain;
 
-//std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromTarget = -0.5;
 
@@ -103,18 +102,12 @@ Box boxLightViewBox;
 ShadowBox* shadowBox;
 
 // Models complex instances
-//Model modelRock;
 // Lamps
 Model modelLamp1;
 Model modelLamp2;
-//Model modelLampPost2;
 // Hierba
 Model modelGrass;
-// Fountain
-Model modelFountain;
 // Model animate instance
-/*// Mayow
-Model mayowModelAnimate;*/
 // Osmosis
 Model modelOsmosisAnimate;
 // Covid
@@ -125,7 +118,6 @@ Model maskArray[NUM_MASKS];
 Model modelBulletAnimate;
 // Map
 Model modelMapTest;
-//Model modelMapRef;
 Model mapArray[27];
 std::string mapDirs[27] = {
 	"../models/Map/L_HortBackLeft.obj",		//0
@@ -164,7 +156,7 @@ GLuint textureCespedID, textureWallID, textureWindowID, textureRainID,
 textureSmokeID;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID,
 textureTerrainBID, textureTerrainBlendMapID;
-GLuint textureParticleFountainID, textureParticleSmokeID, textureParticleRainID, texIdSmoke, texIdRain;
+GLuint textureParticleSmokeID, textureParticleRainID, texIdSmoke, texIdRain;
 GLuint skyboxTextureID;
 
 // Modelo para el redener de texto
@@ -181,19 +173,17 @@ GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 GL_TEXTURE_CUBE_MAP_NEGATIVE_Z };
 
 std::string fileNames[6] = { "../Textures/mp_bloodvalley/blood-valley_ft.tga",
-		"../Textures/mp_bloodvalley/blood-valley_bk.tga",
-		"../Textures/mp_bloodvalley/blood-valley_up.tga",
-		"../Textures/mp_bloodvalley/blood-valley_dn.tga",
-		"../Textures/mp_bloodvalley/blood-valley_rt.tga",
-		"../Textures/mp_bloodvalley/blood-valley_lf.tga" };
+	"../Textures/mp_bloodvalley/blood-valley_bk.tga",
+	"../Textures/mp_bloodvalley/blood-valley_up.tga",
+	"../Textures/mp_bloodvalley/blood-valley_dn.tga",
+	"../Textures/mp_bloodvalley/blood-valley_rt.tga",
+	"../Textures/mp_bloodvalley/blood-valley_lf.tga" };
 
 bool exitApp = false;
 int lastMousePosX, offsetX = 0;
 int lastMousePosY, offsetY = 0;
 
 // Model matrix definitions
-//glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
-//glm::mat4 matrixModelRock = glm::mat4(1.0);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid[NUM_COVID] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 glm::mat4 modelMatrixMask = glm::mat4(1.0f);
@@ -201,9 +191,7 @@ glm::mat4 modelMatrixBullet = glm::mat4(1.0f);
 glm::mat4 modelMatrixBulletBody = glm::mat4(1.0f);
 glm::mat4 modelMatrixBulletRef = glm::mat4(1.0f);
 glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
-//glm::mat4 modelMatrixMapRef = glm::mat4(1.0f);
 glm::mat4 modelMatrixMap = glm::mat4(1.0f);
-glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 
 int animationIndex = 1;
 int modelSelected = 0;
@@ -214,12 +202,6 @@ bool enableBulletFiring = true;
 bool bulletIsActive = false;
 float bulletMovement = 0.0;
 float bulletMaxMovement = 10.0;
-
-// Variables to animations keyframes
-bool saveFrame = false, availableSave = true;
-std::ofstream myfile;
-std::string fileName = "";
-bool record = false;
 
 // Rendering flags
 bool renderMask[NUM_MASKS] = { true, true, true, true, true, true, true, true };
@@ -236,8 +218,6 @@ glm::vec3 neblinaRoja = glm::vec3(0.9, 0.2, 0.2);
 glm::vec3 colorLluvia = glm::vec3(0.5, 0.5, 0.5);
 glm::vec3 lluviaGris = glm::vec3(0.25, 0.25, 0.25);
 glm::vec3 lluviaRoja = glm::vec3(0.9, 0.2, 0.2);
-
-//bool banderaDisparo = true;
 
 // Lamps positions
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), glm::vec3(
@@ -269,12 +249,6 @@ std::map<std::string, glm::vec3> blendingUnsorted = {
 
 double deltaTime;
 double currTime, lastTime;
-
-// Jump variables
-bool isJump = false;
-float GRAVITY = 1.81;
-double tmv = 0;
-double startTimeJump = 0;
 
 // Definition for the particle system
 GLuint initVel, startTime;
@@ -316,24 +290,23 @@ GLuint depthMap, depthMapFBO;
  */
 
  // OpenAL Defines
-#define NUM_BUFFERS 5
-#define NUM_SOURCES 5
+// CHANGE BUFFERS TO 1, ONLY ONE PER COVID FOR TESTING
+#define NUM_BUFFERS NUM_COVID
+#define NUM_SOURCES NUM_COVID
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-// Source 0
-//ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
-//ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
 // Source for Covid
 ALfloat sourceCovidPos[NUM_COVID][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
 ALfloat sourceCovidVel[NUM_COVID][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
-//ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
-//ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
-// Source 2
-//ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
-//ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+// Source Covid dead
+//ALfloat sourceCovDeadPos[] = { 0.0, 0.0, 0.0 };
+//ALfloat sourceCovDeadVel[] = { 0.0, 0.0, 0.0 };
+// Source user dead
+//ALfloat sourceUserDeadPos[] = { 2.0, 0.0, 0.0 };
+//ALfloat sourceUserDeadVel[] = { 0.0, 0.0, 0.0 };
 // Buffers
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
@@ -703,20 +676,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.loadModel("../models/Lamps/SpotLamp/SpotLamp2.fbx");
 	modelLamp2.setShader(&shaderMulLighting);
-	/*modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
-	modelLampPost2.setShader(&shaderMulLighting);*/
 
 	//Grass
 	modelGrass.loadModel("../models/grass/grassModel.obj");
 	modelGrass.setShader(&shaderMulLighting);
-
-	//Fountain
-	modelFountain.loadModel("../models/fountain/fountain.obj");
-	modelFountain.setShader(&shaderMulLighting);
-
-	//Mayow
-	/*mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
-	mayowModelAnimate.setShader(&shaderMulLighting);*/
 
 	//Osmosis
 	modelOsmosisAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
@@ -726,8 +689,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelMapTest.loadModel("../models/Map/Map.obj");
 	modelMapTest.setShader(&shaderMulLighting);
 
-	//modelMapRef.loadModel("../models/Map/Reference.obj");
-	//modelMapRef.setShader(&shaderMulLighting);
 
 	for (unsigned int i = 0; i < 27; i++)
 	{
@@ -1281,7 +1242,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	buffer[2] = alutCreateBufferFromFile("../sounds/two.wav");
 	buffer[3] = alutCreateBufferFromFile("../sounds/three.wav");
 	buffer[4] = alutCreateBufferFromFile("../sounds/four.wav");
-	//buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
 	int errorAlut = alutGetError();
 	if (errorAlut != ALUT_ERROR_NO_ERROR) {
 		printf("- Error open files with alut %d !!\n", errorAlut);
@@ -1361,15 +1321,11 @@ void destroy() {
 	terrain.destroy();
 
 	// Custom objects Delete
-	//modelRock.destroy();
 	modelLamp1.destroy();
 	modelLamp2.destroy();
-	//modelLampPost2.destroy();
 	modelGrass.destroy();
-	modelFountain.destroy();
 
 	// Custom objects animate
-	//mayowModelAnimate.destroy();
 	modelOsmosisAnimate.destroy();
 	for (unsigned int i = 0; i < NUM_COVID; i++)
 	{
@@ -1381,8 +1337,6 @@ void destroy() {
 	}
 	modelBulletAnimate.destroy();
 	modelMapTest.destroy();
-	//modelMapRef.destroy();
-	//modelMapSquareFL.destroy();
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		mapArray[i].destroy();
@@ -1400,19 +1354,11 @@ void destroy() {
 	glDeleteTextures(1, &textureTerrainGID);
 	glDeleteTextures(1, &textureTerrainBID);
 	glDeleteTextures(1, &textureTerrainBlendMapID);
-	glDeleteTextures(1, &textureParticleFountainID);
 	glDeleteTextures(1, &textureParticleSmokeID);
 
 	// Cube Maps Delete
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	glDeleteTextures(1, &skyboxTextureID);
-
-	//// Remove the buffer of the fountain particles
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glDeleteBuffers(1, &initVel);
-	//glDeleteBuffers(1, &startTime);
-	//glBindVertexArray(0);
-	//glDeleteVertexArrays(1, &VAOParticles);
 
 	// Remove the buffer of the Smoke particles
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1524,14 +1470,6 @@ bool processInput(bool continueApplication) {
 				bulletIsActive = true;
 				std::cout << "Bullet fired" << std::endl;
 			}
-			//if (banderaDisparo) {
-			//	//aqui lo del disparo
-			//	std::cout << "Disparo" << std::endl;
-			//	if (bullets > 0) {
-			//		bullets -= 1;
-			//		banderaDisparo = false;
-			//	}
-			//}
 			animationIndex = 1;
 		}
 		else if (axes[5] <= 0) {
@@ -1555,13 +1493,6 @@ bool processInput(bool continueApplication) {
 			std::cout << "Se presiona A" << std::endl;
 		if (buttons[1] == GLFW_PRESS)
 			std::cout << "Se presiona B" << std::endl;
-		/*if (buttons[2] == GLFW_PRESS) {
-			std::cout << "Se presiona X" << std::endl;
-			std::cout << "Recargas" << std::endl;
-			if (bullets != 0) {
-				banderaDisparo = true;
-			}
-		}*/
 		if (buttons[3] == GLFW_PRESS)
 			std::cout << "Se presiona Y" << std::endl;
 		if (buttons[4] == GLFW_PRESS)
@@ -1584,12 +1515,6 @@ bool processInput(bool continueApplication) {
 			std::cout << "Cruceta Abajo" << std::endl;
 		if (buttons[13] == GLFW_PRESS)
 			std::cout << "Cruceta Izquierda" << std::endl;
-
-		if (!isJump && buttons[0] == GLFW_PRESS) {
-			isJump = true;
-			startTimeJump = currTime;
-			tmv = 0;
-		}
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -1619,24 +1544,6 @@ bool processInput(bool continueApplication) {
 		}
 	}
 
-	/*if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		if (banderaDisparo) {
-			//aqui lo del disparo
-			std::cout << "Disparo" << std::endl;
-			if (bullets > 0) {
-				bullets -= 1;
-				banderaDisparo = false;
-			}
-		}
-		animationIndex = 1;
-	}
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-		std::cout << "Recargas" << std::endl;
-		if (bullets != 0) {
-			banderaDisparo = true;
-		}
-	}*/
-
 	//Para que no pueda mover la camara el usuario
 	//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	//	camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
@@ -1645,20 +1552,6 @@ bool processInput(bool continueApplication) {
 	offsetX = 0;
 	offsetY = 0;
 
-	// Seleccionar modelo
-	/*if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
-		enableCountSelected = false;
-		modelSelected++;
-		if (modelSelected > 2)
-			modelSelected = 0;
-		if (modelSelected == 1)
-
-			if (modelSelected == 2)
-
-				std::cout << "modelSelected:" << modelSelected << std::endl;
-	}
-	else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
-		enableCountSelected = true;*/
 	//Movimiento Osmosis
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f),
@@ -1675,37 +1568,7 @@ bool processInput(bool continueApplication) {
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 			glm::vec3(0, 0, -0.2));
-	}
-	//Movimiento mayow
-	/*if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(1.0f),
-				glm::vec3(0, 1, 0));
-		animationIndex = 0;
-	} else if (modelSelected
-			== 2&& glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-1.0f),
-				glm::vec3(0, 1, 0));
-
-		animationIndex = 0;
-	}
-	if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow,
-				glm::vec3(0, 0, 0.02));
-		animationIndex = 0;
-	} else if (modelSelected
-			== 2&& glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow,
-				glm::vec3(0, 0, -0.02));
-		animationIndex = 0;
-	}*/
-
-	bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-	if (!isJump && keySpaceStatus) {
-		isJump = true;
-		startTimeJump = currTime;
-		tmv = 0;
-	}
-		
+	}		
 
 	glfwPollEvents();
 	return continueApplication;
@@ -1719,18 +1582,6 @@ void applicationLoop() {
 	glm::vec3 target;
 	float angleTarget;
 
-	std::map<std::string, glm::vec3> blendingUnsorted = {
-	{ "fountain", glm::vec3(5.0, 0.0, -40.0) },
-	{ "fire", glm::vec3(0.0, 0.0, 7.0) }
-	};
-
-	//matrixModelRock = glm::translate(matrixModelRock,
-	//	glm::vec3(-3.0, 0.0, 2.0));
-	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
-			glm::vec3(13.0f, 0.05f, -5.0f));
-	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
-			glm::vec3(0, 1, 0));*/
-
 	// Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 		glm::vec3(0.0f, 0.0f, 0.0f));
@@ -1743,25 +1594,9 @@ void applicationLoop() {
 		modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], covidPositions[i]);
 	}
 
-	// Bullet
-	//modelMatrixBullet = glm::translate(modelMatrixBullet, glm::vec3(-13.0f, 5.0f, 2.0f));
-
-	modelMatrixFountain = glm::translate(modelMatrixFountain,glm::vec3(69, 0.0, -13.0));
-	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
-		modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
-	modelMatrixFountain = glm::scale(modelMatrixFountain,
-		glm::vec3(10.0f, 10.0f, 10.0f));
-
-	//Map
-	//modelMatrixMapSquareFL = glm::translate(modelMatrixMapSquareFL,
-	//	glm::vec3(-15.1655f, 16.93653f, 4.13053f));
-
 	lastTime = TimeManager::Instance().GetTime();
 
 	// Time for the particles animation
-	/*currTimeParticlesAnimation = lastTime;
-	lastTimeParticlesAnimation = lastTime;*/
-
 	currTimeParticlesAnimationSmoke = lastTime;
 	lastTimeParticlesAnimationSmoke = lastTime;
 
@@ -1800,8 +1635,6 @@ void applicationLoop() {
 			angleTarget = 0.0;
 		if (axis.y < 0)
 			angleTarget = -angleTarget;
-		//if (modelSelected == 1)
-		//	angleTarget -= glm::radians(90.0f);
 		camera->setCameraTarget(target);
 		camera->setAngleTarget(angleTarget);
 		camera->updateCamera();
@@ -2080,22 +1913,22 @@ void applicationLoop() {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		/*******************************************
-		 * Debug to view the texture view map
-		 *******************************************/
-		 // reset viewport
-		 /*glViewport(0, 0, screenWidth, screenHeight);
-		  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		  // render Depth map to quad for visual debugging
-		  shaderViewDepth.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
-		  shaderViewDepth.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
-		  glActiveTexture(GL_TEXTURE0);
-		  glBindTexture(GL_TEXTURE_2D, depthMap);
-		  boxViewDepth.setScale(glm::vec3(2.0, 2.0, 1.0));
-		  boxViewDepth.render();*/
+		* Debug to view the texture view map
+		*******************************************/
+		// reset viewport
+		/*glViewport(0, 0, screenWidth, screenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// render Depth map to quad for visual debugging
+		shaderViewDepth.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		shaderViewDepth.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		boxViewDepth.setScale(glm::vec3(2.0, 2.0, 1.0));
+		boxViewDepth.render();*/
 
-		  /*******************************************
-		   * 2.- We render the normal objects
-		   *******************************************/
+		/*******************************************
+		* 2.- We render the normal objects
+		*******************************************/
 		glViewport(0, 0, screenWidth, screenHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		prepareScene();
@@ -2120,38 +1953,26 @@ void applicationLoop() {
 		glDepthFunc(oldDepthFuncMode);
 		renderScene();
 		/*******************************************
-		 * Debug to box light box
-		 *******************************************/
-		 /*glm::vec3 front = glm::normalize(-lightPos);
-		  glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), front));
-		  glm::vec3 up = glm::normalize(glm::cross(front, right));
-		  glDisable(GL_CULL_FACE);
-		  glm::mat4 boxViewTransform = glm::mat4(1.0f);
-		  boxViewTransform = glm::translate(boxViewTransform, centerBox);
-		  boxViewTransform[0] = glm::vec4(right, 0.0);
-		  boxViewTransform[1] = glm::vec4(up, 0.0);
-		  boxViewTransform[2] = glm::vec4(front, 0.0);
-		  boxViewTransform = glm::scale(boxViewTransform, glm::vec3(shadowBox->getWidth(), shadowBox->getHeight(), shadowBox->getLength()));
-		  boxLightViewBox.enableWireMode();
-		  boxLightViewBox.render(boxViewTransform);
-		  glEnable(GL_CULL_FACE);*/
+		* Debug to box light box
+		*******************************************/
+		/*glm::vec3 front = glm::normalize(-lightPos);
+		glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), front));
+		glm::vec3 up = glm::normalize(glm::cross(front, right));
+		glDisable(GL_CULL_FACE);
+		glm::mat4 boxViewTransform = glm::mat4(1.0f);
+		boxViewTransform = glm::translate(boxViewTransform, centerBox);
+		boxViewTransform[0] = glm::vec4(right, 0.0);
+		boxViewTransform[1] = glm::vec4(up, 0.0);
+		boxViewTransform[2] = glm::vec4(front, 0.0);
+		boxViewTransform = glm::scale(boxViewTransform, glm::vec3(shadowBox->getWidth(), shadowBox->getHeight(), shadowBox->getLength()));
+		boxLightViewBox.enableWireMode();
+		boxLightViewBox.render(boxViewTransform);
+		glEnable(GL_CULL_FACE);*/
 
-		  /*******************************************
-		   * Creacion de colliders
-		   * IMPORTANT do this before interpolations
-		   *******************************************/
-
-		//   //Collider del la rock
-		//AbstractModel::SBB rockCollider;
-		//glm::mat4 modelMatrixColliderRock = glm::mat4(matrixModelRock);
-		//modelMatrixColliderRock = glm::scale(modelMatrixColliderRock,
-		//	glm::vec3(1.0, 1.0, 1.0));
-		//modelMatrixColliderRock = glm::translate(modelMatrixColliderRock,
-		//	modelRock.getSbb().c);
-		//rockCollider.c = glm::vec3(modelMatrixColliderRock[3]);
-		//rockCollider.ratio = modelRock.getSbb().ratio * 1.0;
-		//addOrUpdateColliders(collidersSBB, "rock", rockCollider,
-		//	matrixModelRock);
+		/*******************************************
+		* Creacion de colliders
+		* IMPORTANT do this before interpolations
+		*******************************************/
 
 		// Covid colliders
 		for (unsigned int i = 0; i < NUM_COVID; i++)
@@ -2234,7 +2055,6 @@ void applicationLoop() {
 		addOrUpdateColliders(collidersOBB, "Osmosis", osmosisCollider, modelMatrixOsmosis);
 
 		// Map colliders
-		//AbstractModel::OBB mapColliders[27];
 		for (unsigned int i = 0; i < 27; i++)
 		{
 			AbstractModel::OBB mapCollider;
@@ -2242,8 +2062,6 @@ void applicationLoop() {
 			addOrUpdateColliders(collidersOBB, "map-" + std::to_string(i),
 				mapCollider, modelMatrixColliderMap);
 			mapCollider.u = glm::quat_cast(modelMatrixColliderMap);
-			//modelMatrixColliderMap = glm::scale(modelMatrixColliderMap,
-			//	glm::vec3(1.1, 1.1, 1.1));
 			modelMatrixColliderMap = glm::translate(modelMatrixColliderMap,
 				mapArray[i].getObb().c);
 			mapCollider.c = glm::vec3(modelMatrixColliderMap[3]);
@@ -2279,32 +2097,10 @@ void applicationLoop() {
 			dyBullet = -100;
 			dzBullet = 0;
 		}		
-		//modelMatrixColliderBullet = glm::rotate(modelMatrixColliderOsmosis, glm::radians(90.0f), glm::vec3(0, 1, 0));
-		//modelMatrixColliderBullet = glm::scale(modelMatrixColliderBullet, glm::vec3(0.25, 0.25, 0.25));
 		modelMatrixColliderBullet = glm::translate(modelMatrixColliderBullet, bulletPosition);
 		bulletCollider.c = glm::vec3(modelMatrixColliderBullet[3]);
 		bulletCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.25;
 		addOrUpdateColliders(collidersSBB, "bullet", bulletCollider, modelMatrixBulletBody);
-
-		// Collider de mayow
-		//AbstractModel::OBB mayowCollider;
-		//glm::mat4 modelmatrixColliderMayow = glm::mat4(modelMatrixMayow);
-		//modelmatrixColliderMayow = glm::rotate(modelmatrixColliderMayow,
-		//		glm::radians(-90.0f), glm::vec3(1, 0, 0));
-		//// Set the orientation of collider before doing the scale
-		//mayowCollider.u = glm::quat_cast(modelmatrixColliderMayow);
-		//modelmatrixColliderMayow = glm::scale(modelmatrixColliderMayow,
-		//		glm::vec3(0.021, 0.021, 0.021));
-		//modelmatrixColliderMayow = glm::translate(modelmatrixColliderMayow,
-		//		glm::vec3(mayowModelAnimate.getObb().c.x,
-		//				mayowModelAnimate.getObb().c.y,
-		//				mayowModelAnimate.getObb().c.z));
-		//mayowCollider.e = mayowModelAnimate.getObb().e
-		//		* glm::vec3(0.021, 0.021, 0.021)
-		//		* glm::vec3(0.787401574, 0.787401574, 0.787401574);
-		//mayowCollider.c = glm::vec3(modelmatrixColliderMayow[3]);
-		//addOrUpdateColliders(collidersOBB, "mayow", mayowCollider,
-		//		modelMatrixMayow);
 
 		// Lamps1 colliders
 		//for (int i = 0; i < lamp1Position.size(); i++) {
@@ -2351,26 +2147,6 @@ void applicationLoop() {
 		//		lampCollider;
 		//}
 
-		// Collider de mayow
-		//AbstractModel::OBB mayowCollider;
-		//glm::mat4 modelmatrixColliderMayow = glm::mat4(modelMatrixMayow);
-		//modelmatrixColliderMayow = glm::rotate(modelmatrixColliderMayow,
-		//		glm::radians(-90.0f), glm::vec3(1, 0, 0));
-		//// Set the orientation of collider before doing the scale
-		//mayowCollider.u = glm::quat_cast(modelmatrixColliderMayow);
-		//modelmatrixColliderMayow = glm::scale(modelmatrixColliderMayow,
-		//		glm::vec3(0.021, 0.021, 0.021));
-		//modelmatrixColliderMayow = glm::translate(modelmatrixColliderMayow,
-		//		glm::vec3(mayowModelAnimate.getObb().c.x,
-		//				mayowModelAnimate.getObb().c.y,
-		//				mayowModelAnimate.getObb().c.z));
-		//mayowCollider.e = mayowModelAnimate.getObb().e
-		//		* glm::vec3(0.021, 0.021, 0.021)
-		//		* glm::vec3(0.787401574, 0.787401574, 0.787401574);
-		//mayowCollider.c = glm::vec3(modelmatrixColliderMayow[3]);
-		//addOrUpdateColliders(collidersOBB, "mayow", mayowCollider,
-		//		modelMatrixMayow);
-
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
@@ -2404,27 +2180,27 @@ void applicationLoop() {
 
 		// Esto es para ilustrar la transformacion inversa de los coliders
 		/*glm::vec3 cinv = glm::inverse(mayowCollider.u) * glm::vec4(rockCollider.c, 1.0);
-		 glm::mat4 invColliderS = glm::mat4(1.0);
-		 invColliderS = glm::translate(invColliderS, cinv);
-		 invColliderS =  invColliderS * glm::mat4(mayowCollider.u);
-		 invColliderS = glm::scale(invColliderS, glm::vec3(rockCollider.ratio * 2.0, rockCollider.ratio * 2.0, rockCollider.ratio * 2.0));
-		 sphereCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
-		 sphereCollider.enableWireMode();
-		 sphereCollider.render(invColliderS);
-		 glm::vec3 cinv2 = glm::inverse(mayowCollider.u) * glm::vec4(mayowCollider.c, 1.0);
-		 glm::mat4 invColliderB = glm::mat4(1.0);
-		 invColliderB = glm::translate(invColliderB, cinv2);
-		 invColliderB = glm::scale(invColliderB, mayowCollider.e * 2.0f);
-		 boxCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
-		 boxCollider.enableWireMode();
-		 boxCollider.render(invColliderB);
-		 // Se regresa el color blanco
-		 sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-		 boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));*/
+		glm::mat4 invColliderS = glm::mat4(1.0);
+		invColliderS = glm::translate(invColliderS, cinv);
+		invColliderS =  invColliderS * glm::mat4(mayowCollider.u);
+		invColliderS = glm::scale(invColliderS, glm::vec3(rockCollider.ratio * 2.0, rockCollider.ratio * 2.0, rockCollider.ratio * 2.0));
+		sphereCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
+		sphereCollider.enableWireMode();
+		sphereCollider.render(invColliderS);
+		glm::vec3 cinv2 = glm::inverse(mayowCollider.u) * glm::vec4(mayowCollider.c, 1.0);
+		glm::mat4 invColliderB = glm::mat4(1.0);
+		invColliderB = glm::translate(invColliderB, cinv2);
+		invColliderB = glm::scale(invColliderB, mayowCollider.e * 2.0f);
+		boxCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
+		boxCollider.enableWireMode();
+		boxCollider.render(invColliderB);
+		// Se regresa el color blanco
+		sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
+		boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));*/
 
-		 /*******************************************
-		  * Test Colisions
-		  *******************************************/
+		/*******************************************
+		* Test Colisions
+		*******************************************/
 
 		// Box  vs Box
 		for (std::map<std::string,
@@ -2484,6 +2260,7 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 				isCollision);
 		}
+
 		// Sphere vs Box
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
@@ -2566,8 +2343,6 @@ void applicationLoop() {
 			modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
 			//modelText->render(cadena, -.95, 0.9, 50, 1.0, 1.0, 1.0);
 			//modelText2->render(cadena1, -.20, 0.9, 50, 1.0, 1.0, 1.0);
-			//if (recarga)
-			//	modelText3->render(cadena2, .65, 0.9, 50, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
 		else {
@@ -2579,29 +2354,10 @@ void applicationLoop() {
 		/****************************+
 		 * Open AL sound data
 		 */
-		/*source0Pos[0] = modelMatrixFountain[3].x;
-		source0Pos[1] = modelMatrixFountain[3].y;
-		source0Pos[2] = modelMatrixFountain[3].z;
-		alSourcefv(source[0], AL_POSITION, source0Pos);*/
-
-		/*source2Pos[0] = modelMatrixDart[3].x;
-		source2Pos[1] = modelMatrixDart[3].y;
-		source2Pos[2] = modelMatrixDart[3].z;
-		alSourcefv(source[2], AL_POSITION, source2Pos);*/
-
-		// Listener for the Thris person camera
-		/*listenerPos[0] = modelMatrixMayow[3].x;
-		listenerPos[1] = modelMatrixMayow[3].y;
-		listenerPos[2] = modelMatrixMayow[3].z;
-		alListenerfv(AL_POSITION, listenerPos);*/
-
 		listenerPos[0] = modelMatrixOsmosis[3].x;
 		listenerPos[1] = modelMatrixOsmosis[3].y;
 		listenerPos[2] = modelMatrixOsmosis[3].z;
 		alListenerfv(AL_POSITION, listenerPos);
-
-		/*glm::vec3 upModel = glm::normalize(modelMatrixMayow[1]);
-		glm::vec3 frontModel = glm::normalize(modelMatrixMayow[2]);*/
 
 		glm::vec3 upModel = glm::normalize(modelMatrixOsmosis[1]);
 		glm::vec3 frontModel = glm::normalize(modelMatrixOsmosis[2]);
@@ -2613,17 +2369,6 @@ void applicationLoop() {
 		listenerOri[4] = upModel.y;
 		listenerOri[5] = upModel.z;
 
-		// Listener for the First person camera
-		/*listenerPos[0] = camera->getPosition().x;
-		 listenerPos[1] = camera->getPosition().y;
-		 listenerPos[2] = camera->getPosition().z;
-		 alListenerfv(AL_POSITION, listenerPos);
-		 listenerOri[0] = camera->getFront().x;
-		 listenerOri[1] = camera->getFront().y;
-		 listenerOri[2] = camera->getFront().z;
-		 listenerOri[3] = camera->getUp().x;
-		 listenerOri[4] = camera->getUp().y;
-		 listenerOri[5] = camera->getUp().z;*/
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
 		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
@@ -2642,20 +2387,14 @@ void prepareScene() {
 
 	skyboxSphere.setShader(&shaderSkybox);
 
-	//modelRock.setShader(&shaderMulLighting);
-
 	terrain.setShader(&shaderTerrain);
 
 	//Lamp models
 	modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.setShader(&shaderMulLighting);
-	//modelLampPost2.setShader(&shaderMulLighting);
 
 	//Grass
 	modelGrass.setShader(&shaderMulLighting);
-
-	//Mayow
-	//mayowModelAnimate.setShader(&shaderMulLighting);
 
 	//Osmosis
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
@@ -2677,8 +2416,6 @@ void prepareScene() {
 
 	//Map
 	modelMapTest.setShader(&shaderMulLighting);
-	//modelMapRef.setShader(&shaderMulLighting);
-	//modelMapSquareFL.setShader(&shaderMulLighting);
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		mapArray[i].setShader(&shaderMulLighting);
@@ -2689,20 +2426,14 @@ void prepareDepthScene() {
 
 	skyboxSphere.setShader(&shaderDepth);
 
-	//modelRock.setShader(&shaderDepth);
-
 	terrain.setShader(&shaderDepth);
 
 	//Lamp models
 	modelLamp1.setShader(&shaderDepth);
 	modelLamp2.setShader(&shaderDepth);
-	//modelLampPost2.setShader(&shaderDepth);
 
 	//Grass
 	modelGrass.setShader(&shaderDepth);
-
-	//Mayow
-	//mayowModelAnimate.setShader(&shaderDepth);
 
 	// Osmosis
 	modelOsmosisAnimate.setShader(&shaderDepth);
@@ -2724,8 +2455,6 @@ void prepareDepthScene() {
 
 	// Map
 	modelMapTest.setShader(&shaderDepth);
-	//modelMapRef.setShader(&shaderDepth);
-	//modelMapSquareFL.setShader(&shaderDepth);
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		mapArray[i].setShader(&shaderDepth);
@@ -2767,11 +2496,6 @@ void renderScene(bool renderParticles) {
 	/*******************************************
 	 * Custom objects obj
 	 *******************************************/
-	 //Rock render
-	/*matrixModelRock[3][1] = terrain.getHeightTerrain(matrixModelRock[3][0],
-		matrixModelRock[3][2]);
-	modelRock.render(matrixModelRock);*/
-	// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
 	glActiveTexture(GL_TEXTURE0);
 
 	// Render the lamps
@@ -2796,6 +2520,7 @@ void renderScene(bool renderParticles) {
 		modelLampPost2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLampPost2.render();
 	}*/
+
 	glm::mat4 modelMatrixBodyLamp1 = glm::mat4(1.0);
 	modelMatrixBodyLamp1 = glm::translate(modelMatrixBodyLamp1, glm::vec3(69.0f, 10.0f, -13.0f));
 	modelMatrixBodyLamp1 = glm::rotate(modelMatrixBodyLamp1, glm::radians(-90.0f), glm::vec3(1, 0, 0));
@@ -2815,59 +2540,17 @@ void renderScene(bool renderParticles) {
 	modelGrass.render();
 	glEnable(GL_CULL_FACE);
 
-	// Fountain
-	glDisable(GL_CULL_FACE);
-	modelFountain.render(modelMatrixFountain);
-	glEnable(GL_CULL_FACE);
-
 	/*******************************************
-	 * Custom Anim objects obj
-	 *******************************************/
-	 //modelMatrixMayow[3][1] = -GRAVITY * tmv * tmv + 3.5 * tmv
-	 //		+ terrain.getHeightTerrain(modelMatrixMayow[3][0],
-	 //				modelMatrixMayow[3][2]);
-	 //tmv = currTime - startTimeJump;
-	 //if (modelMatrixMayow[3][1]
-	 //		< terrain.getHeightTerrain(modelMatrixMayow[3][0],
-	 //				modelMatrixMayow[3][2])) {
-	 //	isJump = false;
-	 //	modelMatrixMayow[3][1] = terrain.getHeightTerrain(
-	 //			modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
-	 //}
-	 ////modelMatrixMayow[3][1] = terrain.getHeightTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
-	 //glm::mat4 modelMatrixMayowBody = glm::mat4(modelMatrixMayow);
-	 //modelMatrixMayowBody = glm::scale(modelMatrixMayowBody,
-	 //		glm::vec3(0.021, 0.021, 0.021));
-	 //mayowModelAnimate.setAnimationIndex(animationIndex);
-	 //mayowModelAnimate.render(modelMatrixMayowBody);
+	* Custom Anim objects obj
+	*******************************************/
 
-
-
-	 /*glm::vec3 ejeyS = glm::normalize(terrain.getNormalTerrain(modelMatrixOsmosis[3][0], modelMatrixOsmosis[3][2]));
-	 glm::vec3 ejexS = glm::normalize(modelMatrixOsmosis[0]);
-	 glm::vec3 ejezS = glm::normalize(glm::cross(ejexS, ejeyS));
-	 ejexS = glm::normalize(glm::cross(ejeyS, ejezS));
-	 modelMatrixOsmosis[0] = glm::vec4(ejexS, 0.0);
-	 modelMatrixOsmosis[1] = glm::vec4(ejeyS, 0.0);
-	 modelMatrixOsmosis[2] = glm::vec4(ejezS, 0.0);*/
 	modelMatrixOsmosis[3][1] = terrain.getHeightTerrain(modelMatrixOsmosis[3][0], modelMatrixOsmosis[3][2]);
 	glm::mat4 modelMatrixOsmosisBody = glm::mat4(modelMatrixOsmosis);
 	modelMatrixOsmosisBody = glm::scale(modelMatrixOsmosisBody, glm::vec3(0.004, 0.004, 0.004));
 	modelOsmosisAnimate.setAnimationIndex(animationIndex);
 	modelOsmosisAnimate.render(modelMatrixOsmosisBody);
 
-
 	// Map
-	modelMatrixMapTest[3][1] = terrain.getHeightTerrain(modelMatrixMapTest[3][0], modelMatrixMapTest[3][2]) + 0.2f;
-	//glm::mat4 modelMatrixMapTestMain = glm::mat4(modelMatrixMapTest);
-	//modelMapTest.render(modelMatrixMapTest);
-
-	//modelMatrixMapRef[3][1] = terrain.getHeightTerrain(modelMatrixMapRef[3][0], modelMatrixMapRef[3][2]) + 1.0f;
-	//modelMapRef.render(modelMatrixMapRef);
-
-	//modelMatrixMapSquareFL[3][1] = terrain.getHeightTerrain(modelMatrixMapSquareFL[3][0], modelMatrixMapSquareFL[3][2]);
-	//glm::mat4 modelMatrixMapSquareFLMain = glm::mat4(modelMatrixMapSquareFL);
-	//modelMapSquareFL.render(modelMatrixMapSquareFL);
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		modelMatrixMap[3][1] = terrain.getHeightTerrain(modelMatrixMap[3][0], modelMatrixMap[3][2]);
@@ -2898,8 +2581,8 @@ void renderScene(bool renderParticles) {
 			maskArray[i].render();
 		}
 	}
+
 	// Bullet
-	//modelMatrixBala[3][1] = terrain.getHeightTerrain(modelMatrixBala[3][0], modelMatrixBala[3][2]);
 	if (!bulletIsActive) {
 		modelMatrixBulletBody = glm::mat4(modelMatrixOsmosis);
 		modelMatrixBulletBody = glm::translate(modelMatrixBulletBody, glm::vec3(-0.5, 3.25, 1));
@@ -2996,68 +2679,34 @@ void renderScene(bool renderParticles) {
 	}
 
 	/**********
-	 * Update the position with alpha objects
-	 */
+	* Update the position with alpha objects
+	*/
 
-	 /**********
-	  * Sorter with alpha objects
-	  */
+	/**********
+	* Sorter with alpha objects
+	*/
 	std::map<float, std::pair<std::string, glm::vec3>> blendingSorted;
 	std::map<std::string, glm::vec3>::iterator itblend;
 	for (itblend = blendingUnsorted.begin(); itblend != blendingUnsorted.end();
 		itblend++) {
 		float distanceFromView = glm::length(
-			camera->getPosition() - itblend->second);
+		camera->getPosition() - itblend->second);
 		blendingSorted[distanceFromView] = std::make_pair(itblend->first,
-			itblend->second);
+		itblend->second);
 	}
 
 	/**********
-	 * Render de las transparencias
-	 */
+	* Render de las transparencias
+	*/
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_CULL_FACE);
 	for (std::map<float, std::pair<std::string, glm::vec3> >::reverse_iterator it =
 		blendingSorted.rbegin(); it != blendingSorted.rend(); it++) {
-		//if (renderParticles	&& it->second.first.compare("fountain") == 0) {
-		//	/**********
-		//	 * Init Render particles systems
-		//	 */
-		//	glm::mat4 modelMatrixParticlesFountain = glm::mat4(1.0);
-		//	modelMatrixParticlesFountain = glm::translate(modelMatrixParticlesFountain, it->second.second);
-		//	modelMatrixParticlesFountain[3][1] = terrain.getHeightTerrain(modelMatrixParticlesFountain[3][0],
-		//		modelMatrixParticlesFountain[3][2]) + 0.36 * 10.0;
-		//	modelMatrixParticlesFountain = glm::scale(modelMatrixParticlesFountain, glm::vec3(3.0, 3.0, 3.0));
-		//	currTimeParticlesAnimation = TimeManager::Instance().GetTime();
-		//	if (currTimeParticlesAnimation - lastTimeParticlesAnimation > 11.0)
-		//		lastTimeParticlesAnimation = currTimeParticlesAnimation;
-		//	//glDisable(GL_DEPTH_TEST);
-		//	glDepthMask(GL_FALSE);
-		//	// Set the point size
-		//	glPointSize(10.0f);
-		//	glActiveTexture(GL_TEXTURE0);
-		//	glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
-		//	shaderParticlesFountain.turnOn();
-		//	shaderParticlesFountain.setFloat("Time",float(currTimeParticlesAnimation - lastTimeParticlesAnimation));
-		//	shaderParticlesFountain.setFloat("ParticleLifetime", 1.0f);
-		//	shaderParticlesFountain.setInt("ParticleTex", 0);
-		//	shaderParticlesFountain.setVectorFloat3("Gravity",glm::value_ptr(glm::vec3(0.0f, -0.9f, 0.0f)));
-		//	shaderParticlesFountain.setMatrix4("model", 1, false,glm::value_ptr(modelMatrixParticlesFountain));
-		//	glBindVertexArray(VAOParticles);
-		//	glDrawArrays(GL_POINTS, 0, nParticles);
-		//	glDepthMask(GL_TRUE);
-		//	//glEnable(GL_DEPTH_TEST);
-		//	shaderParticlesFountain.turnOff();
-		//	/**********
-		//	 * End Render particles systems
-		//	 */
-		//}
 
 		for (unsigned int i = 0; i < NUM_COVID; i++)
 		{
 			if (renderParticles && it->second.first.substr(0, 4) == "Smok" == 0 && renderCovid[i]) {
-				//int noSmoke = it->second.first.substr(5, 1)[0] - '0';
 				lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
 				currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
@@ -3108,280 +2757,52 @@ void renderScene(bool renderParticles) {
 			}
 		}
 
-		//if (renderParticles && it->second.first.compare("Smoke1") == 0) {
-		//	/**********
-		//	 * Init Render particles systems
-		//	 */
-		//	lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-		//	currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
-
-		//	shaderParticlesSmoke.setInt("Pass", 1);
-		//	shaderParticlesSmoke.setFloat("Time",currTimeParticlesAnimationSmoke);
-		//	shaderParticlesSmoke.setFloat("DeltaT",currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
-
-		//	glActiveTexture(GL_TEXTURE1);
-		//	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-		//	glEnable(GL_RASTERIZER_DISCARD);
-		//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-		//	glBeginTransformFeedback(GL_POINTS);
-		//	glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-		//	glVertexAttribDivisor(0, 0);
-		//	glVertexAttribDivisor(1, 0);
-		//	glVertexAttribDivisor(2, 0);
-		//	glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-		//	glEndTransformFeedback();
-		//	glDisable(GL_RASTERIZER_DISCARD);
-
-		//	shaderParticlesSmoke.setInt("Pass", 2);
-		//	glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-		//	modelSmokeParticles = glm::translate(modelSmokeParticles, glm::vec3(modelMatrixCovid[4][3].x, modelMatrixCovid[4][3].y, modelMatrixCovid[4][3].z));
-		//	modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]) + 2;
-		//	shaderParticlesSmoke.setMatrix4("model", 1, false,glm::value_ptr(modelSmokeParticles));
-
-		//	shaderParticlesSmoke.turnOn();
-		//	glActiveTexture(GL_TEXTURE0);
-		//	glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		//	glDepthMask(GL_FALSE);
-		//	glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-		//	glVertexAttribDivisor(0, 1);
-		//	glVertexAttribDivisor(1, 1);
-		//	glVertexAttribDivisor(2, 1);
-		//	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-		//	glBindVertexArray(0);
-		//	glDepthMask(GL_TRUE);
-		//	drawBufSmoke = 1 - drawBufSmoke;
-		//	shaderParticlesSmoke.turnOff();
-
-		//	/****************************+
-		//	 * Open AL sound data
-		//	 */
-		//	source1Pos[0] = modelSmokeParticles[3].x;
-		//	source1Pos[1] = modelSmokeParticles[3].y;
-		//	source1Pos[2] = modelSmokeParticles[3].z;
-		//	alSourcefv(source[1], AL_POSITION, source1Pos);
-
-		//	/**********
-		//	 * End Render particles systems
-		//	 */
-		//}
-
-		//else if (renderParticles && it->second.first.compare("Smoke2") == 0) {
-		//	/**********
-		//	 * Init Render particles systems
-		//	 */
-		//	lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-		//	currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
-
-		//	shaderParticlesSmoke.setInt("Pass", 1);
-		//	shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
-		//	shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
-
-		//	glActiveTexture(GL_TEXTURE1);
-		//	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-		//	glEnable(GL_RASTERIZER_DISCARD);
-		//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-		//	glBeginTransformFeedback(GL_POINTS);
-		//	glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-		//	glVertexAttribDivisor(0, 0);
-		//	glVertexAttribDivisor(1, 0);
-		//	glVertexAttribDivisor(2, 0);
-		//	glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-		//	glEndTransformFeedback();
-		//	glDisable(GL_RASTERIZER_DISCARD);
-
-		//	shaderParticlesSmoke.setInt("Pass", 2);
-		//	glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-		//	modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
-		//	modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-		//	shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
-
-		//	shaderParticlesSmoke.turnOn();
-		//	glActiveTexture(GL_TEXTURE0);
-		//	glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		//	glDepthMask(GL_FALSE);
-		//	glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-		//	glVertexAttribDivisor(0, 1);
-		//	glVertexAttribDivisor(1, 1);
-		//	glVertexAttribDivisor(2, 1);
-		//	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-		//	glBindVertexArray(0);
-		//	glDepthMask(GL_TRUE);
-		//	drawBufSmoke = 1 - drawBufSmoke;
-		//	shaderParticlesSmoke.turnOff();
-
-		//	/****************************+
-		//	 * Open AL sound data
-		//	 */
-		//	source1Pos[0] = modelSmokeParticles[3].x;
-		//	source1Pos[1] = modelSmokeParticles[3].y;
-		//	source1Pos[2] = modelSmokeParticles[3].z;
-		//	alSourcefv(source[1], AL_POSITION, source1Pos);
-
-		//	/**********
-		//	 * End Render particles systems
-		//	 */
-		//}
-
-		//else if (renderParticles && it->second.first.compare("Smoke3") == 0) {
-		///**********
-		// * Init Render particles systems
-		// */
-		// lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-		// currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
-
-		// shaderParticlesSmoke.setInt("Pass", 1);
-		// shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
-		// shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
-
-		// glActiveTexture(GL_TEXTURE1);
-		// glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-		// glEnable(GL_RASTERIZER_DISCARD);
-		// glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-		// glBeginTransformFeedback(GL_POINTS);
-		// glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-		// glVertexAttribDivisor(0, 0);
-		// glVertexAttribDivisor(1, 0);
-		// glVertexAttribDivisor(2, 0);
-		// glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-		// glEndTransformFeedback();
-		// glDisable(GL_RASTERIZER_DISCARD);
-
-		// shaderParticlesSmoke.setInt("Pass", 2);
-		// glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-		// modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
-		// modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-		// shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
-
-		// shaderParticlesSmoke.turnOn();
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		// glDepthMask(GL_FALSE);
-		// glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-		// glVertexAttribDivisor(0, 1);
-		// glVertexAttribDivisor(1, 1);
-		// glVertexAttribDivisor(2, 1);
-		// glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-		// glBindVertexArray(0);
-		// glDepthMask(GL_TRUE);
-		// drawBufSmoke = 1 - drawBufSmoke;
-		// shaderParticlesSmoke.turnOff();
-
-		// /****************************+
-		//  * Open AL sound data
-		//  */
-		// source1Pos[0] = modelSmokeParticles[3].x;
-		// source1Pos[1] = modelSmokeParticles[3].y;
-		// source1Pos[2] = modelSmokeParticles[3].z;
-		// alSourcefv(source[1], AL_POSITION, source1Pos);
-
-		// /**********
-		//  * End Render particles systems
-		//  */
-		//}
-
-		//else if (renderParticles && it->second.first.compare("Smoke4") == 0) {
-		///**********
-		// * Init Render particles systems
-		// */
-		// lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-		// currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
-
-		// shaderParticlesSmoke.setInt("Pass", 1);
-		// shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
-		// shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
-
-		// glActiveTexture(GL_TEXTURE1);
-		// glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-		// glEnable(GL_RASTERIZER_DISCARD);
-		// glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-		// glBeginTransformFeedback(GL_POINTS);
-		// glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-		// glVertexAttribDivisor(0, 0);
-		// glVertexAttribDivisor(1, 0);
-		// glVertexAttribDivisor(2, 0);
-		// glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-		// glEndTransformFeedback();
-		// glDisable(GL_RASTERIZER_DISCARD);
-
-		// shaderParticlesSmoke.setInt("Pass", 2);
-		// glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-		// modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
-		// modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-		// shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
-
-		// shaderParticlesSmoke.turnOn();
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		// glDepthMask(GL_FALSE);
-		// glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-		// glVertexAttribDivisor(0, 1);
-		// glVertexAttribDivisor(1, 1);
-		// glVertexAttribDivisor(2, 1);
-		// glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-		// glBindVertexArray(0);
-		// glDepthMask(GL_TRUE);
-		// drawBufSmoke = 1 - drawBufSmoke;
-		// shaderParticlesSmoke.turnOff();
-
-		// /****************************+
-		//  * Open AL sound data
-		//  */
-		// source1Pos[0] = modelSmokeParticles[3].x;
-		// source1Pos[1] = modelSmokeParticles[3].y;
-		// source1Pos[2] = modelSmokeParticles[3].z;
-		// alSourcefv(source[1], AL_POSITION, source1Pos);
-
-		// /**********
-		//  * End Render particles systems
-		//  */
-		//}
-
 		if (renderParticles && it->second.first.compare("Rain") == 0) {
-		/**********
-		 * Init Render particles systems
-		 */
-		 lastTimeParticlesAnimationRain = currTimeParticlesAnimationRain;
-		 currTimeParticlesAnimationRain = TimeManager::Instance().GetTime();
+			/**********
+			* Init Render particles systems
+			*/
+			lastTimeParticlesAnimationRain = currTimeParticlesAnimationRain;
+			currTimeParticlesAnimationRain = TimeManager::Instance().GetTime();
 
-		 shaderParticlesRain.setInt("Pass", 1);
-		 shaderParticlesRain.setFloat("Time", currTimeParticlesAnimationRain);
-		 shaderParticlesRain.setFloat("DeltaT", currTimeParticlesAnimationRain - lastTimeParticlesAnimationRain);
+			shaderParticlesRain.setInt("Pass", 1);
+			shaderParticlesRain.setFloat("Time", currTimeParticlesAnimationRain);
+			shaderParticlesRain.setFloat("DeltaT", currTimeParticlesAnimationRain - lastTimeParticlesAnimationRain);
 
-		 glActiveTexture(GL_TEXTURE1);
-		 glBindTexture(GL_TEXTURE_1D, texIdRain);
-		 glEnable(GL_RASTERIZER_DISCARD);
-		 glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackRain[drawBufRain]);
-		 glBeginTransformFeedback(GL_POINTS);
-		 glBindVertexArray(particleArrayRain[1 - drawBufRain]);
-		 glVertexAttribDivisor(0, 0);
-		 glVertexAttribDivisor(1, 0);
-		 glVertexAttribDivisor(2, 0);
-		 glDrawArrays(GL_POINTS, 0, nParticlesRain);
-		 glEndTransformFeedback();
-		 glDisable(GL_RASTERIZER_DISCARD);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_1D, texIdRain);
+			glEnable(GL_RASTERIZER_DISCARD);
+			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackRain[drawBufRain]);
+			glBeginTransformFeedback(GL_POINTS);
+			glBindVertexArray(particleArrayRain[1 - drawBufRain]);
+			glVertexAttribDivisor(0, 0);
+			glVertexAttribDivisor(1, 0);
+			glVertexAttribDivisor(2, 0);
+			glDrawArrays(GL_POINTS, 0, nParticlesRain);
+			glEndTransformFeedback();
+			glDisable(GL_RASTERIZER_DISCARD);
 
-		 shaderParticlesRain.setInt("Pass", 2);
-		 glm::mat4 modelRainParticles = glm::mat4(1.0);
-		 modelRainParticles = glm::translate(modelRainParticles, it->second.second);
-		 modelRainParticles[3][1] = terrain.getHeightTerrain(modelRainParticles[3][0], modelRainParticles[3][2]);
-		 shaderParticlesRain.setMatrix4("model", 1, false, glm::value_ptr(modelRainParticles));
+			shaderParticlesRain.setInt("Pass", 2);
+			glm::mat4 modelRainParticles = glm::mat4(1.0);
+			modelRainParticles = glm::translate(modelRainParticles, it->second.second);
+			modelRainParticles[3][1] = terrain.getHeightTerrain(modelRainParticles[3][0], modelRainParticles[3][2]);
+			shaderParticlesRain.setMatrix4("model", 1, false, glm::value_ptr(modelRainParticles));
 
-		 shaderParticlesRain.turnOn();
-		 glActiveTexture(GL_TEXTURE0);
-		 if (hp <= 1)
-			 glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		 else
-			 glBindTexture(GL_TEXTURE_2D, textureParticleRainID);
-		 glDepthMask(GL_FALSE);
-		 glBindVertexArray(particleArrayRain[drawBufRain]);
-		 glVertexAttribDivisor(0, 1);
-		 glVertexAttribDivisor(1, 1);
-		 glVertexAttribDivisor(2, 1);
-		 glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesRain);
-		 glBindVertexArray(0);
-		 glDepthMask(GL_TRUE);
-		 drawBufRain = 1 - drawBufRain;
-		 shaderParticlesRain.turnOff();
+			shaderParticlesRain.turnOn();
+			glActiveTexture(GL_TEXTURE0);
+			if (hp <= 1)
+				glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+			else
+				glBindTexture(GL_TEXTURE_2D, textureParticleRainID);
+			glDepthMask(GL_FALSE);
+			glBindVertexArray(particleArrayRain[drawBufRain]);
+			glVertexAttribDivisor(0, 1);
+			glVertexAttribDivisor(1, 1);
+			glVertexAttribDivisor(2, 1);
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesRain);
+			glBindVertexArray(0);
+			glDepthMask(GL_TRUE);
+			drawBufRain = 1 - drawBufRain;
+			shaderParticlesRain.turnOff();
 		}
 
 	}
