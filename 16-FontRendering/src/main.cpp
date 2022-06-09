@@ -224,6 +224,7 @@ int lastMousePosY, offsetY = 0;
 
 // Model matrix definitions
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
+//glm::mat4 matrixModelRock = glm::mat4(1.0);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid2 = glm::mat4(1.0f);
@@ -1589,7 +1590,6 @@ void applicationLoop() {
 	int numberAdvanceCovid4 = 0;
 	int maxAdvanceCovid4 = 0.0;
 
-<<<<<<< HEAD
 	posOsmo = glm::vec3(modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
 
 	std::map<std::string, glm::vec3> blendingUnsorted = {
@@ -1597,10 +1597,8 @@ void applicationLoop() {
 	{ "fire", glm::vec3(0.0, 0.0, 7.0) }
 	};
 
-	matrixModelRock = glm::translate(matrixModelRock,
-		glm::vec3(-3.0, 0.0, 2.0));
-=======
->>>>>>> 37a4e135202692b6ecb99cfff810f09ea87d5ad2
+	//matrixModelRock = glm::translate(matrixModelRock,
+	//	glm::vec3(-3.0, 0.0, 2.0));
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
