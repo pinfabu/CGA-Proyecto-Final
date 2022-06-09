@@ -95,6 +95,9 @@ bool toqueCovid5 = true;
 glm::vec3 colorNeb = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 neblinaGris = glm::vec3(0.25, 0.25, 0.25);
 glm::vec3 neblinaRoja = glm::vec3(0.9, 0.2, 0.2);
+glm::vec3 colorLluvia = glm::vec3(0.5, 0.5, 0.5);
+glm::vec3 lluviaGris = glm::vec3(0.25, 0.25, 0.25);
+glm::vec3 lluviaRoja = glm::vec3(0.9, 0.2, 0.2);
 
 Shader shader;
 //Shader con skybox
@@ -103,14 +106,14 @@ Shader shaderSkybox;
 Shader shaderMulLighting;
 //Shader para el terreno
 Shader shaderTerrain;
-//Shader para las particulas de fountain
-Shader shaderParticlesFountain;
-//Shader para las particulas de fuego
-Shader shaderParticlesFire;
 //Shader para visualizar el buffer de profundidad
 Shader shaderViewDepth;
 //Shader para dibujar el buffer de profunidad
 Shader shaderDepth;
+//Shader para las particulas de humo
+Shader shaderParticlesSmoke;
+//Shader para las particulas de lluvia
+Shader shaderParticlesRain;
 
 //std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
@@ -191,11 +194,11 @@ std::string mapDirs[27] = {
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap2.png");
 
-GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID,
-textureLandingPadID;
+GLuint textureCespedID, textureWallID, textureWindowID, textureRainID,
+textureSmokeID;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID,
 textureTerrainBID, textureTerrainBlendMapID;
-GLuint textureParticleFountainID, textureParticleFireID, texId;
+GLuint textureParticleFountainID, textureParticleSmokeID, textureParticleRainID, texIdSmoke, texIdRain;
 GLuint skyboxTextureID;
 
 // Modelo para el redener de texto
@@ -264,8 +267,11 @@ std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
 
 // Blending model unsorted
 std::map<std::string, glm::vec3> blendingUnsorted = {
-	{ "fountain", posOsmo }, 
-	{ "fire", glm::vec3(0.0, 0.0, 7.0) } 
+	{ "Smoke1", glm::vec3(-8.0, 0.0, -15.0)},
+	{ "Smoke2", glm::vec3(-2.0, 0.0, -15.0)},
+	{ "Smoke3", glm::vec3(4.0, 0.0, -15.0)},
+	{ "Smoke4", glm::vec3(10.0, 0.0, -15.0)},
+	{ "Rain", glm::vec3(0.0, 0.0, 0.0)}
 };
 
 double deltaTime;
@@ -283,16 +289,27 @@ GLuint VAOParticles;
 GLuint nParticles = 8000;
 double currTimeParticlesAnimation, lastTimeParticlesAnimation;
 
-// Definition for the particle system fire
-GLuint initVelFire, startTimeFire;
-GLuint VAOParticlesFire;
-GLuint nParticlesFire = 2000;
-GLuint posBuf[2], velBuf[2], age[2];
-GLuint particleArray[2];
-GLuint feedback[2];
-GLuint drawBuf = 1;
-float particleSize = 0.5, particleLifetime = 3.0;
-double currTimeParticlesAnimationFire, lastTimeParticlesAnimationFire;
+// Definition for the particle system smoke
+GLuint initVelSmoke, startTimeSmoke;
+GLuint VAOParticlesSmoke;
+GLuint nParticlesSmoke = 2000;
+GLuint posBufSmoke[2], velBufSmoke[2], ageSmoke[2];
+GLuint particleArraySmoke[2];
+GLuint feedbackSmoke[2];
+GLuint drawBufSmoke = 1;
+float particleSizeSmoke = 0.5, particleLifetimeSmoke = 6.0;
+double currTimeParticlesAnimationSmoke, lastTimeParticlesAnimationSmoke;
+
+// Definition for the particle system rain
+GLuint initVelRain, startTimeRain;
+GLuint VAOParticlesRain;
+GLuint nParticlesRain = 15000;
+GLuint posBufRain[2], velBufRain[2], ageRain[2];
+GLuint particleArrayRain[2];
+GLuint feedbackRain[2];
+GLuint drawBufRain = 1;
+float particleSizeRain = 0.5, particleLifetimeRain = 8.0;
+double currTimeParticlesAnimationRain, lastTimeParticlesAnimationRain;
 
 // Colliders
 std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> > collidersOBB;
@@ -341,7 +358,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod);
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-void initParticleBuffers();
+//void initParticleBuffers();
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroy();
 bool processInput(bool continueApplication = true);
@@ -349,97 +366,97 @@ void prepareScene();
 void prepareDepthScene();
 void renderScene(bool renderParticles = true);
 
-void initParticleBuffers() {
+//void initParticleBuffers() {
+//	// Generate the buffers
+//	glGenBuffers(1, &initVel);   // Initial velocity buffer
+//	glGenBuffers(1, &startTime); // Start time buffer
+//
+//	// Allocate space for all buffers
+//	int size = nParticles * 3 * sizeof(float);
+//	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+//	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+//	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+//	glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(float), NULL,
+//		GL_STATIC_DRAW);
+//
+//	// Fill the first velocity buffer with random velocities
+//	glm::vec3 v(0.0f);
+//	float velocity, theta, phi;
+//	GLfloat* data = new GLfloat[nParticles * 3];
+//	for (unsigned int i = 0; i < nParticles; i++) {
+//
+//		theta = glm::mix(0.0f, glm::pi<float>() / 6.0f,
+//			((float)rand() / RAND_MAX));
+//		phi = glm::mix(0.0f, glm::two_pi<float>(), ((float)rand() / RAND_MAX));
+//
+//		v.x = 5 * sinf(theta) * 5 * cosf(phi);
+//		v.y = 5 * cosf(theta);
+//		v.z = 5 * sinf(theta) * 5 * sinf(phi);
+//
+//		velocity = glm::mix(2.0f, 1.0f, ((float)rand() / RAND_MAX));
+//		v = glm::normalize(v) * velocity;
+//
+//		data[3 * i] = v.x;
+//		data[3 * i + 1] = v.y;
+//		data[3 * i + 2] = v.z;
+//	}
+//	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+//	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+//
+//	// Fill the start time buffer
+//	delete[] data;
+//	data = new GLfloat[nParticles];
+//	float time = 0.0f;
+//	float rate = 0.00075f;
+//	for (unsigned int i = 0; i < nParticles; i++) {
+//		data[i] = time;
+//		time += rate;
+//	}
+//	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+//	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(float), data);
+//
+//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	delete[] data;
+//
+//	glGenVertexArrays(1, &VAOParticles);
+//	glBindVertexArray(VAOParticles);
+//	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+//	glEnableVertexAttribArray(0);
+//
+//	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+//	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, NULL);
+//	glEnableVertexAttribArray(1);
+//
+//	glBindVertexArray(0);
+//}
+
+void initParticleBuffersSmoke() {
 	// Generate the buffers
-	glGenBuffers(1, &initVel);   // Initial velocity buffer
-	glGenBuffers(1, &startTime); // Start time buffer
+	glGenBuffers(2, posBufSmoke);    // position buffers
+	glGenBuffers(2, velBufSmoke);    // velocity buffers
+	glGenBuffers(2, ageSmoke);       // age buffers
 
 	// Allocate space for all buffers
-	int size = nParticles * 3 * sizeof(float);
-	glBindBuffer(GL_ARRAY_BUFFER, initVel);
-	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, startTime);
-	glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(float), NULL,
-		GL_STATIC_DRAW);
-
-	// Fill the first velocity buffer with random velocities
-	glm::vec3 v(0.0f);
-	float velocity, theta, phi;
-	GLfloat* data = new GLfloat[nParticles * 3];
-	for (unsigned int i = 0; i < nParticles; i++) {
-
-		theta = glm::mix(0.0f, glm::pi<float>() / 6.0f,
-			((float)rand() / RAND_MAX));
-		phi = glm::mix(0.0f, glm::two_pi<float>(), ((float)rand() / RAND_MAX));
-
-		v.x = 5 * sinf(theta) * 5 * cosf(phi);
-		v.y = 5 * cosf(theta);
-		v.z = 5 * sinf(theta) * 5 * sinf(phi);
-
-		velocity = glm::mix(2.0f, 1.0f, ((float)rand() / RAND_MAX));
-		v = glm::normalize(v) * velocity;
-
-		data[3 * i] = v.x;
-		data[3 * i + 1] = v.y;
-		data[3 * i + 2] = v.z;
-	}
-	glBindBuffer(GL_ARRAY_BUFFER, initVel);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
-
-	// Fill the start time buffer
-	delete[] data;
-	data = new GLfloat[nParticles];
-	float time = 0.0f;
-	float rate = 0.00075f;
-	for (unsigned int i = 0; i < nParticles; i++) {
-		data[i] = time;
-		time += rate;
-	}
-	glBindBuffer(GL_ARRAY_BUFFER, startTime);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(float), data);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	delete[] data;
-
-	glGenVertexArrays(1, &VAOParticles);
-	glBindVertexArray(VAOParticles);
-	glBindBuffer(GL_ARRAY_BUFFER, initVel);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, startTime);
-	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(0);
-}
-
-void initParticleBuffersFire() {
-	// Generate the buffers
-	glGenBuffers(2, posBuf);    // position buffers
-	glGenBuffers(2, velBuf);    // velocity buffers
-	glGenBuffers(2, age);       // age buffers
-
-	// Allocate space for all buffers
-	int size = nParticlesFire * sizeof(GLfloat);
-	glBindBuffer(GL_ARRAY_BUFFER, posBuf[0]);
+	int size = nParticlesSmoke * sizeof(GLfloat);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufSmoke[0]);
 	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
-	glBindBuffer(GL_ARRAY_BUFFER, posBuf[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufSmoke[1]);
 	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
-	glBindBuffer(GL_ARRAY_BUFFER, velBuf[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, velBufSmoke[0]);
 	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
-	glBindBuffer(GL_ARRAY_BUFFER, velBuf[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, velBufSmoke[1]);
 	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
-	glBindBuffer(GL_ARRAY_BUFFER, age[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, ageSmoke[0]);
 	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
-	glBindBuffer(GL_ARRAY_BUFFER, age[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, ageSmoke[1]);
 	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
 
 	// Fill the first age buffer
-	std::vector<GLfloat> initialAge(nParticlesFire);
-	float rate = particleLifetime / nParticlesFire;
-	for (unsigned int i = 0; i < nParticlesFire; i++) {
-		int index = i - nParticlesFire;
+	std::vector<GLfloat> initialAge(nParticlesSmoke);
+	float rate = particleLifetimeSmoke / nParticlesSmoke;
+	for (unsigned int i = 0; i < nParticlesSmoke; i++) {
+		int index = i - nParticlesSmoke;
 		float result = rate * index;
 		initialAge[i] = result;
 	}
@@ -447,58 +464,147 @@ void initParticleBuffersFire() {
 	//Random::shuffle(initialAge);
 	auto rng = std::default_random_engine{ };
 	std::shuffle(initialAge.begin(), initialAge.end(), rng);
-	glBindBuffer(GL_ARRAY_BUFFER, age[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, ageSmoke[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, size, initialAge.data());
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// Create vertex arrays for each set of buffers
-	glGenVertexArrays(2, particleArray);
+	glGenVertexArrays(2, particleArraySmoke);
 
 	// Set up particle array 0
-	glBindVertexArray(particleArray[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, posBuf[0]);
+	glBindVertexArray(particleArraySmoke[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufSmoke[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, velBuf[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, velBufSmoke[0]);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, age[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, ageSmoke[0]);
 	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(2);
 
 	// Set up particle array 1
-	glBindVertexArray(particleArray[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, posBuf[1]);
+	glBindVertexArray(particleArraySmoke[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufSmoke[1]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, velBuf[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, velBufSmoke[1]);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, age[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, ageSmoke[1]);
 	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 
 	// Setup the feedback objects
-	glGenTransformFeedbacks(2, feedback);
+	glGenTransformFeedbacks(2, feedbackSmoke);
 
 	// Transform feedback 0
-	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback[0]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBuf[0]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBuf[0]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, age[0]);
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBufSmoke[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBufSmoke[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, ageSmoke[0]);
 
 	// Transform feedback 1
-	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback[1]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBuf[1]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBuf[1]);
-	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, age[1]);
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBufSmoke[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBufSmoke[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, ageSmoke[1]);
+
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+}
+
+void initParticleBuffersRain() {
+	// Generate the buffers
+	glGenBuffers(2, posBufRain);    // position buffers
+	glGenBuffers(2, velBufRain);    // velocity buffers
+	glGenBuffers(2, ageRain);       // age buffers
+
+	// Allocate space for all buffers
+	int size = nParticlesRain * sizeof(GLfloat);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufRain[0]);
+	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufRain[1]);
+	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, velBufRain[0]);
+	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, velBufRain[1]);
+	glBufferData(GL_ARRAY_BUFFER, 3 * size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, ageRain[0]);
+	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, ageRain[1]);
+	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
+
+	// Fill the first age buffer
+	std::vector<GLfloat> initialAge(nParticlesRain);
+	float rate = particleLifetimeRain / nParticlesRain;
+	for (unsigned int i = 0; i < nParticlesRain; i++) {
+		int index = i - nParticlesRain;
+		float result = rate * index;
+		initialAge[i] = result;
+	}
+	// Shuffle them for better looking results
+	//Random::shuffle(initialAge);
+	auto rng = std::default_random_engine{ };
+	std::shuffle(initialAge.begin(), initialAge.end(), rng);
+	glBindBuffer(GL_ARRAY_BUFFER, ageRain[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, size, initialAge.data());
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// Create vertex arrays for each set of buffers
+	glGenVertexArrays(2, particleArrayRain);
+
+	// Set up particle array 0
+	glBindVertexArray(particleArrayRain[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufRain[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, velBufRain[0]);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, ageRain[0]);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
+
+	// Set up particle array 1
+	glBindVertexArray(particleArrayRain[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBufRain[1]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, velBufRain[1]);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, ageRain[1]);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0);
+
+	// Setup the feedback objects
+	glGenTransformFeedbacks(2, feedbackRain);
+
+	// Transform feedback 0
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackRain[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBufRain[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBufRain[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, ageRain[0]);
+
+	// Transform feedback 1
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackRain[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBufRain[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBufRain[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, ageRain[1]);
 
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 }
@@ -560,19 +666,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Inicialización de los shaders
 	shader.initialize("../Shaders/colorShader.vs", "../Shaders/colorShader.fs");
 	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
-	shaderMulLighting.initialize(
-		"../Shaders/iluminacion_textura_animation_shadow.vs",
-		"../Shaders/multipleLights_shadow.fs");
-	shaderTerrain.initialize("../Shaders/terrain_shadow.vs",
-		"../Shaders/terrain_shadow.fs");
-	shaderParticlesFountain.initialize("../Shaders/particlesFountain.vs",
-		"../Shaders/particlesFountain.fs");
-	shaderParticlesFire.initialize("../Shaders/particlesFire.vs",
-		"../Shaders/particlesFire.fs", { "Position", "Velocity", "Age" });
-	shaderViewDepth.initialize("../Shaders/texturizado.vs",
-		"../Shaders/texturizado_depth_view.fs");
-	shaderDepth.initialize("../Shaders/shadow_mapping_depth.vs",
-		"../Shaders/shadow_mapping_depth.fs");
+	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_shadow.vs","../Shaders/multipleLights_shadow.fs");
+	shaderTerrain.initialize("../Shaders/terrain_shadow.vs","../Shaders/terrain_shadow.fs");
+	shaderParticlesSmoke.initialize("../Shaders/particlesSmoke.vs", "../Shaders/particlesSmoke.fs", { "Position", "Velocity", "Age" });
+	shaderParticlesRain.initialize("../Shaders/particlesRain.vs","../Shaders/particlesRain.fs", { "Position", "Velocity", "Age" });
+	shaderViewDepth.initialize("../Shaders/texturizado.vs","../Shaders/texturizado_depth_view.fs");
+	shaderDepth.initialize("../Shaders/shadow_mapping_depth.vs","../Shaders/shadow_mapping_depth.fs");
 
 	// Inicializacion de los objetos.
 	skyboxSphere.init();
@@ -800,15 +899,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureWindow.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureHighway("../Textures/highway.jpg");
+	Texture textureRain("../Textures/copo.png");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureHighway.loadImage();
+	bitmap = textureRain.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureHighway.convertToData(bitmap, imageWidth, imageHeight);
+	data = textureRain.convertToData(bitmap, imageWidth, imageHeight);
 	// Creando la textura con id 1
-	glGenTextures(1, &textureHighwayID);
+	glGenTextures(1, &textureRainID);
 	// Enlazar esa textura a una tipo de textura de 2D.
-	glBindTexture(GL_TEXTURE_2D, textureHighwayID);
+	glBindTexture(GL_TEXTURE_2D, textureRainID);
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -829,39 +928,39 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
-	textureHighway.freeImage(bitmap);
+	textureRain.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureLandingPad("../Textures/landingPad.jpg");
-	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureLandingPad.loadImage();
-	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureLandingPad.convertToData(bitmap, imageWidth, imageHeight);
-	// Creando la textura con id 1
-	glGenTextures(1, &textureLandingPadID);
-	// Enlazar esa textura a una tipo de textura de 2D.
-	glBindTexture(GL_TEXTURE_2D, textureLandingPadID);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Verifica si se pudo abrir la textura
-	if (data) {
-		// Transferis los datos de la imagen a memoria
-		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
-		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
-		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
-			GL_BGRA, GL_UNSIGNED_BYTE, data);
-		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-		std::cout << "Failed to load texture" << std::endl;
-	// Libera la memoria de la textura
-	textureLandingPad.freeImage(bitmap);
+	//Texture textureSmoke("../Textures/blod.png");
+	//// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
+	//bitmap = textureSmoke.loadImage();
+	//// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
+	//data = textureSmoke.convertToData(bitmap, imageWidth, imageHeight);
+	//// Creando la textura con id 1
+	//glGenTextures(1, &textureSmokeID);
+	//// Enlazar esa textura a una tipo de textura de 2D.
+	//glBindTexture(GL_TEXTURE_2D, textureSmokeID);
+	//// set the texture wrapping parameters
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//// set texture filtering parameters
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//// Verifica si se pudo abrir la textura
+	//if (data) {
+	//	// Transferis los datos de la imagen a memoria
+	//	// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
+	//	// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
+	//	// a los datos
+	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+	//		GL_BGRA, GL_UNSIGNED_BYTE, data);
+	//	// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
+	//	glGenerateMipmap(GL_TEXTURE_2D);
+	//}
+	//else
+	//	std::cout << "Failed to load texture" << std::endl;
+	//// Libera la memoria de la textura
+	//textureSmoke.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
 	Texture textureTerrainBackground("../Textures/grassy2.png");
@@ -1025,12 +1124,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Libera la memoria de la textura
 	textureTerrainBlendMap.freeImage(bitmap);
 
-	Texture textureParticlesFountain("../Textures/blood.png");
-	bitmap = textureParticlesFountain.loadImage();
-	data = textureParticlesFountain.convertToData(bitmap, imageWidth,
+	Texture textureParticlesRain("../Textures/copo.png");
+	bitmap = textureParticlesRain.loadImage();
+	data = textureParticlesRain.convertToData(bitmap, imageWidth,
 		imageHeight);
-	glGenTextures(1, &textureParticleFountainID);
-	glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
+	glGenTextures(1, &textureParticleRainID);
+	glBindTexture(GL_TEXTURE_2D, textureParticleRainID);
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -1044,13 +1143,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 	else
 		std::cout << "Failed to load texture" << std::endl;
-	textureParticlesFountain.freeImage(bitmap);
+	textureParticlesRain.freeImage(bitmap);
 
-	Texture textureParticleFire("../Textures/fire.png");
-	bitmap = textureParticleFire.loadImage();
-	data = textureParticleFire.convertToData(bitmap, imageWidth, imageHeight);
-	glGenTextures(1, &textureParticleFireID);
-	glBindTexture(GL_TEXTURE_2D, textureParticleFireID);
+	Texture textureParticleSmoke("../Textures/blood.png");
+	bitmap = textureParticleSmoke.loadImage();
+	data = textureParticleSmoke.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureParticleSmokeID);
+	glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -1064,37 +1163,59 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 	else
 		std::cout << "Failed to load texture" << std::endl;
-	textureParticleFire.freeImage(bitmap);
+	textureParticleSmoke.freeImage(bitmap);
 
-	std::uniform_real_distribution<float> distr01 =
-		std::uniform_real_distribution<float>(0.0f, 1.0f);
+	//Smoke
+	std::uniform_real_distribution<float> distr01 =	std::uniform_real_distribution<float>(0.0f, 1.0f);
 	std::mt19937 generator;
 	std::random_device rd;
 	generator.seed(rd());
-	int size = nParticlesFire * 2;
+	int size = nParticlesSmoke * 2;
 	std::vector<GLfloat> randData(size);
 	for (int i = 0; i < randData.size(); i++) {
 		randData[i] = distr01(generator);
 	}
-
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_1D, texId);
+	glGenTextures(1, &texIdSmoke);
+	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
 	glTexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, size);
-	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size, GL_RED, GL_FLOAT,
-		randData.data());
+	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size, GL_RED, GL_FLOAT,randData.data());
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	shaderParticlesFire.setInt("Pass", 1);
-	shaderParticlesFire.setInt("ParticleTex", 0);
-	shaderParticlesFire.setInt("RandomTex", 1);
-	shaderParticlesFire.setFloat("ParticleLifetime", particleLifetime);
-	shaderParticlesFire.setFloat("ParticleSize", particleSize);
-	shaderParticlesFire.setVectorFloat3("Accel",
-		glm::value_ptr(glm::vec3(0.0f, 0.1f, 0.0f)));
-	shaderParticlesFire.setVectorFloat3("Emitter",
-		glm::value_ptr(glm::vec3(0.0f)));
+	shaderParticlesSmoke.setInt("Pass", 1);
+	shaderParticlesSmoke.setInt("ParticleTex", 0);
+	shaderParticlesSmoke.setInt("RandomTex", 1);
+	shaderParticlesSmoke.setFloat("ParticleLifetime", particleLifetimeSmoke);
+	shaderParticlesSmoke.setFloat("ParticleSize", particleSizeSmoke);
+	shaderParticlesSmoke.setVectorFloat3("Accel", glm::value_ptr(glm::vec3(0.0f, 0.1f, 0.0f)));
+	shaderParticlesSmoke.setVectorFloat3("Emitter", glm::value_ptr(glm::vec3(0.0f)));
 
+	//Rain
+	std::uniform_real_distribution<float> distr02 = std::uniform_real_distribution<float>(0.0f, 1.0f);
+	std::mt19937 generator2;
+	std::random_device rd2;
+	generator2.seed(rd2());
+	int size2 = nParticlesRain * 2;
+	std::vector<GLfloat> randData2(size);
+	for (int i = 0; i < randData2.size(); i++) {
+		randData2[i] = distr02(generator2);
+	}
+	glGenTextures(1, &texIdRain);
+	glBindTexture(GL_TEXTURE_1D, texIdRain);
+	glTexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, size2);
+	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size2, GL_RED, GL_FLOAT, randData2.data());
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	shaderParticlesRain.setInt("Pass", 1);
+	shaderParticlesRain.setInt("ParticleTex", 0);
+	shaderParticlesRain.setInt("RandomTex", 1);
+	shaderParticlesRain.setFloat("ParticleLifetime", particleLifetimeRain);
+	shaderParticlesRain.setFloat("ParticleSize", particleSizeRain);
+	shaderParticlesRain.setVectorFloat3("Accel", glm::value_ptr(glm::vec3(0.0f, -1.2f, 0.0f)));
+	shaderParticlesRain.setVectorFloat3("Emitter", glm::value_ptr(glm::vec3(0.0f, 10.0f, 0.0f)));
+
+	//Smoke
 	glm::mat3 basis;
 	glm::vec3 u, v, n;
 	v = glm::vec3(0, 1, 0);
@@ -1106,18 +1227,23 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	basis[0] = glm::normalize(u);
 	basis[1] = glm::normalize(v);
 	basis[2] = glm::normalize(n);
-	shaderParticlesFire.setMatrix3("EmitterBasis", 1, false,
-		glm::value_ptr(basis));
+	shaderParticlesSmoke.setMatrix3("EmitterBasis", 1, false,glm::value_ptr(basis));
+	shaderParticlesRain.setMatrix3("EmitterBasis", 1, false, glm::value_ptr(basis));
 
 	/*******************************************
 	 * Inicializacion de los buffers de la fuente
 	 *******************************************/
-	initParticleBuffers();
+	//initParticleBuffers();
 
 	/*******************************************
-	 * Inicializacion de los buffers del fuego
+	 * Inicializacion de los buffers del Smoke
 	 *******************************************/
-	initParticleBuffersFire();
+	initParticleBuffersSmoke();
+
+	/*******************************************
+	 * Inicializacion de los buffers del Rain
+	 *******************************************/
+	initParticleBuffersRain();
 
 	/*******************************************
 	 * Inicializacion del framebuffer para
@@ -1227,8 +1353,8 @@ void destroy() {
 	shaderMulLighting.destroy();
 	shaderSkybox.destroy();
 	shaderTerrain.destroy();
-	shaderParticlesFountain.destroy();
-	shaderParticlesFire.destroy();
+	shaderParticlesSmoke.destroy();
+	shaderParticlesRain.destroy();
 
 	// Basic objects Delete
 	skyboxSphere.destroy();
@@ -1276,36 +1402,45 @@ void destroy() {
 	glDeleteTextures(1, &textureCespedID);
 	glDeleteTextures(1, &textureWallID);
 	glDeleteTextures(1, &textureWindowID);
-	glDeleteTextures(1, &textureHighwayID);
-	glDeleteTextures(1, &textureLandingPadID);
+	glDeleteTextures(1, &textureRainID);
+	glDeleteTextures(1, &textureSmokeID);
 	glDeleteTextures(1, &textureTerrainBackgroundID);
 	glDeleteTextures(1, &textureTerrainRID);
 	glDeleteTextures(1, &textureTerrainGID);
 	glDeleteTextures(1, &textureTerrainBID);
 	glDeleteTextures(1, &textureTerrainBlendMapID);
 	glDeleteTextures(1, &textureParticleFountainID);
-	glDeleteTextures(1, &textureParticleFireID);
+	glDeleteTextures(1, &textureParticleSmokeID);
 
 	// Cube Maps Delete
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	glDeleteTextures(1, &skyboxTextureID);
 
-	// Remove the buffer of the fountain particles
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &initVel);
-	glDeleteBuffers(1, &startTime);
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &VAOParticles);
+	//// Remove the buffer of the fountain particles
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glDeleteBuffers(1, &initVel);
+	//glDeleteBuffers(1, &startTime);
+	//glBindVertexArray(0);
+	//glDeleteVertexArrays(1, &VAOParticles);
 
-	// Remove the buffer of the fire particles
+	// Remove the buffer of the Smoke particles
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(2, posBuf);
-	glDeleteBuffers(2, velBuf);
-	glDeleteBuffers(2, age);
+	glDeleteBuffers(2, posBufSmoke);
+	glDeleteBuffers(2, velBufSmoke);
+	glDeleteBuffers(2, ageSmoke);
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
-	glDeleteTransformFeedbacks(2, feedback);
+	glDeleteTransformFeedbacks(2, feedbackSmoke);
 	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &VAOParticlesFire);
+	glDeleteVertexArrays(1, &VAOParticlesSmoke);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(2, posBufRain);
+	glDeleteBuffers(2, velBufRain);
+	glDeleteBuffers(2, ageRain);
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+	glDeleteTransformFeedbacks(2, feedbackRain);
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &VAOParticlesRain);
 }
 
 void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes) {
@@ -1589,28 +1724,14 @@ void applicationLoop() {
 	int numberAdvanceCovid4 = 0;
 	int maxAdvanceCovid4 = 0.0;
 
-<<<<<<< HEAD
-	posOsmo = glm::vec3(modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
-
-	std::map<std::string, glm::vec3> blendingUnsorted = {
-	{ "fountain", posOsmo },
-	{ "fire", glm::vec3(0.0, 0.0, 7.0) }
-	};
-
-	matrixModelRock = glm::translate(matrixModelRock,
-		glm::vec3(-3.0, 0.0, 2.0));
-=======
->>>>>>> 37a4e135202692b6ecb99cfff810f09ea87d5ad2
 	/*modelMatrixMayow = glm::translate(modelMatrixMayow,
 			glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
 			glm::vec3(0, 1, 0));*/
 
 	//Ubicación Osmosis
-	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-		glm::vec3(0.0f, 0.0f, 0.0f));
-	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
-		glm::vec3(0, 1, 0));
+	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,	glm::vec3(0.0f, 0.0f, 0.0f));
+	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f), glm::vec3(0, 1, 0));
 
 	//Covid
 	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-69.0f, 0.1684f, 35.0f));//Covid esquina inferior izquierda
@@ -1640,11 +1761,14 @@ void applicationLoop() {
 	lastTime = TimeManager::Instance().GetTime();
 
 	// Time for the particles animation
-	currTimeParticlesAnimation = lastTime;
-	lastTimeParticlesAnimation = lastTime;
+	/*currTimeParticlesAnimation = lastTime;
+	lastTimeParticlesAnimation = lastTime;*/
 
-	currTimeParticlesAnimationFire = lastTime;
-	lastTimeParticlesAnimationFire = lastTime;
+	currTimeParticlesAnimationSmoke = lastTime;
+	lastTimeParticlesAnimationSmoke = lastTime;
+
+	currTimeParticlesAnimationRain = lastTime;
+	lastTimeParticlesAnimationRain = lastTime;
 
 	glm::vec3 lightPos = glm::vec3(10.0, 10.0, 0.0);
 
@@ -1734,16 +1858,19 @@ void applicationLoop() {
 		shaderTerrain.setMatrix4("view", 1, false, glm::value_ptr(view));
 		shaderTerrain.setMatrix4("lightSpaceMatrix", 1, false,
 			glm::value_ptr(lightSpaceMatrix));
-		// Settea la matriz de vista y projection al shader para el fountain
-		shaderParticlesFountain.setMatrix4("projection", 1, false,
-			glm::value_ptr(projection));
-		shaderParticlesFountain.setMatrix4("view", 1, false,
-			glm::value_ptr(view));
-		// Settea la matriz de vista y projection al shader para el fuego
-		shaderParticlesFire.setInt("Pass", 2);
-		shaderParticlesFire.setMatrix4("projection", 1, false,
-			glm::value_ptr(projection));
-		shaderParticlesFire.setMatrix4("view", 1, false, glm::value_ptr(view));
+		// Settea la matriz de vista y projection al shader para el Smoke
+		shaderParticlesSmoke.setMatrix4("projection", 1, false, glm::value_ptr(projection));
+		shaderParticlesSmoke.setMatrix4("view", 1, false, glm::value_ptr(view));
+		shaderParticlesSmoke.setVectorFloat3("colorSmoke", glm::value_ptr(glm::vec3(1,1,1)));
+
+		if (vida <= 1)
+			colorLluvia = lluviaRoja;
+		else
+			colorLluvia = lluviaGris;
+		// Settea la matriz de vista y projection al shader para el Rain
+		shaderParticlesRain.setMatrix4("projection", 1, false, glm::value_ptr(projection));
+		shaderParticlesRain.setMatrix4("view", 1, false, glm::value_ptr(view));
+		shaderParticlesRain.setVectorFloat3("colorRain", glm::value_ptr(colorLluvia));
 
 		/*******************************************
 		 * Propiedades de neblina
@@ -3055,16 +3182,16 @@ void applicationLoop() {
 		 * State machines
 		 *******************************************/
 		cadena = "Vidas: " + std::to_string(vida);
-		cadena1 = " Balas: " + std::to_string(balas);
+		cadena1 = " Disparos: " + std::to_string(balas);
 		if (vida > 0) {
-			modelText->render(cadena, -.95, 0.9, 50, 0.0, 0.63, 0.16);
-			modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
+			modelText->render(cadena, -.95, 0.9, 50, 1.0, 1.0, 1.0);
+			modelText2->render(cadena1, -.20, 0.9, 50, 1.0, 1.0, 1.0);
 			if (recarga)
-				modelText3->render(cadena2, .65, 0.9, 50, 0.0, 0.9, 0.9);
+				modelText3->render(cadena2, .65, 0.9, 50, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
 		else {
-			modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
+			modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
 
@@ -3492,94 +3619,313 @@ void renderScene(bool renderParticles) {
 	glDisable(GL_CULL_FACE);
 	for (std::map<float, std::pair<std::string, glm::vec3> >::reverse_iterator it =
 		blendingSorted.rbegin(); it != blendingSorted.rend(); it++) {
-		if (renderParticles	&& it->second.first.compare("fountain") == 0) {
+		//if (renderParticles	&& it->second.first.compare("fountain") == 0) {
+		//	/**********
+		//	 * Init Render particles systems
+		//	 */
+		//	glm::mat4 modelMatrixParticlesFountain = glm::mat4(1.0);
+		//	modelMatrixParticlesFountain = glm::translate(modelMatrixParticlesFountain, it->second.second);
+		//	modelMatrixParticlesFountain[3][1] = terrain.getHeightTerrain(modelMatrixParticlesFountain[3][0],
+		//		modelMatrixParticlesFountain[3][2]) + 0.36 * 10.0;
+		//	modelMatrixParticlesFountain = glm::scale(modelMatrixParticlesFountain, glm::vec3(3.0, 3.0, 3.0));
+		//	currTimeParticlesAnimation = TimeManager::Instance().GetTime();
+		//	if (currTimeParticlesAnimation - lastTimeParticlesAnimation > 11.0)
+		//		lastTimeParticlesAnimation = currTimeParticlesAnimation;
+		//	//glDisable(GL_DEPTH_TEST);
+		//	glDepthMask(GL_FALSE);
+		//	// Set the point size
+		//	glPointSize(10.0f);
+		//	glActiveTexture(GL_TEXTURE0);
+		//	glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
+		//	shaderParticlesFountain.turnOn();
+		//	shaderParticlesFountain.setFloat("Time",float(currTimeParticlesAnimation - lastTimeParticlesAnimation));
+		//	shaderParticlesFountain.setFloat("ParticleLifetime", 1.0f);
+		//	shaderParticlesFountain.setInt("ParticleTex", 0);
+		//	shaderParticlesFountain.setVectorFloat3("Gravity",glm::value_ptr(glm::vec3(0.0f, -0.9f, 0.0f)));
+		//	shaderParticlesFountain.setMatrix4("model", 1, false,glm::value_ptr(modelMatrixParticlesFountain));
+		//	glBindVertexArray(VAOParticles);
+		//	glDrawArrays(GL_POINTS, 0, nParticles);
+		//	glDepthMask(GL_TRUE);
+		//	//glEnable(GL_DEPTH_TEST);
+		//	shaderParticlesFountain.turnOff();
+		//	/**********
+		//	 * End Render particles systems
+		//	 */
+		//}
+		if (renderParticles && it->second.first.compare("Smoke1") == 0) {
 			/**********
 			 * Init Render particles systems
 			 */
-			glm::mat4 modelMatrixParticlesFountain = glm::mat4(1.0);
-			modelMatrixParticlesFountain = glm::translate(modelMatrixParticlesFountain, it->second.second);
-			modelMatrixParticlesFountain[3][1] = terrain.getHeightTerrain(modelMatrixParticlesFountain[3][0],
-				modelMatrixParticlesFountain[3][2]) + 0.36 * 10.0;
-			modelMatrixParticlesFountain = glm::scale(modelMatrixParticlesFountain, glm::vec3(3.0, 3.0, 3.0));
-			currTimeParticlesAnimation = TimeManager::Instance().GetTime();
-			if (currTimeParticlesAnimation - lastTimeParticlesAnimation > 11.0)
-				lastTimeParticlesAnimation = currTimeParticlesAnimation;
-			//glDisable(GL_DEPTH_TEST);
-			glDepthMask(GL_FALSE);
-			// Set the point size
-			glPointSize(10.0f);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
-			shaderParticlesFountain.turnOn();
-			shaderParticlesFountain.setFloat("Time",float(currTimeParticlesAnimation - lastTimeParticlesAnimation));
-			shaderParticlesFountain.setFloat("ParticleLifetime", 1.0f);
-			shaderParticlesFountain.setInt("ParticleTex", 0);
-			shaderParticlesFountain.setVectorFloat3("Gravity",glm::value_ptr(glm::vec3(0.0f, -0.9f, 0.0f)));
-			shaderParticlesFountain.setMatrix4("model", 1, false,glm::value_ptr(modelMatrixParticlesFountain));
-			glBindVertexArray(VAOParticles);
-			glDrawArrays(GL_POINTS, 0, nParticles);
-			glDepthMask(GL_TRUE);
-			//glEnable(GL_DEPTH_TEST);
-			shaderParticlesFountain.turnOff();
-			/**********
-			 * End Render particles systems
-			 */
-		}
-		else if (renderParticles && it->second.first.compare("fire") == 0) {
-			/**********
-			 * Init Render particles systems
-			 */
-			lastTimeParticlesAnimationFire = currTimeParticlesAnimationFire;
-			currTimeParticlesAnimationFire = TimeManager::Instance().GetTime();
+			lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+			currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
-			shaderParticlesFire.setInt("Pass", 1);
-			shaderParticlesFire.setFloat("Time",currTimeParticlesAnimationFire);
-			shaderParticlesFire.setFloat("DeltaT",currTimeParticlesAnimationFire - lastTimeParticlesAnimationFire);
+			shaderParticlesSmoke.setInt("Pass", 1);
+			shaderParticlesSmoke.setFloat("Time",currTimeParticlesAnimationSmoke);
+			shaderParticlesSmoke.setFloat("DeltaT",currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_1D, texId);
+			glBindTexture(GL_TEXTURE_1D, texIdSmoke);
 			glEnable(GL_RASTERIZER_DISCARD);
-			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback[drawBuf]);
+			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
 			glBeginTransformFeedback(GL_POINTS);
-			glBindVertexArray(particleArray[1 - drawBuf]);
+			glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
 			glVertexAttribDivisor(0, 0);
 			glVertexAttribDivisor(1, 0);
 			glVertexAttribDivisor(2, 0);
-			glDrawArrays(GL_POINTS, 0, nParticlesFire);
+			glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
 			glEndTransformFeedback();
 			glDisable(GL_RASTERIZER_DISCARD);
 
-			shaderParticlesFire.setInt("Pass", 2);
-			glm::mat4 modelFireParticles = glm::mat4(1.0);
-			modelFireParticles = glm::translate(modelFireParticles,	it->second.second);
-			modelFireParticles[3][1] = terrain.getHeightTerrain(modelFireParticles[3][0], modelFireParticles[3][2]);
-			shaderParticlesFire.setMatrix4("model", 1, false,glm::value_ptr(modelFireParticles));
+			shaderParticlesSmoke.setInt("Pass", 2);
+			glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+			modelSmokeParticles = glm::translate(modelSmokeParticles,	it->second.second);
+			modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+			shaderParticlesSmoke.setMatrix4("model", 1, false,glm::value_ptr(modelSmokeParticles));
 
-			shaderParticlesFire.turnOn();
+			shaderParticlesSmoke.turnOn();
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureParticleFireID);
+			glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
 			glDepthMask(GL_FALSE);
-			glBindVertexArray(particleArray[drawBuf]);
+			glBindVertexArray(particleArraySmoke[drawBufSmoke]);
 			glVertexAttribDivisor(0, 1);
 			glVertexAttribDivisor(1, 1);
 			glVertexAttribDivisor(2, 1);
-			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesFire);
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
 			glBindVertexArray(0);
 			glDepthMask(GL_TRUE);
-			drawBuf = 1 - drawBuf;
-			shaderParticlesFire.turnOff();
+			drawBufSmoke = 1 - drawBufSmoke;
+			shaderParticlesSmoke.turnOff();
 
 			/****************************+
 			 * Open AL sound data
 			 */
-			source1Pos[0] = modelFireParticles[3].x;
-			source1Pos[1] = modelFireParticles[3].y;
-			source1Pos[2] = modelFireParticles[3].z;
+			source1Pos[0] = modelSmokeParticles[3].x;
+			source1Pos[1] = modelSmokeParticles[3].y;
+			source1Pos[2] = modelSmokeParticles[3].z;
 			alSourcefv(source[1], AL_POSITION, source1Pos);
 
 			/**********
 			 * End Render particles systems
 			 */
+		}
+
+		else if (renderParticles && it->second.first.compare("Smoke2") == 0) {
+			/**********
+			 * Init Render particles systems
+			 */
+			lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+			currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+
+			shaderParticlesSmoke.setInt("Pass", 1);
+			shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+			shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+			glEnable(GL_RASTERIZER_DISCARD);
+			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+			glBeginTransformFeedback(GL_POINTS);
+			glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+			glVertexAttribDivisor(0, 0);
+			glVertexAttribDivisor(1, 0);
+			glVertexAttribDivisor(2, 0);
+			glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+			glEndTransformFeedback();
+			glDisable(GL_RASTERIZER_DISCARD);
+
+			shaderParticlesSmoke.setInt("Pass", 2);
+			glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+			modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
+			modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+			shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+
+			shaderParticlesSmoke.turnOn();
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+			glDepthMask(GL_FALSE);
+			glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+			glVertexAttribDivisor(0, 1);
+			glVertexAttribDivisor(1, 1);
+			glVertexAttribDivisor(2, 1);
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+			glBindVertexArray(0);
+			glDepthMask(GL_TRUE);
+			drawBufSmoke = 1 - drawBufSmoke;
+			shaderParticlesSmoke.turnOff();
+
+			/****************************+
+			 * Open AL sound data
+			 */
+			source1Pos[0] = modelSmokeParticles[3].x;
+			source1Pos[1] = modelSmokeParticles[3].y;
+			source1Pos[2] = modelSmokeParticles[3].z;
+			alSourcefv(source[1], AL_POSITION, source1Pos);
+
+			/**********
+			 * End Render particles systems
+			 */
+		}
+
+		else if (renderParticles && it->second.first.compare("Smoke3") == 0) {
+		/**********
+		 * Init Render particles systems
+		 */
+		 lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+		 currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+
+		 shaderParticlesSmoke.setInt("Pass", 1);
+		 shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+		 shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+
+		 glActiveTexture(GL_TEXTURE1);
+		 glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+		 glEnable(GL_RASTERIZER_DISCARD);
+		 glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+		 glBeginTransformFeedback(GL_POINTS);
+		 glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+		 glVertexAttribDivisor(0, 0);
+		 glVertexAttribDivisor(1, 0);
+		 glVertexAttribDivisor(2, 0);
+		 glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+		 glEndTransformFeedback();
+		 glDisable(GL_RASTERIZER_DISCARD);
+
+		 shaderParticlesSmoke.setInt("Pass", 2);
+		 glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+		 modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
+		 modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+		 shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+
+		 shaderParticlesSmoke.turnOn();
+		 glActiveTexture(GL_TEXTURE0);
+		 glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		 glDepthMask(GL_FALSE);
+		 glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+		 glVertexAttribDivisor(0, 1);
+		 glVertexAttribDivisor(1, 1);
+		 glVertexAttribDivisor(2, 1);
+		 glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+		 glBindVertexArray(0);
+		 glDepthMask(GL_TRUE);
+		 drawBufSmoke = 1 - drawBufSmoke;
+		 shaderParticlesSmoke.turnOff();
+
+		 /****************************+
+		  * Open AL sound data
+		  */
+		 source1Pos[0] = modelSmokeParticles[3].x;
+		 source1Pos[1] = modelSmokeParticles[3].y;
+		 source1Pos[2] = modelSmokeParticles[3].z;
+		 alSourcefv(source[1], AL_POSITION, source1Pos);
+
+		 /**********
+		  * End Render particles systems
+		  */
+		}
+
+		else if (renderParticles && it->second.first.compare("Smoke4") == 0) {
+		/**********
+		 * Init Render particles systems
+		 */
+		 lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+		 currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+
+		 shaderParticlesSmoke.setInt("Pass", 1);
+		 shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+		 shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+
+		 glActiveTexture(GL_TEXTURE1);
+		 glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+		 glEnable(GL_RASTERIZER_DISCARD);
+		 glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+		 glBeginTransformFeedback(GL_POINTS);
+		 glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+		 glVertexAttribDivisor(0, 0);
+		 glVertexAttribDivisor(1, 0);
+		 glVertexAttribDivisor(2, 0);
+		 glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+		 glEndTransformFeedback();
+		 glDisable(GL_RASTERIZER_DISCARD);
+
+		 shaderParticlesSmoke.setInt("Pass", 2);
+		 glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+		 modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
+		 modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+		 shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+
+		 shaderParticlesSmoke.turnOn();
+		 glActiveTexture(GL_TEXTURE0);
+		 glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		 glDepthMask(GL_FALSE);
+		 glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+		 glVertexAttribDivisor(0, 1);
+		 glVertexAttribDivisor(1, 1);
+		 glVertexAttribDivisor(2, 1);
+		 glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+		 glBindVertexArray(0);
+		 glDepthMask(GL_TRUE);
+		 drawBufSmoke = 1 - drawBufSmoke;
+		 shaderParticlesSmoke.turnOff();
+
+		 /****************************+
+		  * Open AL sound data
+		  */
+		 source1Pos[0] = modelSmokeParticles[3].x;
+		 source1Pos[1] = modelSmokeParticles[3].y;
+		 source1Pos[2] = modelSmokeParticles[3].z;
+		 alSourcefv(source[1], AL_POSITION, source1Pos);
+
+		 /**********
+		  * End Render particles systems
+		  */
+		}
+
+		else if (renderParticles && it->second.first.compare("Rain") == 0) {
+		/**********
+		 * Init Render particles systems
+		 */
+		 lastTimeParticlesAnimationRain = currTimeParticlesAnimationRain;
+		 currTimeParticlesAnimationRain = TimeManager::Instance().GetTime();
+
+		 shaderParticlesRain.setInt("Pass", 1);
+		 shaderParticlesRain.setFloat("Time", currTimeParticlesAnimationRain);
+		 shaderParticlesRain.setFloat("DeltaT", currTimeParticlesAnimationRain - lastTimeParticlesAnimationRain);
+
+		 glActiveTexture(GL_TEXTURE1);
+		 glBindTexture(GL_TEXTURE_1D, texIdRain);
+		 glEnable(GL_RASTERIZER_DISCARD);
+		 glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackRain[drawBufRain]);
+		 glBeginTransformFeedback(GL_POINTS);
+		 glBindVertexArray(particleArrayRain[1 - drawBufRain]);
+		 glVertexAttribDivisor(0, 0);
+		 glVertexAttribDivisor(1, 0);
+		 glVertexAttribDivisor(2, 0);
+		 glDrawArrays(GL_POINTS, 0, nParticlesRain);
+		 glEndTransformFeedback();
+		 glDisable(GL_RASTERIZER_DISCARD);
+
+		 shaderParticlesRain.setInt("Pass", 2);
+		 glm::mat4 modelRainParticles = glm::mat4(1.0);
+		 modelRainParticles = glm::translate(modelRainParticles, it->second.second);
+		 modelRainParticles[3][1] = terrain.getHeightTerrain(modelRainParticles[3][0], modelRainParticles[3][2]);
+		 shaderParticlesRain.setMatrix4("model", 1, false, glm::value_ptr(modelRainParticles));
+
+		 shaderParticlesRain.turnOn();
+		 glActiveTexture(GL_TEXTURE0);
+		 if (vida <= 1)
+			 glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		 else
+			 glBindTexture(GL_TEXTURE_2D, textureParticleRainID);
+		 glDepthMask(GL_FALSE);
+		 glBindVertexArray(particleArrayRain[drawBufRain]);
+		 glVertexAttribDivisor(0, 1);
+		 glVertexAttribDivisor(1, 1);
+		 glVertexAttribDivisor(2, 1);
+		 glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesRain);
+		 glBindVertexArray(0);
+		 glDepthMask(GL_TRUE);
+		 drawBufRain = 1 - drawBufRain;
+		 shaderParticlesRain.turnOff();
 		}
 
 	}
