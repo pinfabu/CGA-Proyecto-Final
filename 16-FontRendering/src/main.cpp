@@ -57,7 +57,7 @@
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 //Vida personaje
-int vida = 3;
+int hp = 3;
 int bullets = 0;
 std::string cadena = "";
 std::string cadena1 = "";
@@ -113,13 +113,10 @@ Model modelFountain;
 /*// Mayow
 Model mayowModelAnimate;*/
 // Osmosis
-Model OsmosisModelAnimate;
+Model modelOsmosisAnimate;
 // Covid
-Model CovidModelAnimate;
-Model CovidModelAnimate2;
-Model CovidModelAnimate3;
-Model CovidModelAnimate4;
-Model CovidModelAnimate5;
+Model covidArray[5];
+// Masks
 Model maskArray[8];
 // Bullet
 Model modelBulletAnimate;
@@ -195,11 +192,7 @@ int lastMousePosY, offsetY = 0;
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 //glm::mat4 matrixModelRock = glm::mat4(1.0);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
-glm::mat4 modelMatrixCovid = glm::mat4(1.0f);
-glm::mat4 modelMatrixCovid2 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCovid3 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCovid4 = glm::mat4(1.0f);
-glm::mat4 modelMatrixCovid5 = glm::mat4(1.0f);
+glm::mat4 modelMatrixCovid[5] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 glm::mat4 modelMatrixMask = glm::mat4(1.0f);
 glm::mat4 modelMatrixBullet = glm::mat4(1.0f);
 glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
@@ -219,18 +212,12 @@ bool record = false;
 
 // Rendering flags
 bool renderMask[8] = { true, true, true, true, true, true, true, true };
+bool renderCovid[5] = { true, true, true, false, true };
+int freeCovid = 3;
 
-bool DisappearModelCovid1 = true;
-bool DisappearModelCovid2 = true;
-bool DisappearModelCovid3 = true;
-bool DisappearModelCovid4 = true;
-bool DisappearModelCovid5 = true;
-
-bool toqueCovid = true;
-bool toqueCovid2 = true;
-bool toqueCovid3 = true;
-bool toqueCovid4 = true;
-bool toqueCovid5 = true;
+// Var Covid machines
+float stepCountCovid[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+int stateCovid[5] = { 0, 0, 0, 0, 0 };
 
 glm::vec3 colorNeb = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 neblinaGris = glm::vec3(0.25, 0.25, 0.25);
@@ -247,6 +234,11 @@ std::vector<float> lamp1Orientation = { -17.0, -82.67, 23.70 };
 std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24),
 		glm::vec3(-52.73, 0, -3.90) };
 std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
+
+// Covid positions
+// Left Down, Left Up, Right Down, Right Up, Middle
+std::vector<glm::vec3> covidPositions = { glm::vec3(-69.0f, 0.1684f, 35.0f), glm::vec3(-69.0f, 0.1684f, -32.0f), glm::vec3(69.0f, 0.1684f, 35.0f),
+	glm::vec3(69.0f, 0.1684f, -32.0f), glm::vec3(-30.0f, 0.1684f, -15.0f) };
 
 // Mask positions
 std::vector<glm::vec3> maskPositions = { glm::vec3(0.0f, 0.0f, -32.0f), glm::vec3(0.0f, 0.0f, 35.0f), glm::vec3(-40.0f, 0.0f, 2.0f),
@@ -612,8 +604,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	mayowModelAnimate.setShader(&shaderMulLighting);*/
 
 	//Osmosis
-	OsmosisModelAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
-	OsmosisModelAnimate.setShader(&shaderMulLighting);
+	modelOsmosisAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
+	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
 	//Map
 	modelMapTest.loadModel("../models/Map/Map.obj");
@@ -628,17 +620,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		mapArray[i].setShader(&shaderMulLighting);
 	}
 
-	//Covid
-	CovidModelAnimate.loadModel("../models/Covid/Covid.fbx");
-	CovidModelAnimate.setShader(&shaderMulLighting);
-	CovidModelAnimate2.loadModel("../models/Covid/Covid.fbx");
-	CovidModelAnimate2.setShader(&shaderMulLighting);
-	CovidModelAnimate3.loadModel("../models/Covid/Covid.fbx");
-	CovidModelAnimate3.setShader(&shaderMulLighting);
-	CovidModelAnimate4.loadModel("../models/Covid/Covid.fbx");
-	CovidModelAnimate4.setShader(&shaderMulLighting);
-	CovidModelAnimate5.loadModel("../models/Covid/Covid.fbx");
-	CovidModelAnimate5.setShader(&shaderMulLighting);
+	// Covid
+	for (unsigned int i = 0; i < 5; i++)
+	{
+		covidArray[i].loadModel("../models/Covid/Covid.fbx");
+		covidArray[i].setShader(&shaderMulLighting);
+	}
 
 	// Masks
 	for (unsigned int i = 0; i < 8; i++)
@@ -1236,12 +1223,11 @@ void destroy() {
 
 	// Custom objects animate
 	//mayowModelAnimate.destroy();
-	OsmosisModelAnimate.destroy();
-	CovidModelAnimate.destroy();
-	CovidModelAnimate2.destroy();
-	CovidModelAnimate3.destroy();
-	CovidModelAnimate4.destroy();
-	CovidModelAnimate5.destroy();
+	modelOsmosisAnimate.destroy();
+	for (unsigned int i = 0; i < 5; i++)
+	{
+		covidArray[i].destroy();
+	}
 	for (unsigned int i = 0; i < 8; i++)
 	{
 		maskArray[i].destroy();
@@ -1553,31 +1539,6 @@ void applicationLoop() {
 	glm::vec3 target;
 	float angleTarget;
 
-	float advanceCountCovid1 = 0.0;
-	int stateCovid1 = 0;
-	int numberAdvanceCovid1 = 0;
-	int maxAdvanceCovid1 = 0.0;
-
-	float advanceCountCovid2 = 0.0;
-	int stateCovid2 = 0;
-	int numberAdvanceCovid2 = 0;
-	int maxAdvanceCovid2 = 0.0;
-
-	float advanceCountCovid3 = 0.0;
-	int stateCovid3 = 0;
-	int numberAdvanceCovid3 = 0;
-	int maxAdvanceCovid3 = 0.0;
-
-	float advanceCountCovid4 = 0.0;
-	int stateCovid4 = 0;
-	int numberAdvanceCovid4 = 0;
-	int maxAdvanceCovid4 = 0.0;
-
-	float advanceCountCovid5 = 0.0;
-	int stateCovid5 = 0;
-	int numberAdvanceCovid5 = 0;
-	int maxAdvanceCovid5 = 0.0;
-
 	posOsmo = glm::vec3(modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
 
 	std::map<std::string, glm::vec3> blendingUnsorted = {
@@ -1592,20 +1553,19 @@ void applicationLoop() {
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-180.0f),
 			glm::vec3(0, 1, 0));*/
 
-	//Ubicación Osmosis
+	// Ubicación Osmosis
 	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 		glm::vec3(0.0f, 0.0f, 0.0f));
 	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
 		glm::vec3(0, 1, 0));
 
-	//Covid
-	modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-69.0f, 0.1684f, 35.0f));//Covid esquina inferior izquierda
-	modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-69.0f, 0.1684f, -32.0f));//Covid esquina superior izquierda
-	modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(69.0f, 0.1684f, 35.0f));//Covid esquina inferior derecha
-	modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(69.0f, 0.1684f, -32.0f));//Covid esquina superior derecha
-	modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(-30.0f, 0.1684f, -15.0f));//Covid enmedio
+	// Covid
+	for (unsigned int i = 0; i < 5; i++)
+	{
+		modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], covidPositions[i]);
+	}
 
-	//Bala
+	// Bullet
 	modelMatrixBullet = glm::translate(modelMatrixBullet, glm::vec3(-13.0f, 5.0f, 2.0f));
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,glm::vec3(69, 0.0, -13.0));
@@ -1722,7 +1682,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Propiedades de neblina
 		 *******************************************/
-		if (vida <= 1)
+		if (hp <= 1)
 			colorNeb = neblinaRoja;
 		else
 			colorNeb = neblinaGris;
@@ -2009,496 +1969,37 @@ void applicationLoop() {
 		//addOrUpdateColliders(collidersSBB, "rock", rockCollider,
 		//	matrixModelRock);
 
-		//Collider Covid
-		AbstractModel::SBB CovidCollider;
-		glm::mat4 modelMatrixColliderCovid = glm::mat4(modelMatrixCovid);
-		if (DisappearModelCovid1) {
+		// Covid colliders
+		for (unsigned int i = 0; i < 5; i++)
+		{
+			glm::vec3 scale;
+			glm::vec3 position;
+			float ratio;
+			float height;
+			if (renderCovid[i])
+			{
+				scale = glm::vec3(0.001, 0.001, 0.001);
+				position = glm::vec3(covidArray[i].getSbb().c.x, covidArray[i].getSbb().c.y + 31 * 100, covidArray[i].getSbb().c.z);
+				ratio = 0.03;
+				height = 0.0f;
+			}
+			else
+			{
+				scale = glm::vec3(0.0, 0.0, 0.0);
+				position = glm::vec3(0.0f, -100.0f * (i + 1), 0.0f);
+				ratio = 0.0;
+				height = -10.f;
+			}
+			AbstractModel::SBB covidCollider;
+			glm::mat4 modelMatrixColliderCovid = glm::mat4(modelMatrixCovid[i]);
 			modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
-				glm::vec3(0.001, 0.001, 0.001));
+				scale);
 			modelMatrixColliderCovid = glm::translate(modelMatrixColliderCovid,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate.getSbb().c.x,
-					CovidModelAnimate.getSbb().c.y + 31 * 100,
-					CovidModelAnimate.getSbb().c.z));
-			CovidCollider.c = glm::vec3(modelMatrixColliderCovid[3]);
-			CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.03;
-		}
-		else {
-			modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
-				glm::vec3(0.000, 0.000, 0.000));
-			modelMatrixColliderCovid = glm::translate(modelMatrixColliderCovid,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate.getSbb().c.x,
-					CovidModelAnimate.getSbb().c.y + 31 * 100,
-					CovidModelAnimate.getSbb().c.z));
-			CovidCollider.c = glm::vec3(modelMatrixColliderCovid[3]);
-			CovidCollider.ratio = CovidModelAnimate.getSbb().ratio * 0.00;
-		}
-		addOrUpdateColliders(collidersSBB, "Covid", CovidCollider, modelMatrixCovid);
-		
-
-		//Covid 2
-		AbstractModel::SBB CovidCollider2;
-		glm::mat4 modelMatrixColliderCovid2 = glm::mat4(modelMatrixCovid2);
-		if (DisappearModelCovid2) {
-			modelMatrixColliderCovid2 = glm::scale(modelMatrixColliderCovid2,
-				glm::vec3(0.001, 0.001, 0.001));
-			modelMatrixColliderCovid2 = glm::translate(modelMatrixColliderCovid2,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate2.getSbb().c.x,
-					CovidModelAnimate2.getSbb().c.y + 31 * 100,
-					CovidModelAnimate2.getSbb().c.z));
-			CovidCollider2.c = glm::vec3(modelMatrixColliderCovid2[3]);
-			CovidCollider2.ratio = CovidModelAnimate2.getSbb().ratio * 0.03;
-		}
-		else {
-			modelMatrixColliderCovid2 = glm::scale(modelMatrixColliderCovid2,
-				glm::vec3(0.000, 0.000, 0.000));
-			modelMatrixColliderCovid2 = glm::translate(modelMatrixColliderCovid2,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate2.getSbb().c.x,
-					CovidModelAnimate2.getSbb().c.y + 31 * 100,
-					CovidModelAnimate2.getSbb().c.z));
-			CovidCollider2.c = glm::vec3(modelMatrixColliderCovid2[3]);
-			CovidCollider2.ratio = CovidModelAnimate2.getSbb().ratio * 0.00;
-		}
-		addOrUpdateColliders(collidersSBB, "Covid2", CovidCollider2, modelMatrixCovid2);
-
-		//Covid 3
-		AbstractModel::SBB CovidCollider3;
-		glm::mat4 modelMatrixColliderCovid3 = glm::mat4(modelMatrixCovid3);
-		if (DisappearModelCovid3) {
-			modelMatrixColliderCovid3 = glm::scale(modelMatrixColliderCovid3,
-				glm::vec3(0.001, 0.001, 0.001));
-			modelMatrixColliderCovid3 = glm::translate(modelMatrixColliderCovid3,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate3.getSbb().c.x,
-					CovidModelAnimate3.getSbb().c.y + 31 * 100,
-					CovidModelAnimate3.getSbb().c.z));
-			CovidCollider3.c = glm::vec3(modelMatrixColliderCovid3[3]);
-			CovidCollider3.ratio = CovidModelAnimate3.getSbb().ratio * 0.03;
-		}
-		else {
-			modelMatrixColliderCovid3 = glm::scale(modelMatrixColliderCovid3,
-				glm::vec3(0.000, 0.000, 0.000));
-			modelMatrixColliderCovid3 = glm::translate(modelMatrixColliderCovid3,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate3.getSbb().c.x,
-					CovidModelAnimate3.getSbb().c.y + 31 * 100,
-					CovidModelAnimate3.getSbb().c.z));
-			CovidCollider3.c = glm::vec3(modelMatrixColliderCovid3[3]);
-			CovidCollider3.ratio = CovidModelAnimate3.getSbb().ratio * 0.00;
-		}
-		addOrUpdateColliders(collidersSBB, "Covid3", CovidCollider3, modelMatrixCovid3);
-
-		//Covid 4
-		AbstractModel::SBB CovidCollider4;
-		glm::mat4 modelMatrixColliderCovid4 = glm::mat4(modelMatrixCovid4);
-		if (DisappearModelCovid4) {
-			modelMatrixColliderCovid4 = glm::scale(modelMatrixColliderCovid4,
-				glm::vec3(0.001, 0.001, 0.001));
-			modelMatrixColliderCovid4 = glm::translate(modelMatrixColliderCovid4,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate4.getSbb().c.x,
-					CovidModelAnimate4.getSbb().c.y + 23 * 100,
-					CovidModelAnimate4.getSbb().c.z));
-			CovidCollider4.c = glm::vec3(modelMatrixColliderCovid4[3]);
-			CovidCollider4.ratio = CovidModelAnimate4.getSbb().ratio * 0.03;
-		}
-		else {
-			modelMatrixColliderCovid4 = glm::scale(modelMatrixColliderCovid4,
-				glm::vec3(0.000, 0.000, 0.000));
-			modelMatrixColliderCovid4 = glm::translate(modelMatrixColliderCovid4,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate4.getSbb().c.x,
-					CovidModelAnimate4.getSbb().c.y + 31 * 100,
-					CovidModelAnimate4.getSbb().c.z));
-			CovidCollider4.c = glm::vec3(modelMatrixColliderCovid4[3]);
-			CovidCollider4.ratio = CovidModelAnimate4.getSbb().ratio * 0.00;
-		}
-		addOrUpdateColliders(collidersSBB, "Covid4", CovidCollider4, modelMatrixCovid4);
-
-		//Collider Covid5
-		AbstractModel::SBB CovidCollider5;
-		glm::mat4 modelMatrixColliderCovid5 = glm::mat4(modelMatrixCovid5);
-		if (DisappearModelCovid5) {
-			modelMatrixColliderCovid5 = glm::scale(modelMatrixColliderCovid5,
-				glm::vec3(0.001, 0.001, 0.001));
-			modelMatrixColliderCovid5 = glm::translate(modelMatrixColliderCovid5,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate5.getSbb().c.x,
-					CovidModelAnimate5.getSbb().c.y + 31 * 100,
-					CovidModelAnimate.getSbb().c.z));
-			CovidCollider5.c = glm::vec3(modelMatrixColliderCovid5[3]);
-			CovidCollider5.ratio = CovidModelAnimate5.getSbb().ratio * 0.03;
-		}
-		else {
-			modelMatrixColliderCovid5 = glm::scale(modelMatrixColliderCovid5,
-				glm::vec3(0.000, 0.000, 0.000));
-			modelMatrixColliderCovid5 = glm::translate(modelMatrixColliderCovid5,
-				//CovidModelAnimate.getSbb().c
-				glm::vec3(CovidModelAnimate5.getSbb().c.x,
-					CovidModelAnimate5.getSbb().c.y + 31 * 100,
-					CovidModelAnimate5.getSbb().c.z));
-			CovidCollider5.c = glm::vec3(modelMatrixColliderCovid5[3]);
-			CovidCollider5.ratio = CovidModelAnimate5.getSbb().ratio * 0.00;
-		}
-		addOrUpdateColliders(collidersSBB, "Covid5", CovidCollider5, modelMatrixCovid5);
-
-		//Máquina covid esquina superior izquierda
-		switch (stateCovid1)
-		{
-		case 0:
-			if (numberAdvanceCovid1 == 0)//Derecha
-			{
-				maxAdvanceCovid1 = 24.0f;
-			}
-			else if (numberAdvanceCovid1 == 1)//Mov Abajo
-			{
-				maxAdvanceCovid1 = 17.0f;
-			}
-			else if (numberAdvanceCovid1 == 2)//Mov Izq
-			{
-				maxAdvanceCovid1 = 7.0f;
-			}
-			else if (numberAdvanceCovid1 == 3)//Mov Abajo2
-			{
-				maxAdvanceCovid1 = 13.0f;
-			}
-			else if (numberAdvanceCovid1 == 4)//Mov Izq2
-			{
-				maxAdvanceCovid1 = 17.0f;
-			}
-			else if (numberAdvanceCovid1 == 5)//Mov Arriba
-			{
-				maxAdvanceCovid1 = 30.0f;
-			}
-
-			stateCovid1 = 1;
-			break;
-		case 1:
-			if (numberAdvanceCovid1 == 0) {
-				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Derecha
-				advanceCountCovid1 += 0.08;
-			}
-
-			else if (numberAdvanceCovid1 == 1) {
-				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
-				advanceCountCovid1 += 0.08;
-			}
-
-			else if (numberAdvanceCovid1 == 2) {
-				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
-				advanceCountCovid1 += 0.08;
-			}
-
-			else if (numberAdvanceCovid1 == 3) {
-				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
-				advanceCountCovid1 += 0.08;
-			}
-			else if (numberAdvanceCovid1 == 4) {
-				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq2
-				advanceCountCovid1 += 0.08;
-			}
-			else if (numberAdvanceCovid1 == 5) {
-				modelMatrixCovid2 = glm::translate(modelMatrixCovid2, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
-				advanceCountCovid1 += 0.08;
-			}
-
-			if (advanceCountCovid1 > maxAdvanceCovid1)
-			{
-				advanceCountCovid1 = 0;
-				numberAdvanceCovid1++;
-				stateCovid1 = 0;
-				if (numberAdvanceCovid1 == 6) {
-					numberAdvanceCovid1 = 0;
-				}
-			}
-			break;
-		default:
-			break;
-		}
-
-		////Máquina covid esquina inferior izquierda
-		switch (stateCovid2)
-		{
-		case 0:
-			if (numberAdvanceCovid2 == 0)//Arriba
-			{
-				maxAdvanceCovid2 = 30.0f;
-			}
-			else if (numberAdvanceCovid2 == 1)//Der
-			{
-				maxAdvanceCovid2 = 17.0f;
-			}
-			else if (numberAdvanceCovid2 == 2)//Abajo
-			{
-				maxAdvanceCovid2 = 13.0f;
-			}
-			else if (numberAdvanceCovid2 == 3)//Der
-			{
-				maxAdvanceCovid2 = 7.0f;
-			}
-			else if (numberAdvanceCovid2 == 4)//Abajo2
-			{
-				maxAdvanceCovid2 = 17.0f;
-			}
-			else if (numberAdvanceCovid2 == 5)//Izq
-			{
-				maxAdvanceCovid2 = 24.0f;
-			}
-
-			stateCovid2 = 1;
-			break;
-		case 1:
-			if (numberAdvanceCovid2 == 0) {
-				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
-				advanceCountCovid2 += 0.08;
-			}
-
-			else if (numberAdvanceCovid2 == 1) {
-				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
-				advanceCountCovid2 += 0.08;
-			}
-
-			else if (numberAdvanceCovid2 == 2) {
-				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
-				advanceCountCovid2 += 0.08;
-			}
-
-			else if (numberAdvanceCovid2 == 3) {
-				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
-				advanceCountCovid2 += 0.08;
-			}
-			else if (numberAdvanceCovid2 == 4) {
-				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
-				advanceCountCovid2 += 0.08;
-			}
-			else if (numberAdvanceCovid2 == 5) {
-				modelMatrixCovid = glm::translate(modelMatrixCovid, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
-				advanceCountCovid2 += 0.08;
-			}
-
-			if (advanceCountCovid2 > maxAdvanceCovid2)
-			{
-				advanceCountCovid2 = 0;
-				numberAdvanceCovid2++;
-				stateCovid2 = 0;
-				if (numberAdvanceCovid2 == 6) {
-					numberAdvanceCovid2 = 0;
-				}
-			}
-			break;
-		default:
-			break;
-		}
-
-		//Máquina covid esquina superior derecha
-		switch (stateCovid3)
-		{
-		case 0:
-			if (numberAdvanceCovid3 == 0)//Izq
-			{
-				maxAdvanceCovid3 = 24.0f;
-			}
-			else if (numberAdvanceCovid3 == 1)//Abajo
-			{
-				maxAdvanceCovid3 = 17.0f;
-			}
-			else if (numberAdvanceCovid3 == 2)//Der
-			{
-				maxAdvanceCovid3 = 7.0f;
-			}
-			else if (numberAdvanceCovid3 == 3)//Abajo2
-			{
-				maxAdvanceCovid3 = 13.0f;
-			}
-			else if (numberAdvanceCovid3 == 4)//Der2
-			{
-				maxAdvanceCovid3 = 17.0f;
-			}
-			else if (numberAdvanceCovid3 == 5)//Arriba
-			{
-				maxAdvanceCovid3 = 30.0f;
-			}
-
-			stateCovid3 = 1;
-			break;
-		case 1:
-			if (numberAdvanceCovid3 == 0) {
-				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
-				advanceCountCovid3 += 0.08;
-			}
-
-			else if (numberAdvanceCovid3 == 1) {
-				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
-				advanceCountCovid3 += 0.08;
-			}
-
-			else if (numberAdvanceCovid3 == 2) {
-				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
-				advanceCountCovid3 += 0.08;
-			}
-
-			else if (numberAdvanceCovid3 == 3) {
-				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
-				advanceCountCovid3 += 0.08;
-			}
-			else if (numberAdvanceCovid3 == 4) {
-				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der2
-				advanceCountCovid3 += 0.08;
-			}
-			else if (numberAdvanceCovid3 == 5) {
-				modelMatrixCovid4 = glm::translate(modelMatrixCovid4, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
-				advanceCountCovid3 += 0.08;
-			}
-
-			if (advanceCountCovid3 > maxAdvanceCovid3)
-			{
-				advanceCountCovid3 = 0;
-				numberAdvanceCovid3++;
-				stateCovid3 = 0;
-				if (numberAdvanceCovid3 == 6) {
-					numberAdvanceCovid3 = 0;
-				}
-			}
-			break;
-		default:
-			break;
-		}
-
-		//Máquina covid esquina inferior derecha
-		switch (stateCovid4)
-		{
-		case 0:
-			if (numberAdvanceCovid4 == 0)//Arriba
-			{
-				maxAdvanceCovid4 = 30.0f;
-			}
-			else if (numberAdvanceCovid4 == 1)//Izq
-			{
-				maxAdvanceCovid4 = 17.0f;
-			}
-			else if (numberAdvanceCovid4 == 2)//Abajo
-			{
-				maxAdvanceCovid4 = 13.0f;
-			}
-			else if (numberAdvanceCovid4 == 3)//Izq2
-			{
-				maxAdvanceCovid4 = 7.0f;
-			}
-			else if (numberAdvanceCovid4 == 4)//Abajo2
-			{
-				maxAdvanceCovid4 = 17.0f;
-			}
-			else if (numberAdvanceCovid4 == 5)//Der
-			{
-				maxAdvanceCovid4 = 24.0f;
-			}
-
-			stateCovid4 = 1;
-			break;
-		case 1:
-			if (numberAdvanceCovid4 == 0) {
-				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
-				advanceCountCovid4 += 0.08;
-			}
-
-			else if (numberAdvanceCovid4 == 1) {
-				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
-				advanceCountCovid4 += 0.08;
-			}
-
-			else if (numberAdvanceCovid4 == 2) {
-				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
-				advanceCountCovid4 += 0.08;
-			}
-
-			else if (numberAdvanceCovid4 == 3) {
-				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq2
-				advanceCountCovid4 += 0.08;
-			}
-			else if (numberAdvanceCovid4 == 4) {
-				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo2
-				advanceCountCovid4 += 0.08;
-			}
-			else if (numberAdvanceCovid4 == 5) {
-				modelMatrixCovid3 = glm::translate(modelMatrixCovid3, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Der
-				advanceCountCovid4 += 0.08;
-			}
-
-			if (advanceCountCovid4 > maxAdvanceCovid4)
-			{
-				advanceCountCovid4 = 0;
-				numberAdvanceCovid4++;
-				stateCovid4 = 0;
-				if (numberAdvanceCovid4 == 6) {
-					numberAdvanceCovid4 = 0;
-				}
-			}
-			break;
-		default:
-			break;
-		}
-
-		//Máquina covid en medio
-		switch (stateCovid5)
-		{
-		case 0:
-			if (numberAdvanceCovid5 == 0)//Mov Derecha
-			{
-				maxAdvanceCovid5 = 60.0f;
-			}
-			else if (numberAdvanceCovid5 == 1)//Mov Abajo
-			{
-				maxAdvanceCovid5 = 34.0f;
-			}
-			else if (numberAdvanceCovid5 == 2)//Mov Izq
-			{
-				maxAdvanceCovid5 = 60.0f;
-			}
-			else if (numberAdvanceCovid5 == 3)//Mov Arriba
-			{
-				maxAdvanceCovid5 = 34.0f;
-			}
-			
-
-			stateCovid5 = 1;
-			break;
-		case 1:
-			if (numberAdvanceCovid5 == 0) {
-				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(0.08f, 0.0f, 0.0f));//Mov Derecha
-				advanceCountCovid5 += 0.08;
-			}
-
-			else if (numberAdvanceCovid5 == 1) {
-				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(0.0f, 0.0f, 0.08f));//Mov Abajo
-				advanceCountCovid5 += 0.08;
-			}
-
-			else if (numberAdvanceCovid5 == 2) {
-				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(-0.08f, 0.0f, 0.0f));//Mov Izq
-				advanceCountCovid5 += 0.08;
-			}
-
-			else if (numberAdvanceCovid5 == 3) {
-				modelMatrixCovid5 = glm::translate(modelMatrixCovid5, glm::vec3(0.0f, 0.0f, -0.08f));//Mov Arriba
-				advanceCountCovid5 += 0.08;
-			}
-			
-
-			if (advanceCountCovid5 > maxAdvanceCovid5)
-			{
-				advanceCountCovid5 = 0;
-				numberAdvanceCovid5++;
-				stateCovid5 = 0;
-				if (numberAdvanceCovid5 == 4) {
-					numberAdvanceCovid5 = 0;
-				}
-			}
-			break;
-		default:
-			break;
+				position);
+			covidCollider.c = glm::vec3(modelMatrixColliderCovid[3].x, modelMatrixColliderCovid[3].y - height, modelMatrixColliderCovid[3].z);
+			covidCollider.ratio = covidArray[i].getSbb().ratio * ratio;
+			addOrUpdateColliders(collidersSBB, "covid-" + std::to_string(i),
+				covidCollider, modelMatrixCovid[i]);
 		}
 
 		// Mask colliders
@@ -2514,7 +2015,7 @@ void applicationLoop() {
 			else
 			{
 				scale = glm::vec3(0.0, 0.0, 0.0);
-				position = glm::vec3(0.0f, -10.f * i, 0.0f);
+				position = glm::vec3(0.0f, -10.0f * (i + 1), 0.0f);
 			}
 			AbstractModel::OBB maskCollider;
 			glm::mat4 modelMatrixColliderMask = glm::mat4(modelMatrixMask);
@@ -2525,10 +2026,8 @@ void applicationLoop() {
 			addOrUpdateColliders(collidersOBB, "mask-" + std::to_string(i),
 				maskCollider, modelMatrixColliderMask);
 			maskCollider.u = glm::quat_cast(modelMatrixColliderMask);
-			//modelMatrixColliderMask = glm::scale(modelMatrixColliderMask, scale);
 			modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
 				glm::vec3(maskArray[i].getObb().c));
-			//maskCollider.e = mapArray[i].getObb().e;// * glm::vec3(2.25, 2.0, 2.5);
 			maskCollider.e = mapArray[i].getObb().e * scale;
 			maskCollider.c = glm::vec3(modelMatrixColliderMask[3]);
 			std::get<0>(collidersOBB.find("mask-" + std::to_string(i))->second) =
@@ -2543,14 +2042,12 @@ void applicationLoop() {
 		OsmosisCollider.u = glm::quat_cast(modelmatrixColliderOsmosis);
 		modelmatrixColliderOsmosis = glm::scale(modelmatrixColliderOsmosis, glm::vec3(0.1, 0.1, 0.1));
 		modelmatrixColliderOsmosis = glm::translate(modelmatrixColliderOsmosis,
-			glm::vec3(OsmosisModelAnimate.getObb().c.x - 12.5,
-				OsmosisModelAnimate.getObb().c.y + 22,
-				OsmosisModelAnimate.getObb().c.z + 2));
-		OsmosisCollider.e = OsmosisModelAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
+			glm::vec3(modelOsmosisAnimate.getObb().c.x - 12.5,
+				modelOsmosisAnimate.getObb().c.y + 22,
+				modelOsmosisAnimate.getObb().c.z + 2));
+		OsmosisCollider.e = modelOsmosisAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
 		OsmosisCollider.c = glm::vec3(modelmatrixColliderOsmosis[3]);
 		addOrUpdateColliders(collidersOBB, "Osmosis", OsmosisCollider, modelMatrixOsmosis);
-
-
 
 		// Map colliders
 		//AbstractModel::OBB mapColliders[27];
@@ -2571,7 +2068,7 @@ void applicationLoop() {
 				mapCollider;
 		}
 
-		//Collider Bala
+		// Collider Bala
 		AbstractModel::SBB BalaCollider;
 		glm::mat4 modelmatrixColliderBala = glm::mat4(modelMatrixBullet);
 		modelmatrixColliderBala = glm::scale(modelmatrixColliderBala,
@@ -2705,7 +2202,7 @@ void applicationLoop() {
 		  * Test Colisions
 		  *******************************************/
 
-		//Box  vs Box
+		// Box  vs Box
 		for (std::map<std::string,
 			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersOBB.begin(); it != collidersOBB.end(); it++) {
@@ -2723,79 +2220,17 @@ void applicationLoop() {
 						bullets += 1;
 						int noMask = it->first.substr(5, 1)[0] - '0';
 						renderMask[noMask] = !renderMask[noMask];
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
 						std::cout << "EXTRACTED " << noMask << " TYPE " << typeid(noMask).name() << std::endl;
 					}
-					/*if (it->first == "mask-0") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-1") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[1] = !renderMask[1];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-2") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[2] = !renderMask[2];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-3") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[3] = !renderMask[3];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-4") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[4] = !renderMask[4];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-5") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[5] = !renderMask[5];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-6") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[6] = !renderMask[6];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}
-					if (it->first == "mask-7") {
-						if (jt->first == "Osmosis") {
-							bullets += 1;
-							renderMask[7] = !renderMask[7];
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-						}
-					}*/
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 				isCollision);
 		}
 
-		//Sphere vs Sphere
+		// Sphere vs Sphere
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersSBB.begin(); it != collidersSBB.end(); it++) {
@@ -2814,7 +2249,7 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
 				isCollision);
 		}
-		//Sphere vs Box
+		// Sphere vs Box
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersSBB.begin(); it != collidersSBB.end(); it++) {
@@ -2828,63 +2263,21 @@ void applicationLoop() {
 					isCollision = true;
 					addOrUpdateCollisionDetection(collisionDetection, jt->first,
 						isCollision);
-					if (it->first == "Covid") {
-						if (jt->first == "Osmosis") {
-							if (toqueCovid){
-								vida -= 1;
-								DisappearModelCovid1 = !DisappearModelCovid1;
-								DisappearModelCovid5 = !DisappearModelCovid5;
-								std::cout << "Colision " << it->first << " with "
-									<< jt->first << std::endl;
-								toqueCovid = false;
-							}
-						}
-					}
-					if (it->first == "Covid2") {
-						if (jt->first == "Osmosis") {
-							if (toqueCovid2) {
-								vida -= 1;
-								DisappearModelCovid2 = !DisappearModelCovid2;
-								DisappearModelCovid5 = !DisappearModelCovid5;
-								std::cout << "Colision " << it->first << " with "
-									<< jt->first << std::endl;
-								toqueCovid2 = false;
-							}
-						}
-					}
-					if (it->first == "Covid3") {
-						if (jt->first == "Osmosis") {
-							if (toqueCovid3) {
-								vida -= 1;
-								DisappearModelCovid3 = !DisappearModelCovid3;
-								DisappearModelCovid5 = !DisappearModelCovid5;
-								std::cout << "Colision " << it->first << " with "
-									<< jt->first << std::endl;
-								toqueCovid3 = false;
-							}
-						}
-					}
-					if (it->first == "Covid4") {
-						if (jt->first == "Osmosis") {
-							if (toqueCovid4) {
-								vida -= 1;
-								DisappearModelCovid4 = !DisappearModelCovid4;
-								DisappearModelCovid5 = !DisappearModelCovid5;
-								std::cout << "Colision " << it->first << " with "
-									<< jt->first << std::endl;
-								toqueCovid4 = false;
-							}
-						}
-					}
-					if (it->first == "Covid5") {
-						if (jt->first == "Osmosis") {
-							if (toqueCovid5) {
-								vida -= 1;
-								DisappearModelCovid5 = !DisappearModelCovid5;
-								std::cout << "Colision " << it->first << " with "
-									<< jt->first << std::endl;
-								toqueCovid5 = false;
-							}
+					if (it->first.substr(0, 5) == "covid" && jt->first == "Osmosis") {
+						int noCovid = it->first.substr(6, 1)[0] - '0';
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
+						std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
+						std::cout << renderCovid[noCovid] << std::endl;
+						if (renderCovid[noCovid])
+						{
+							hp -= 1;
+							renderCovid[noCovid] = !renderCovid[noCovid];
+							renderCovid[freeCovid] = !renderCovid[freeCovid];
+							freeCovid = noCovid;
+							std::cout << "Colision " << it->first << " with "
+								<< jt->first << std::endl;
+							std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
 						}
 					}
 				}
@@ -2894,7 +2287,7 @@ void applicationLoop() {
 
 		}
 
-		//Impedir que avance el modelo
+		// Impedir que avance el modelo
 		std::map<std::string, bool>::iterator colIt;
 		for (colIt = collisionDetection.begin();
 			colIt != collisionDetection.end(); colIt++) {
@@ -2927,9 +2320,9 @@ void applicationLoop() {
 		/*******************************************
 		 * State machines
 		 *******************************************/
-		cadena = "Vidas: " + std::to_string(vida);
+		cadena = "Vidas: " + std::to_string(hp);
 		cadena1 = " Balas: " + std::to_string(bullets);
-		if (vida > 0) {
+		if (hp > 0) {
 			modelText->render(cadena, -.95, 0.9, 50, 0.0, 0.63, 0.16);
 			modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
 			if (recarga)
@@ -3020,14 +2413,13 @@ void prepareScene() {
 	//mayowModelAnimate.setShader(&shaderMulLighting);
 
 	//Osmosis
-	OsmosisModelAnimate.setShader(&shaderMulLighting);
+	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
-	//Covid
-	CovidModelAnimate.setShader(&shaderMulLighting);
-	CovidModelAnimate2.setShader(&shaderMulLighting);
-	CovidModelAnimate3.setShader(&shaderMulLighting);
-	CovidModelAnimate4.setShader(&shaderMulLighting);
-	CovidModelAnimate5.setShader(&shaderMulLighting);
+	// Covid
+	for (unsigned int i = 0; i < 5; i++)
+	{
+		covidArray[i].setShader(&shaderMulLighting);
+	}
 
 	// Masks
 	for (unsigned int i = 0; i < 8; i++)
@@ -3067,15 +2459,14 @@ void prepareDepthScene() {
 	//Mayow
 	//mayowModelAnimate.setShader(&shaderDepth);
 
-	//Osmosis
-	OsmosisModelAnimate.setShader(&shaderDepth);
+	// Osmosis
+	modelOsmosisAnimate.setShader(&shaderDepth);
 
-	//Covid
-	CovidModelAnimate.setShader(&shaderDepth);
-	CovidModelAnimate2.setShader(&shaderDepth);
-	CovidModelAnimate3.setShader(&shaderDepth);
-	CovidModelAnimate4.setShader(&shaderDepth);
-	CovidModelAnimate5.setShader(&shaderDepth);
+	// Covid
+	for (unsigned int i = 0; i < 5; i++)
+	{
+		covidArray[i].setShader(&shaderDepth);
+	}
 
 	// Masks
 	for (unsigned int i = 0; i < 8; i++)
@@ -3083,10 +2474,10 @@ void prepareDepthScene() {
 		maskArray[i].setShader(&shaderDepth);
 	}
 
-	//Bala
+	// Bullet
 	modelBulletAnimate.setShader(&shaderDepth);
 
-	//Map
+	// Map
 	modelMapTest.setShader(&shaderDepth);
 	//modelMapRef.setShader(&shaderDepth);
 	//modelMapSquareFL.setShader(&shaderDepth);
@@ -3161,7 +2552,7 @@ void renderScene(bool renderParticles) {
 		modelLampPost2.render();
 	}*/
 	glm::mat4 modelMatrixBodyLamp1 = glm::mat4(1.0);
-	modelMatrixBodyLamp1 = glm::translate(modelMatrixBodyLamp1,glm::vec3(69.0f, 10.0f, -13.0f));
+	modelMatrixBodyLamp1 = glm::translate(modelMatrixBodyLamp1, glm::vec3(69.0f, 10.0f, -13.0f));
 	modelMatrixBodyLamp1 = glm::rotate(modelMatrixBodyLamp1, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	modelLamp1.render(modelMatrixBodyLamp1);
 
@@ -3217,8 +2608,8 @@ void renderScene(bool renderParticles) {
 	modelMatrixOsmosis[3][1] = terrain.getHeightTerrain(modelMatrixOsmosis[3][0], modelMatrixOsmosis[3][2]);
 	glm::mat4 modelMatrixOsmosisBody = glm::mat4(modelMatrixOsmosis);
 	modelMatrixOsmosisBody = glm::scale(modelMatrixOsmosisBody, glm::vec3(0.004, 0.004, 0.004));
-	OsmosisModelAnimate.setAnimationIndex(animationIndex);
-	OsmosisModelAnimate.render(modelMatrixOsmosisBody);
+	modelOsmosisAnimate.setAnimationIndex(animationIndex);
+	modelOsmosisAnimate.render(modelMatrixOsmosisBody);
 
 
 	// Map
@@ -3238,51 +2629,20 @@ void renderScene(bool renderParticles) {
 		mapArray[i].render(modelMatrixMap);
 	}
 
-
 	// Covid
-	modelMatrixCovid[3][1] = terrain.getHeightTerrain(modelMatrixCovid[3][0], modelMatrixCovid[3][2]);
-	glm::mat4 modelMatrixCovidBody = glm::mat4(modelMatrixCovid);
-	modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.015, 0.015, 0.015));
-	CovidModelAnimate.setAnimationIndex(0);
-	if (DisappearModelCovid1) {
-		CovidModelAnimate.render(modelMatrixCovidBody);
-	}
-	//Covid2
-	modelMatrixCovid2[3][1] = terrain.getHeightTerrain(modelMatrixCovid2[3][0], modelMatrixCovid2[3][2]);
-	glm::mat4 modelMatrixCovid2Body = glm::mat4(modelMatrixCovid2);
-	modelMatrixCovid2Body = glm::scale(modelMatrixCovid2Body, glm::vec3(0.015, 0.015, 0.015));
-	CovidModelAnimate2.setAnimationIndex(0);
-	if (DisappearModelCovid2) {
-		CovidModelAnimate2.render(modelMatrixCovid2Body);
+	for (unsigned int i = 0; i < 5; i++) {
+		modelMatrixCovid[i][3][1] = terrain.getHeightTerrain(modelMatrixCovid[i][3][0], modelMatrixCovid[i][3][2]) + 1.0f;
+		glm::mat4 modelMatrixCovidBody = glm::mat4(modelMatrixCovid[i]);
+		modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.015, 0.015, 0.015));
+		covidArray[i].setAnimationIndex(0);
+		if (renderCovid[i])
+		{
+			covidArray[i].render(modelMatrixCovidBody);
+		}
 	}
 
-	//Covid3
-	modelMatrixCovid3[3][1] = terrain.getHeightTerrain(modelMatrixCovid3[3][0], modelMatrixCovid3[3][2]);
-	glm::mat4 modelMatrixCovid3Body = glm::mat4(modelMatrixCovid3);
-	modelMatrixCovid3Body = glm::scale(modelMatrixCovid3Body, glm::vec3(0.015, 0.015, 0.015));
-	CovidModelAnimate3.setAnimationIndex(0);
-	if (DisappearModelCovid3) {
-		CovidModelAnimate3.render(modelMatrixCovid3Body);
-	}
-
-	//Covid4
-	modelMatrixCovid4[3][1] = terrain.getHeightTerrain(modelMatrixCovid4[3][0], modelMatrixCovid4[3][2]);
-	glm::mat4 modelMatrixCovid4Body = glm::mat4(modelMatrixCovid4);
-	modelMatrixCovid4Body = glm::scale(modelMatrixCovid4Body, glm::vec3(0.015, 0.015, 0.015));
-	CovidModelAnimate4.setAnimationIndex(0);
-	if (DisappearModelCovid4) {
-		CovidModelAnimate4.render(modelMatrixCovid4Body);
-	}
-	// Covid5
-	modelMatrixCovid5[3][1] = terrain.getHeightTerrain(modelMatrixCovid5[3][0], modelMatrixCovid5[3][2]);
-	glm::mat4 modelMatrixCovidBody5 = glm::mat4(modelMatrixCovid5);
-	modelMatrixCovidBody5 = glm::scale(modelMatrixCovidBody5, glm::vec3(0.015, 0.015, 0.015));
-	CovidModelAnimate5.setAnimationIndex(0);
-	if (DisappearModelCovid5) {
-		CovidModelAnimate5.render(modelMatrixCovidBody5);
-	}
-	// Render the masks
-	for (int i = 0; i < 8; i++) {
+	// Masks
+	for (unsigned int i = 0; i < 8; i++) {
 		maskPositions[i].y = terrain.getHeightTerrain(maskPositions[i].x,
 			maskPositions[i].z);
 		maskArray[i].setPosition(maskPositions[i]);
@@ -3298,7 +2658,74 @@ void renderScene(bool renderParticles) {
 	glm::mat4 modelMatrixBalaBody = glm::mat4(modelMatrixBullet);
 	modelMatrixBalaBody = glm::scale(modelMatrixBalaBody, glm::vec3(0.25, 0.25, 0.25));
 	modelBulletAnimate.render(modelMatrixBalaBody);
-	
+
+	// Left Down, Left Up, Right Down, Right Up, Middle
+	float maxSteps[5][6] = {
+		{ 30.0f, 17.0f, 13.0f, 7.0f, 17.0f, 24.0f },
+		{ 24.0f, 17.0f, 7.0f, 13.0f, 17.0f, 30.0f },
+		{ 30.0f, 17.0f, 13.0f, 7.0f, 17.0f, 24.0f },
+		{ 24.0f, 17.0f, 7.0f, 13.0f, 17.0f, 30.0f },
+		{ 60.0f, 34.0f, 60.0f, 34.0f, 0.0f, 0.0f }
+	};
+	// 0 Up, 1 Down, 2 Left, 3 Right
+	int individualDirections[5][6] = {
+		{ 0, 3, 1, 3, 1, 2 },
+		{ 3, 1, 2, 1, 2, 0 },
+		{ 0, 2, 1, 2, 1, 3 },
+		{ 2, 1, 3, 1, 3, 0 },
+		{ 3, 1, 2, 0, 0, 0 }
+	};
+	std::vector<glm::vec3> direction = {
+		glm::vec3(0.0f, 0.0f, -1.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f),
+		glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f)
+	};
+	float individualStepSize[5] = { 0.07, 0.07, 0.08, 0.09, 0.09 };
+
+	// State machine for Covid
+	for (unsigned int i = 0; i < 5; i++) {
+		switch (stateCovid[i])
+		{
+		case 0:
+			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][0]] * individualStepSize[i]);
+			stepCountCovid[i] += individualStepSize[i];
+			break;
+		case 1:
+			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][1]] * individualStepSize[i]);
+			stepCountCovid[i] += individualStepSize[i];
+			break;
+		case 2:
+			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][2]] * individualStepSize[i]);
+			stepCountCovid[i] += individualStepSize[i];
+			break;
+		case 3:
+			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][3]] * individualStepSize[i]);
+			stepCountCovid[i] += individualStepSize[i];
+			break;
+		case 4:
+			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][4]] * individualStepSize[i]);
+			stepCountCovid[i] += individualStepSize[i];
+			break;
+		case 5:
+			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][5]] * individualStepSize[i]);
+			stepCountCovid[i] += individualStepSize[i];
+			break;
+		default:
+			break;
+		}
+		if (stepCountCovid[i] > maxSteps[i][stateCovid[i]])
+		{
+			stepCountCovid[i] = 0.0f;
+			stateCovid[i]++;
+			if (stateCovid[i] == 6) {
+				stateCovid[i] = 0;
+			}
+			if (i == 5 && stateCovid[i] == 4) {
+				stateCovid[i] = 0;
+			}
+		}
+	}
 
 	/**********
 	 * Update the position with alpha objects
