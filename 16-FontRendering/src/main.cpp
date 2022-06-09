@@ -65,7 +65,6 @@ std::string cadena2 = "Recarga";
 std::string cadena3 = "";
 int screenWidth;
 int screenHeight;
-bool recarga = false;
 
 const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
@@ -195,6 +194,8 @@ glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
 glm::mat4 modelMatrixCovid[5] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 glm::mat4 modelMatrixMask = glm::mat4(1.0f);
 glm::mat4 modelMatrixBullet = glm::mat4(1.0f);
+glm::mat4 modelMatrixBulletBody = glm::mat4(1.0f);
+glm::mat4 modelMatrixBulletRef = glm::mat4(1.0f);
 glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 //glm::mat4 modelMatrixMapRef = glm::mat4(1.0f);
 glm::mat4 modelMatrixMap = glm::mat4(1.0f);
@@ -203,6 +204,12 @@ glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 int animationIndex = 1;
 int modelSelected = 0;
 bool enableCountSelected = true;
+
+// Bullet states
+bool enableBulletFiring = true;
+bool bulletIsActive = false;
+float bulletMovement = 0.0;
+float bulletMaxMovement = 10.0;
 
 // Variables to animations keyframes
 bool saveFrame = false, availableSave = true;
@@ -733,7 +740,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		maskArray[i].setShader(&shaderMulLighting);
 	}
 
-	//Bala
+	// Bullet
 	modelBulletAnimate.loadModel("../models/Osmosis/bala.fbx");
 	modelBulletAnimate.setShader(&shaderMulLighting);
 
@@ -1496,18 +1503,29 @@ bool processInput(bool continueApplication) {
 			animationIndex = 1;
 		}
 
-		if (axes[5] > 0) {
-			if (banderaDisparo) {
-				//aqui lo del disparo
-				std::cout << "Disparo" << std::endl;
-				if (bullets > 0) {
-					bullets -= 1;
-					banderaDisparo = false;
-					recarga = true;
-				}
+		if (enableBulletFiring && axes[5] > 0) {
+			if (bullets > 0) {
+				bullets -= 1;
+				enableBulletFiring = false;
+				bulletIsActive = true;
+				std::cout << "Bullet fired" << std::endl;
 			}
+			//if (banderaDisparo) {
+			//	//aqui lo del disparo
+			//	std::cout << "Disparo" << std::endl;
+			//	if (bullets > 0) {
+			//		bullets -= 1;
+			//		banderaDisparo = false;
+			//	}
+			//}
 			animationIndex = 1;
 		}
+		else if (axes[5] <= 0) {
+			if (!bulletIsActive) {
+				enableBulletFiring = true;
+			}
+		}
+			
 			
 		/*if (fabs(axes[3]) > 0.2) {
 			camera->mouseMoveCamera(0.0, axes[3], deltaTime);
@@ -1523,14 +1541,13 @@ bool processInput(bool continueApplication) {
 			std::cout << "Se presiona A" << std::endl;
 		if (buttons[1] == GLFW_PRESS)
 			std::cout << "Se presiona B" << std::endl;
-		if (buttons[2] == GLFW_PRESS) {
+		/*if (buttons[2] == GLFW_PRESS) {
 			std::cout << "Se presiona X" << std::endl;
 			std::cout << "Recargas" << std::endl;
 			if (bullets != 0) {
 				banderaDisparo = true;
-				recarga = false;
 			}
-		}
+		}*/
 		if (buttons[3] == GLFW_PRESS)
 			std::cout << "Se presiona Y" << std::endl;
 		if (buttons[4] == GLFW_PRESS)
@@ -1573,14 +1590,28 @@ bool processInput(bool continueApplication) {
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-2.0f), glm::vec3(0, 1, 0));
 	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+
+	if (enableBulletFiring && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		if (bullets > 0) {
+			bullets -= 1;
+			enableBulletFiring = false;
+			bulletIsActive = true;
+			std::cout << "Bullet fired" << std::endl;
+		}
+	}
+	else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+		if (!bulletIsActive) {
+			enableBulletFiring = true;
+		}
+	}
+
+	/*if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		if (banderaDisparo) {
 			//aqui lo del disparo
 			std::cout << "Disparo" << std::endl;
 			if (bullets > 0) {
 				bullets -= 1;
 				banderaDisparo = false;
-				recarga = true;
 			}
 		}
 		animationIndex = 1;
@@ -1589,9 +1620,8 @@ bool processInput(bool continueApplication) {
 		std::cout << "Recargas" << std::endl;
 		if (bullets != 0) {
 			banderaDisparo = true;
-			recarga = false;
 		}
-	}
+	}*/
 
 	//Para que no pueda mover la camara el usuario
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -1661,6 +1691,7 @@ bool processInput(bool continueApplication) {
 		startTimeJump = currTime;
 		tmv = 0;
 	}
+		
 
 	glfwPollEvents();
 	return continueApplication;
@@ -1701,7 +1732,7 @@ void applicationLoop() {
 	}
 
 	// Bullet
-	modelMatrixBullet = glm::translate(modelMatrixBullet, glm::vec3(-13.0f, 5.0f, 2.0f));
+	//modelMatrixBullet = glm::translate(modelMatrixBullet, glm::vec3(-13.0f, 5.0f, 2.0f));
 
 	modelMatrixFountain = glm::translate(modelMatrixFountain,glm::vec3(69, 0.0, -13.0));
 	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
@@ -2120,7 +2151,7 @@ void applicationLoop() {
 			if (renderCovid[i])
 			{
 				scale = glm::vec3(0.001, 0.001, 0.001);
-				position = glm::vec3(covidArray[i].getSbb().c.x, covidArray[i].getSbb().c.y + 31 * 100, covidArray[i].getSbb().c.z);
+				position = glm::vec3(covidArray[i].getSbb().c.x, covidArray[i].getSbb().c.y + 25 * 100, covidArray[i].getSbb().c.z);
 				ratio = 0.03;
 				height = 0.0f;
 			}
@@ -2176,19 +2207,19 @@ void applicationLoop() {
 		}
 
 		//Collider Osmosis
-		AbstractModel::OBB OsmosisCollider;
-		glm::mat4 modelmatrixColliderOsmosis = glm::mat4(modelMatrixOsmosis);
-		modelmatrixColliderOsmosis = glm::rotate(modelmatrixColliderOsmosis, glm::radians(90.0f), glm::vec3(0, 1, 0));
+		AbstractModel::OBB osmosisCollider;
+		glm::mat4 modelMatrixColliderOsmosis = glm::mat4(modelMatrixOsmosis);
+		modelMatrixColliderOsmosis = glm::rotate(modelMatrixColliderOsmosis, glm::radians(90.0f), glm::vec3(0, 1, 0));
 		// Set the orientation of collider before doing the scale
-		OsmosisCollider.u = glm::quat_cast(modelmatrixColliderOsmosis);
-		modelmatrixColliderOsmosis = glm::scale(modelmatrixColliderOsmosis, glm::vec3(0.1, 0.1, 0.1));
-		modelmatrixColliderOsmosis = glm::translate(modelmatrixColliderOsmosis,
+		osmosisCollider.u = glm::quat_cast(modelMatrixColliderOsmosis);
+		modelMatrixColliderOsmosis = glm::scale(modelMatrixColliderOsmosis, glm::vec3(0.1, 0.1, 0.1));
+		modelMatrixColliderOsmosis = glm::translate(modelMatrixColliderOsmosis,
 			glm::vec3(modelOsmosisAnimate.getObb().c.x - 12.5,
 				modelOsmosisAnimate.getObb().c.y + 22,
 				modelOsmosisAnimate.getObb().c.z + 2));
-		OsmosisCollider.e = modelOsmosisAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
-		OsmosisCollider.c = glm::vec3(modelmatrixColliderOsmosis[3]);
-		addOrUpdateColliders(collidersOBB, "Osmosis", OsmosisCollider, modelMatrixOsmosis);
+		osmosisCollider.e = modelOsmosisAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
+		osmosisCollider.c = glm::vec3(modelMatrixColliderOsmosis[3]);
+		addOrUpdateColliders(collidersOBB, "Osmosis", osmosisCollider, modelMatrixOsmosis);
 
 		// Map colliders
 		//AbstractModel::OBB mapColliders[27];
@@ -2209,19 +2240,59 @@ void applicationLoop() {
 				mapCollider;
 		}
 
-		// Collider Bala
-		AbstractModel::SBB BalaCollider;
-		glm::mat4 modelmatrixColliderBala = glm::mat4(modelMatrixBullet);
-		modelmatrixColliderBala = glm::scale(modelmatrixColliderBala,
-		glm::vec3(0.01, 0.01, 0.01));
-		modelmatrixColliderBala = glm::translate(modelmatrixColliderBala,
-		//CovidModelAnimate.getSbb().c
-		glm::vec3(modelBulletAnimate.getSbb().c.x,
-			modelBulletAnimate.getSbb().c.y,
-			modelBulletAnimate.getSbb().c.z));
-		BalaCollider.c = glm::vec3(modelmatrixColliderBala[3]);
-		BalaCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.14;
-		addOrUpdateColliders(collidersSBB, "Bala", BalaCollider, modelMatrixBullet);
+		// Collider Bullet
+		AbstractModel::SBB bulletCollider;
+		glm::mat4 modelMatrixColliderBullet;
+		glm::vec3 bulletPosition;
+		float dxBullet;
+		float dyBullet;
+		float dzBullet;
+		if (bulletIsActive)
+		{
+			modelMatrixColliderBullet = glm::mat4(modelMatrixBulletBody);
+			bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
+				modelBulletAnimate.getSbb().c.y,
+				modelBulletAnimate.getSbb().c.z);
+			dxBullet = -0.5;
+			dyBullet = 4;
+			dzBullet = 1 + bulletMovement;
+		}
+		else
+		{
+			modelMatrixColliderBullet = glm::mat4(1.0f);
+			bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
+				modelBulletAnimate.getSbb().c.y - 100,
+				modelBulletAnimate.getSbb().c.z + 1.5);
+			dxBullet = 0;
+			dyBullet = -100;
+			dzBullet = 0;
+		}		
+		//modelMatrixColliderBullet = glm::rotate(modelMatrixColliderOsmosis, glm::radians(90.0f), glm::vec3(0, 1, 0));
+		//modelMatrixColliderBullet = glm::scale(modelMatrixColliderBullet, glm::vec3(0.25, 0.25, 0.25));
+		modelMatrixColliderBullet = glm::translate(modelMatrixColliderBullet, bulletPosition);
+		bulletCollider.c = glm::vec3(modelMatrixColliderBullet[3]);
+		bulletCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.25;
+		addOrUpdateColliders(collidersSBB, "bullet", bulletCollider, modelMatrixBulletBody);
+
+		// Collider de mayow
+		//AbstractModel::OBB mayowCollider;
+		//glm::mat4 modelmatrixColliderMayow = glm::mat4(modelMatrixMayow);
+		//modelmatrixColliderMayow = glm::rotate(modelmatrixColliderMayow,
+		//		glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		//// Set the orientation of collider before doing the scale
+		//mayowCollider.u = glm::quat_cast(modelmatrixColliderMayow);
+		//modelmatrixColliderMayow = glm::scale(modelmatrixColliderMayow,
+		//		glm::vec3(0.021, 0.021, 0.021));
+		//modelmatrixColliderMayow = glm::translate(modelmatrixColliderMayow,
+		//		glm::vec3(mayowModelAnimate.getObb().c.x,
+		//				mayowModelAnimate.getObb().c.y,
+		//				mayowModelAnimate.getObb().c.z));
+		//mayowCollider.e = mayowModelAnimate.getObb().e
+		//		* glm::vec3(0.021, 0.021, 0.021)
+		//		* glm::vec3(0.787401574, 0.787401574, 0.787401574);
+		//mayowCollider.c = glm::vec3(modelmatrixColliderMayow[3]);
+		//addOrUpdateColliders(collidersOBB, "mayow", mayowCollider,
+		//		modelMatrixMayow);
 
 		// Lamps1 colliders
 		//for (int i = 0; i < lamp1Position.size(); i++) {
@@ -2385,6 +2456,15 @@ void applicationLoop() {
 					std::cout << "Colision " << it->first << " with "
 						<< jt->first << std::endl;
 					isCollision = true;
+					if (it->first.substr(0, 5) == "covid" && jt->first == "bullet") {
+						int noCovid = it->first.substr(6, 1)[0] - '0';
+						bulletIsActive = false;
+						bulletMovement = 0.0;
+						renderCovid[noCovid] = !renderCovid[noCovid];
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
+						std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
+					}
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
@@ -2401,10 +2481,10 @@ void applicationLoop() {
 			for (; jt != collidersOBB.end(); jt++) {
 				if (testSphereOBox(std::get<0>(it->second),
 					std::get<0>(jt->second))) {
-					isCollision = true;
-					addOrUpdateCollisionDetection(collisionDetection, jt->first,
-						isCollision);
 					if (it->first.substr(0, 5) == "covid" && jt->first == "Osmosis") {
+						isCollision = true;
+						addOrUpdateCollisionDetection(collisionDetection, jt->first,
+							isCollision);
 						int noCovid = it->first.substr(6, 1)[0] - '0';
 						std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
@@ -2468,8 +2548,8 @@ void applicationLoop() {
 			modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
 			//modelText->render(cadena, -.95, 0.9, 50, 1.0, 1.0, 1.0);
 			//modelText2->render(cadena1, -.20, 0.9, 50, 1.0, 1.0, 1.0);
-			if (recarga)
-				modelText3->render(cadena2, .65, 0.9, 50, 1.0, 1.0, 1.0);
+			//if (recarga)
+			//	modelText3->render(cadena2, .65, 0.9, 50, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
 		else {
@@ -2571,7 +2651,7 @@ void prepareScene() {
 		maskArray[i].setShader(&shaderMulLighting);
 	}
 
-	//Bala
+	// Bullet
 	modelBulletAnimate.setShader(&shaderMulLighting);
 
 	//Map
@@ -2799,9 +2879,19 @@ void renderScene(bool renderParticles) {
 	}
 	// Bullet
 	//modelMatrixBala[3][1] = terrain.getHeightTerrain(modelMatrixBala[3][0], modelMatrixBala[3][2]);
-	glm::mat4 modelMatrixBalaBody = glm::mat4(modelMatrixBullet);
-	modelMatrixBalaBody = glm::scale(modelMatrixBalaBody, glm::vec3(0.25, 0.25, 0.25));
-	modelBulletAnimate.render(modelMatrixBalaBody);
+	if (!bulletIsActive) {
+		modelMatrixBulletBody = glm::mat4(modelMatrixOsmosis);
+		modelMatrixBulletBody = glm::translate(modelMatrixBulletBody, glm::vec3(-0.5, 4, 1));
+		modelMatrixBulletRef = glm::mat4(modelMatrixBulletBody);
+	}
+	else {
+		modelMatrixBulletBody = glm::mat4(modelMatrixBulletRef);
+		modelMatrixBulletBody = glm::translate(modelMatrixBulletBody, glm::vec3(0, 0, bulletMovement));
+	}
+	modelMatrixBulletBody = glm::scale(modelMatrixBulletBody, glm::vec3(0.25, 0.25, 0.25));
+	if (bulletIsActive) {
+		modelBulletAnimate.render(modelMatrixBulletBody);
+	}
 
 	// Left Down, Left Up, Right Down, Right Up, Middle
 	float maxSteps[5][6] = {
@@ -2868,6 +2958,19 @@ void renderScene(bool renderParticles) {
 			if (i == 5 && stateCovid[i] == 4) {
 				stateCovid[i] = 0;
 			}
+		}
+	}
+
+	if (bulletIsActive)
+	{
+		if (bulletMovement < bulletMaxMovement)
+		{
+			bulletMovement += 0.15;
+		}
+		else
+		{
+			bulletMovement = 0;
+			bulletIsActive = false;
 		}
 	}
 
