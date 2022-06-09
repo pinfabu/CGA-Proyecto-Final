@@ -56,6 +56,10 @@
 #include <AL/alut.h>
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
+
+#define NUM_COVID 5
+#define NUM_MASKS 8
+
 //Vida personaje
 int hp = 3;
 int bullets = 0;
@@ -88,7 +92,7 @@ Shader shaderParticlesRain;
 
 //std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromTarget = 5;
+float distanceFromTarget = -0.5;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -114,9 +118,9 @@ Model mayowModelAnimate;*/
 // Osmosis
 Model modelOsmosisAnimate;
 // Covid
-Model covidArray[5];
+Model covidArray[NUM_COVID];
 // Masks
-Model maskArray[8];
+Model maskArray[NUM_MASKS];
 // Bullet
 Model modelBulletAnimate;
 // Map
@@ -191,7 +195,7 @@ int lastMousePosY, offsetY = 0;
 //glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 //glm::mat4 matrixModelRock = glm::mat4(1.0);
 glm::mat4 modelMatrixOsmosis = glm::mat4(1.0f);
-glm::mat4 modelMatrixCovid[5] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+glm::mat4 modelMatrixCovid[NUM_COVID] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 glm::mat4 modelMatrixMask = glm::mat4(1.0f);
 glm::mat4 modelMatrixBullet = glm::mat4(1.0f);
 glm::mat4 modelMatrixBulletBody = glm::mat4(1.0f);
@@ -218,13 +222,13 @@ std::string fileName = "";
 bool record = false;
 
 // Rendering flags
-bool renderMask[8] = { true, true, true, true, true, true, true, true };
-bool renderCovid[5] = { true, true, true, false, true };
+bool renderMask[NUM_MASKS] = { true, true, true, true, true, true, true, true };
+bool renderCovid[NUM_COVID] = { true, true, true, false, true };
 int freeCovid = 3;
 
 // Var Covid machines
-float stepCountCovid[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-int stateCovid[5] = { 0, 0, 0, 0, 0 };
+float stepCountCovid[NUM_COVID] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+int stateCovid[NUM_COVID] = { 0, 0, 0, 0, 0 };
 
 glm::vec3 colorNeb = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 neblinaGris = glm::vec3(0.25, 0.25, 0.25);
@@ -233,9 +237,7 @@ glm::vec3 colorLluvia = glm::vec3(0.5, 0.5, 0.5);
 glm::vec3 lluviaGris = glm::vec3(0.25, 0.25, 0.25);
 glm::vec3 lluviaRoja = glm::vec3(0.9, 0.2, 0.2);
 
-bool banderaDisparo = true;
-
-glm::vec3 posOsmo = glm::vec3(69, 0.0, -13.0);
+//bool banderaDisparo = true;
 
 // Lamps positions
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), glm::vec3(
@@ -261,6 +263,7 @@ std::map<std::string, glm::vec3> blendingUnsorted = {
 	{ "Smoke2", glm::vec3(-2.0, 0.0, -15.0)},
 	{ "Smoke3", glm::vec3(4.0, 0.0, -15.0)},
 	{ "Smoke4", glm::vec3(10.0, 0.0, -15.0)},
+	{ "Smoke5", glm::vec3(16.0, 0.0, -15.0)},
 	{ "Rain", glm::vec3(0.0, 0.0, 0.0)}
 };
 
@@ -313,22 +316,24 @@ GLuint depthMap, depthMapFBO;
  */
 
  // OpenAL Defines
-#define NUM_BUFFERS 3
-#define NUM_SOURCES 3
+#define NUM_BUFFERS 5
+#define NUM_SOURCES 5
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
 // Source 0
-ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
-ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
-// Source 1
-ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
-ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
+//ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
+//ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
+// Source for Covid
+ALfloat sourceCovidPos[NUM_COVID][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
+ALfloat sourceCovidVel[NUM_COVID][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
+//ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
+//ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
 // Source 2
-ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
-ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+//ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
+//ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
 // Buffers
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
@@ -339,7 +344,7 @@ ALenum format;
 ALvoid* data;
 int ch;
 ALboolean loop;
-std::vector<bool> sourcesPlay = { true, true, true };
+std::vector<bool> sourcesPlay = { true, true, true, false, true };
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes);
@@ -420,6 +425,10 @@ void renderScene(bool renderParticles = true);
 //
 //	glBindVertexArray(0);
 //}
+
+void resetGame() {
+
+}
 
 void initParticleBuffersSmoke() {
 	// Generate the buffers
@@ -727,14 +736,14 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 
 	// Covid
-	for (unsigned int i = 0; i < 5; i++)
+	for (unsigned int i = 0; i < NUM_COVID; i++)
 	{
 		covidArray[i].loadModel("../models/Covid/Covid.fbx");
 		covidArray[i].setShader(&shaderMulLighting);
 	}
 
 	// Masks
-	for (unsigned int i = 0; i < 8; i++)
+	for (unsigned int i = 0; i < NUM_MASKS; i++)
 	{
 		maskArray[i].loadModel("../models/Cubrebocas/CubrebocasAnim.fbx");
 		maskArray[i].setShader(&shaderMulLighting);
@@ -1267,8 +1276,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Config source 0
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
-	buffer[0] = alutCreateBufferFromFile("../sounds/fountain.wav");
-	buffer[1] = alutCreateBufferFromFile("../sounds/fire.wav");
+	buffer[0] = alutCreateBufferFromFile("../sounds/zero.wav");
+	buffer[1] = alutCreateBufferFromFile("../sounds/one.wav");
+	buffer[2] = alutCreateBufferFromFile("../sounds/two.wav");
+	buffer[3] = alutCreateBufferFromFile("../sounds/three.wav");
+	buffer[4] = alutCreateBufferFromFile("../sounds/four.wav");
 	//buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
 	int errorAlut = alutGetError();
 	if (errorAlut != ALUT_ERROR_NO_ERROR) {
@@ -1286,29 +1298,31 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else {
 		printf("init - no errors after alGenSources\n");
 	}
-	alSourcef(source[0], AL_PITCH, 1.0f);
+	/*alSourcef(source[0], AL_PITCH, 1.0f);
 	alSourcef(source[0], AL_GAIN, 3.0f);
 	alSourcefv(source[0], AL_POSITION, source0Pos);
 	alSourcefv(source[0], AL_VELOCITY, source0Vel);
 	alSourcei(source[0], AL_BUFFER, buffer[0]);
 	alSourcei(source[0], AL_LOOPING, AL_TRUE);
-	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
+	alSourcef(source[0], AL_MAX_DISTANCE, 2000);*/
 
-	alSourcef(source[1], AL_PITCH, 1.0f);
-	alSourcef(source[1], AL_GAIN, 3.0f);
-	alSourcefv(source[1], AL_POSITION, source1Pos);
-	alSourcefv(source[1], AL_VELOCITY, source1Vel);
-	alSourcei(source[1], AL_BUFFER, buffer[1]);
-	alSourcei(source[1], AL_LOOPING, AL_TRUE);
-	alSourcef(source[1], AL_MAX_DISTANCE, 2000);
+	for (unsigned int i = 0; i < NUM_COVID; i++) {
+		alSourcef(source[i], AL_PITCH, 1.0f);
+		alSourcef(source[i], AL_GAIN, 3.0f);
+		alSourcefv(source[i], AL_POSITION, sourceCovidPos[i]);
+		alSourcefv(source[i], AL_VELOCITY, sourceCovidVel[i]);
+		alSourcei(source[i], AL_BUFFER, buffer[i]);
+		alSourcei(source[i], AL_LOOPING, AL_TRUE);
+		alSourcef(source[i], AL_MAX_DISTANCE, 500);
+	}
 
-	alSourcef(source[2], AL_PITCH, 1.0f);
+	/*alSourcef(source[2], AL_PITCH, 1.0f);
 	alSourcef(source[2], AL_GAIN, 0.3f);
 	alSourcefv(source[2], AL_POSITION, source2Pos);
 	alSourcefv(source[2], AL_VELOCITY, source2Vel);
 	alSourcei(source[2], AL_BUFFER, buffer[2]);
 	alSourcei(source[2], AL_LOOPING, AL_TRUE);
-	alSourcef(source[2], AL_MAX_DISTANCE, 500);
+	alSourcef(source[2], AL_MAX_DISTANCE, 500);*/
 
 	// Se inicializa el modelo de texeles.
 	modelText = new FontTypeRendering::FontTypeRendering(screenWidth,
@@ -1357,11 +1371,11 @@ void destroy() {
 	// Custom objects animate
 	//mayowModelAnimate.destroy();
 	modelOsmosisAnimate.destroy();
-	for (unsigned int i = 0; i < 5; i++)
+	for (unsigned int i = 0; i < NUM_COVID; i++)
 	{
 		covidArray[i].destroy();
 	}
-	for (unsigned int i = 0; i < 8; i++)
+	for (unsigned int i = 0; i < NUM_MASKS; i++)
 	{
 		maskArray[i].destroy();
 	}
@@ -1447,7 +1461,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 	//Camara en tercera persona
 	distanceFromTarget -= yoffset;
-	camera->setDistanceFromTarget(distanceFromTarget);
+	//camera->setDistanceFromTarget(distanceFromTarget);
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod) {
@@ -1624,15 +1638,15 @@ bool processInput(bool continueApplication) {
 	}*/
 
 	//Para que no pueda mover la camara el usuario
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-		camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-		camera->mouseMoveCamera(0.0, offsetY, deltaTime);
+	//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	//	camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
+	//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	//	camera->mouseMoveCamera(0.0, offsetY, deltaTime);
 	offsetX = 0;
 	offsetY = 0;
 
 	// Seleccionar modelo
-	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+	/*if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
 		enableCountSelected = false;
 		modelSelected++;
 		if (modelSelected > 2)
@@ -1644,7 +1658,7 @@ bool processInput(bool continueApplication) {
 				std::cout << "modelSelected:" << modelSelected << std::endl;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
-		enableCountSelected = true;
+		enableCountSelected = true;*/
 	//Movimiento Osmosis
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f),
@@ -1705,10 +1719,8 @@ void applicationLoop() {
 	glm::vec3 target;
 	float angleTarget;
 
-	posOsmo = glm::vec3(modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
-
 	std::map<std::string, glm::vec3> blendingUnsorted = {
-	{ "fountain", posOsmo },
+	{ "fountain", glm::vec3(5.0, 0.0, -40.0) },
 	{ "fire", glm::vec3(0.0, 0.0, 7.0) }
 	};
 
@@ -1726,7 +1738,7 @@ void applicationLoop() {
 		glm::vec3(0, 1, 0));
 
 	// Covid
-	for (unsigned int i = 0; i < 5; i++)
+	for (unsigned int i = 0; i < NUM_COVID; i++)
 	{
 		modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], covidPositions[i]);
 	}
@@ -1782,14 +1794,14 @@ void applicationLoop() {
 
 		axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
 		angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
-		target = glm::vec3 (modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.5, modelMatrixOsmosis[3].z);
+		target = glm::vec3 (modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.25, modelMatrixOsmosis[3].z);
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
 		if (axis.y < 0)
 			angleTarget = -angleTarget;
-		if (modelSelected == 1)
-			angleTarget -= glm::radians(90.0f);
+		//if (modelSelected == 1)
+		//	angleTarget -= glm::radians(90.0f);
 		camera->setCameraTarget(target);
 		camera->setAngleTarget(angleTarget);
 		camera->updateCamera();
@@ -2142,7 +2154,7 @@ void applicationLoop() {
 		//	matrixModelRock);
 
 		// Covid colliders
-		for (unsigned int i = 0; i < 5; i++)
+		for (unsigned int i = 0; i < NUM_COVID; i++)
 		{
 			glm::vec3 scale;
 			glm::vec3 position;
@@ -2175,7 +2187,7 @@ void applicationLoop() {
 		}
 
 		// Mask colliders
-		for (unsigned int i = 0; i < 8; i++)
+		for (unsigned int i = 0; i < NUM_MASKS; i++)
 		{
 			glm::vec3 scale;
 			glm::vec3 position;
@@ -2461,9 +2473,11 @@ void applicationLoop() {
 						bulletIsActive = false;
 						bulletMovement = 0.0;
 						renderCovid[noCovid] = !renderCovid[noCovid];
+						sourcesPlay[noCovid] = false;
 						std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
 						std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
+						std::cout << "SOUND deactivated " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
 					}
 				}
 			}
@@ -2494,11 +2508,15 @@ void applicationLoop() {
 						{
 							hp -= 1;
 							renderCovid[noCovid] = !renderCovid[noCovid];
+							sourcesPlay[noCovid] = false;
 							renderCovid[freeCovid] = !renderCovid[freeCovid];
+							sourcesPlay[freeCovid] = true;
 							freeCovid = noCovid;
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 							std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
+							std::cout << "SOUND deactivated " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
+							std::cout << "SOUND activated " << freeCovid << " is " << sourcesPlay[freeCovid] << std::endl;
 						}
 					}
 				}
@@ -2561,10 +2579,10 @@ void applicationLoop() {
 		/****************************+
 		 * Open AL sound data
 		 */
-		source0Pos[0] = modelMatrixFountain[3].x;
+		/*source0Pos[0] = modelMatrixFountain[3].x;
 		source0Pos[1] = modelMatrixFountain[3].y;
 		source0Pos[2] = modelMatrixFountain[3].z;
-		alSourcefv(source[0], AL_POSITION, source0Pos);
+		alSourcefv(source[0], AL_POSITION, source0Pos);*/
 
 		/*source2Pos[0] = modelMatrixDart[3].x;
 		source2Pos[1] = modelMatrixDart[3].y;
@@ -2609,9 +2627,12 @@ void applicationLoop() {
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
 		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
-			if (sourcesPlay[i]) {
+			if (sourcesPlay[i] && renderCovid[i]) {
 				sourcesPlay[i] = false;
 				alSourcePlay(source[i]);
+			}
+			else if (!sourcesPlay[i] && !renderCovid[i]) {
+				alSourceStop(source[i]);
 			}
 		}
 	}
@@ -2640,13 +2661,13 @@ void prepareScene() {
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
 	// Covid
-	for (unsigned int i = 0; i < 5; i++)
+	for (unsigned int i = 0; i < NUM_COVID; i++)
 	{
 		covidArray[i].setShader(&shaderMulLighting);
 	}
 
 	// Masks
-	for (unsigned int i = 0; i < 8; i++)
+	for (unsigned int i = 0; i < NUM_MASKS; i++)
 	{
 		maskArray[i].setShader(&shaderMulLighting);
 	}
@@ -2687,13 +2708,13 @@ void prepareDepthScene() {
 	modelOsmosisAnimate.setShader(&shaderDepth);
 
 	// Covid
-	for (unsigned int i = 0; i < 5; i++)
+	for (unsigned int i = 0; i < NUM_COVID; i++)
 	{
 		covidArray[i].setShader(&shaderDepth);
 	}
 
 	// Masks
-	for (unsigned int i = 0; i < 8; i++)
+	for (unsigned int i = 0; i < NUM_MASKS; i++)
 	{
 		maskArray[i].setShader(&shaderDepth);
 	}
@@ -2854,7 +2875,7 @@ void renderScene(bool renderParticles) {
 	}
 
 	// Covid
-	for (unsigned int i = 0; i < 5; i++) {
+	for (unsigned int i = 0; i < NUM_COVID; i++) {
 		modelMatrixCovid[i][3][1] = terrain.getHeightTerrain(modelMatrixCovid[i][3][0], modelMatrixCovid[i][3][2]) + 1.0f;
 		glm::mat4 modelMatrixCovidBody = glm::mat4(modelMatrixCovid[i]);
 		modelMatrixCovidBody = glm::scale(modelMatrixCovidBody, glm::vec3(0.015, 0.015, 0.015));
@@ -2866,7 +2887,7 @@ void renderScene(bool renderParticles) {
 	}
 
 	// Masks
-	for (unsigned int i = 0; i < 8; i++) {
+	for (unsigned int i = 0; i < NUM_MASKS; i++) {
 		maskPositions[i].y = terrain.getHeightTerrain(maskPositions[i].x,
 			maskPositions[i].z);
 		maskArray[i].setPosition(maskPositions[i]);
@@ -2881,7 +2902,7 @@ void renderScene(bool renderParticles) {
 	//modelMatrixBala[3][1] = terrain.getHeightTerrain(modelMatrixBala[3][0], modelMatrixBala[3][2]);
 	if (!bulletIsActive) {
 		modelMatrixBulletBody = glm::mat4(modelMatrixOsmosis);
-		modelMatrixBulletBody = glm::translate(modelMatrixBulletBody, glm::vec3(-0.5, 4, 1));
+		modelMatrixBulletBody = glm::translate(modelMatrixBulletBody, glm::vec3(-0.5, 3.25, 1));
 		modelMatrixBulletRef = glm::mat4(modelMatrixBulletBody);
 	}
 	else {
@@ -2894,7 +2915,7 @@ void renderScene(bool renderParticles) {
 	}
 
 	// Left Down, Left Up, Right Down, Right Up, Middle
-	float maxSteps[5][6] = {
+	float maxSteps[NUM_COVID][6] = {
 		{ 30.0f, 17.0f, 13.0f, 7.0f, 17.0f, 24.0f },
 		{ 24.0f, 17.0f, 7.0f, 13.0f, 17.0f, 30.0f },
 		{ 30.0f, 17.0f, 13.0f, 7.0f, 17.0f, 24.0f },
@@ -2902,7 +2923,7 @@ void renderScene(bool renderParticles) {
 		{ 60.0f, 34.0f, 60.0f, 34.0f, 0.0f, 0.0f }
 	};
 	// 0 Up, 1 Down, 2 Left, 3 Right
-	int individualDirections[5][6] = {
+	int individualDirections[NUM_COVID][6] = {
 		{ 0, 3, 1, 3, 1, 2 },
 		{ 3, 1, 2, 1, 2, 0 },
 		{ 0, 2, 1, 2, 1, 3 },
@@ -2915,10 +2936,10 @@ void renderScene(bool renderParticles) {
 		glm::vec3(-1.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f)
 	};
-	float individualStepSize[5] = { 0.07, 0.07, 0.08, 0.09, 0.09 };
+	float individualStepSize[NUM_COVID] = { 0.07, 0.07, 0.08, 0.09, 0.09 };
 
 	// State machine for Covid
-	for (unsigned int i = 0; i < 5; i++) {
+	for (unsigned int i = 0; i < NUM_COVID; i++) {
 		switch (stateCovid[i])
 		{
 		case 0:
@@ -3032,235 +3053,290 @@ void renderScene(bool renderParticles) {
 		//	 * End Render particles systems
 		//	 */
 		//}
-		if (renderParticles && it->second.first.compare("Smoke1") == 0) {
-			/**********
-			 * Init Render particles systems
-			 */
-			lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-			currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
-			shaderParticlesSmoke.setInt("Pass", 1);
-			shaderParticlesSmoke.setFloat("Time",currTimeParticlesAnimationSmoke);
-			shaderParticlesSmoke.setFloat("DeltaT",currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+		for (unsigned int i = 0; i < NUM_COVID; i++)
+		{
+			if (renderParticles && it->second.first.substr(0, 4) == "Smok" == 0 && renderCovid[i]) {
+				//int noSmoke = it->second.first.substr(5, 1)[0] - '0';
+				lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+				currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-			glEnable(GL_RASTERIZER_DISCARD);
-			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-			glBeginTransformFeedback(GL_POINTS);
-			glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-			glVertexAttribDivisor(0, 0);
-			glVertexAttribDivisor(1, 0);
-			glVertexAttribDivisor(2, 0);
-			glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-			glEndTransformFeedback();
-			glDisable(GL_RASTERIZER_DISCARD);
+				shaderParticlesSmoke.setInt("Pass", 1);
+				shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+				shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
 
-			shaderParticlesSmoke.setInt("Pass", 2);
-			glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-			modelSmokeParticles = glm::translate(modelSmokeParticles,	it->second.second);
-			modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-			shaderParticlesSmoke.setMatrix4("model", 1, false,glm::value_ptr(modelSmokeParticles));
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+				glEnable(GL_RASTERIZER_DISCARD);
+				glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+				glBeginTransformFeedback(GL_POINTS);
+				glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+				glVertexAttribDivisor(0, 0);
+				glVertexAttribDivisor(1, 0);
+				glVertexAttribDivisor(2, 0);
+				glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+				glEndTransformFeedback();
+				glDisable(GL_RASTERIZER_DISCARD);
 
-			shaderParticlesSmoke.turnOn();
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-			glDepthMask(GL_FALSE);
-			glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-			glVertexAttribDivisor(0, 1);
-			glVertexAttribDivisor(1, 1);
-			glVertexAttribDivisor(2, 1);
-			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-			glBindVertexArray(0);
-			glDepthMask(GL_TRUE);
-			drawBufSmoke = 1 - drawBufSmoke;
-			shaderParticlesSmoke.turnOff();
+				shaderParticlesSmoke.setInt("Pass", 2);
+				glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+				modelSmokeParticles = glm::translate(modelSmokeParticles, glm::vec3(modelMatrixCovid[i][3].x, modelMatrixCovid[i][3].y, modelMatrixCovid[i][3].z));
+				modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]) + 2;
+				shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
 
-			/****************************+
-			 * Open AL sound data
-			 */
-			source1Pos[0] = modelSmokeParticles[3].x;
-			source1Pos[1] = modelSmokeParticles[3].y;
-			source1Pos[2] = modelSmokeParticles[3].z;
-			alSourcefv(source[1], AL_POSITION, source1Pos);
+				shaderParticlesSmoke.turnOn();
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+				glDepthMask(GL_FALSE);
+				glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+				glVertexAttribDivisor(0, 1);
+				glVertexAttribDivisor(1, 1);
+				glVertexAttribDivisor(2, 1);
+				glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+				glBindVertexArray(0);
+				glDepthMask(GL_TRUE);
+				drawBufSmoke = 1 - drawBufSmoke;
+				shaderParticlesSmoke.turnOff();
 
-			/**********
-			 * End Render particles systems
-			 */
+				/****************************+
+				 * Open AL sound data
+				 */
+				sourceCovidPos[i][0] = modelSmokeParticles[3].x;
+				sourceCovidPos[i][1] = modelSmokeParticles[3].y;
+				sourceCovidPos[i][2] = modelSmokeParticles[3].z;
+				alSourcefv(source[i], AL_POSITION, sourceCovidPos[i]);
+			}
 		}
 
-		else if (renderParticles && it->second.first.compare("Smoke2") == 0) {
-			/**********
-			 * Init Render particles systems
-			 */
-			lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-			currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+		//if (renderParticles && it->second.first.compare("Smoke1") == 0) {
+		//	/**********
+		//	 * Init Render particles systems
+		//	 */
+		//	lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+		//	currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
-			shaderParticlesSmoke.setInt("Pass", 1);
-			shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
-			shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+		//	shaderParticlesSmoke.setInt("Pass", 1);
+		//	shaderParticlesSmoke.setFloat("Time",currTimeParticlesAnimationSmoke);
+		//	shaderParticlesSmoke.setFloat("DeltaT",currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
 
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-			glEnable(GL_RASTERIZER_DISCARD);
-			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-			glBeginTransformFeedback(GL_POINTS);
-			glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-			glVertexAttribDivisor(0, 0);
-			glVertexAttribDivisor(1, 0);
-			glVertexAttribDivisor(2, 0);
-			glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-			glEndTransformFeedback();
-			glDisable(GL_RASTERIZER_DISCARD);
+		//	glActiveTexture(GL_TEXTURE1);
+		//	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+		//	glEnable(GL_RASTERIZER_DISCARD);
+		//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+		//	glBeginTransformFeedback(GL_POINTS);
+		//	glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+		//	glVertexAttribDivisor(0, 0);
+		//	glVertexAttribDivisor(1, 0);
+		//	glVertexAttribDivisor(2, 0);
+		//	glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+		//	glEndTransformFeedback();
+		//	glDisable(GL_RASTERIZER_DISCARD);
 
-			shaderParticlesSmoke.setInt("Pass", 2);
-			glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-			modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
-			modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-			shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+		//	shaderParticlesSmoke.setInt("Pass", 2);
+		//	glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+		//	modelSmokeParticles = glm::translate(modelSmokeParticles, glm::vec3(modelMatrixCovid[4][3].x, modelMatrixCovid[4][3].y, modelMatrixCovid[4][3].z));
+		//	modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]) + 2;
+		//	shaderParticlesSmoke.setMatrix4("model", 1, false,glm::value_ptr(modelSmokeParticles));
 
-			shaderParticlesSmoke.turnOn();
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-			glDepthMask(GL_FALSE);
-			glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-			glVertexAttribDivisor(0, 1);
-			glVertexAttribDivisor(1, 1);
-			glVertexAttribDivisor(2, 1);
-			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-			glBindVertexArray(0);
-			glDepthMask(GL_TRUE);
-			drawBufSmoke = 1 - drawBufSmoke;
-			shaderParticlesSmoke.turnOff();
+		//	shaderParticlesSmoke.turnOn();
+		//	glActiveTexture(GL_TEXTURE0);
+		//	glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		//	glDepthMask(GL_FALSE);
+		//	glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+		//	glVertexAttribDivisor(0, 1);
+		//	glVertexAttribDivisor(1, 1);
+		//	glVertexAttribDivisor(2, 1);
+		//	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+		//	glBindVertexArray(0);
+		//	glDepthMask(GL_TRUE);
+		//	drawBufSmoke = 1 - drawBufSmoke;
+		//	shaderParticlesSmoke.turnOff();
 
-			/****************************+
-			 * Open AL sound data
-			 */
-			source1Pos[0] = modelSmokeParticles[3].x;
-			source1Pos[1] = modelSmokeParticles[3].y;
-			source1Pos[2] = modelSmokeParticles[3].z;
-			alSourcefv(source[1], AL_POSITION, source1Pos);
+		//	/****************************+
+		//	 * Open AL sound data
+		//	 */
+		//	source1Pos[0] = modelSmokeParticles[3].x;
+		//	source1Pos[1] = modelSmokeParticles[3].y;
+		//	source1Pos[2] = modelSmokeParticles[3].z;
+		//	alSourcefv(source[1], AL_POSITION, source1Pos);
 
-			/**********
-			 * End Render particles systems
-			 */
-		}
+		//	/**********
+		//	 * End Render particles systems
+		//	 */
+		//}
 
-		else if (renderParticles && it->second.first.compare("Smoke3") == 0) {
-		/**********
-		 * Init Render particles systems
-		 */
-		 lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-		 currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+		//else if (renderParticles && it->second.first.compare("Smoke2") == 0) {
+		//	/**********
+		//	 * Init Render particles systems
+		//	 */
+		//	lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+		//	currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
-		 shaderParticlesSmoke.setInt("Pass", 1);
-		 shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
-		 shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+		//	shaderParticlesSmoke.setInt("Pass", 1);
+		//	shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+		//	shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
 
-		 glActiveTexture(GL_TEXTURE1);
-		 glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-		 glEnable(GL_RASTERIZER_DISCARD);
-		 glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-		 glBeginTransformFeedback(GL_POINTS);
-		 glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-		 glVertexAttribDivisor(0, 0);
-		 glVertexAttribDivisor(1, 0);
-		 glVertexAttribDivisor(2, 0);
-		 glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-		 glEndTransformFeedback();
-		 glDisable(GL_RASTERIZER_DISCARD);
+		//	glActiveTexture(GL_TEXTURE1);
+		//	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+		//	glEnable(GL_RASTERIZER_DISCARD);
+		//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+		//	glBeginTransformFeedback(GL_POINTS);
+		//	glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+		//	glVertexAttribDivisor(0, 0);
+		//	glVertexAttribDivisor(1, 0);
+		//	glVertexAttribDivisor(2, 0);
+		//	glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+		//	glEndTransformFeedback();
+		//	glDisable(GL_RASTERIZER_DISCARD);
 
-		 shaderParticlesSmoke.setInt("Pass", 2);
-		 glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-		 modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
-		 modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-		 shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+		//	shaderParticlesSmoke.setInt("Pass", 2);
+		//	glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+		//	modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
+		//	modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+		//	shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
 
-		 shaderParticlesSmoke.turnOn();
-		 glActiveTexture(GL_TEXTURE0);
-		 glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		 glDepthMask(GL_FALSE);
-		 glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-		 glVertexAttribDivisor(0, 1);
-		 glVertexAttribDivisor(1, 1);
-		 glVertexAttribDivisor(2, 1);
-		 glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-		 glBindVertexArray(0);
-		 glDepthMask(GL_TRUE);
-		 drawBufSmoke = 1 - drawBufSmoke;
-		 shaderParticlesSmoke.turnOff();
+		//	shaderParticlesSmoke.turnOn();
+		//	glActiveTexture(GL_TEXTURE0);
+		//	glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		//	glDepthMask(GL_FALSE);
+		//	glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+		//	glVertexAttribDivisor(0, 1);
+		//	glVertexAttribDivisor(1, 1);
+		//	glVertexAttribDivisor(2, 1);
+		//	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+		//	glBindVertexArray(0);
+		//	glDepthMask(GL_TRUE);
+		//	drawBufSmoke = 1 - drawBufSmoke;
+		//	shaderParticlesSmoke.turnOff();
 
-		 /****************************+
-		  * Open AL sound data
-		  */
-		 source1Pos[0] = modelSmokeParticles[3].x;
-		 source1Pos[1] = modelSmokeParticles[3].y;
-		 source1Pos[2] = modelSmokeParticles[3].z;
-		 alSourcefv(source[1], AL_POSITION, source1Pos);
+		//	/****************************+
+		//	 * Open AL sound data
+		//	 */
+		//	source1Pos[0] = modelSmokeParticles[3].x;
+		//	source1Pos[1] = modelSmokeParticles[3].y;
+		//	source1Pos[2] = modelSmokeParticles[3].z;
+		//	alSourcefv(source[1], AL_POSITION, source1Pos);
 
-		 /**********
-		  * End Render particles systems
-		  */
-		}
+		//	/**********
+		//	 * End Render particles systems
+		//	 */
+		//}
 
-		else if (renderParticles && it->second.first.compare("Smoke4") == 0) {
-		/**********
-		 * Init Render particles systems
-		 */
-		 lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
-		 currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+		//else if (renderParticles && it->second.first.compare("Smoke3") == 0) {
+		///**********
+		// * Init Render particles systems
+		// */
+		// lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+		// currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
 
-		 shaderParticlesSmoke.setInt("Pass", 1);
-		 shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
-		 shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+		// shaderParticlesSmoke.setInt("Pass", 1);
+		// shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+		// shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
 
-		 glActiveTexture(GL_TEXTURE1);
-		 glBindTexture(GL_TEXTURE_1D, texIdSmoke);
-		 glEnable(GL_RASTERIZER_DISCARD);
-		 glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
-		 glBeginTransformFeedback(GL_POINTS);
-		 glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
-		 glVertexAttribDivisor(0, 0);
-		 glVertexAttribDivisor(1, 0);
-		 glVertexAttribDivisor(2, 0);
-		 glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
-		 glEndTransformFeedback();
-		 glDisable(GL_RASTERIZER_DISCARD);
+		// glActiveTexture(GL_TEXTURE1);
+		// glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+		// glEnable(GL_RASTERIZER_DISCARD);
+		// glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+		// glBeginTransformFeedback(GL_POINTS);
+		// glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+		// glVertexAttribDivisor(0, 0);
+		// glVertexAttribDivisor(1, 0);
+		// glVertexAttribDivisor(2, 0);
+		// glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+		// glEndTransformFeedback();
+		// glDisable(GL_RASTERIZER_DISCARD);
 
-		 shaderParticlesSmoke.setInt("Pass", 2);
-		 glm::mat4 modelSmokeParticles = glm::mat4(1.0);
-		 modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
-		 modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
-		 shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+		// shaderParticlesSmoke.setInt("Pass", 2);
+		// glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+		// modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
+		// modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+		// shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
 
-		 shaderParticlesSmoke.turnOn();
-		 glActiveTexture(GL_TEXTURE0);
-		 glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
-		 glDepthMask(GL_FALSE);
-		 glBindVertexArray(particleArraySmoke[drawBufSmoke]);
-		 glVertexAttribDivisor(0, 1);
-		 glVertexAttribDivisor(1, 1);
-		 glVertexAttribDivisor(2, 1);
-		 glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
-		 glBindVertexArray(0);
-		 glDepthMask(GL_TRUE);
-		 drawBufSmoke = 1 - drawBufSmoke;
-		 shaderParticlesSmoke.turnOff();
+		// shaderParticlesSmoke.turnOn();
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		// glDepthMask(GL_FALSE);
+		// glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+		// glVertexAttribDivisor(0, 1);
+		// glVertexAttribDivisor(1, 1);
+		// glVertexAttribDivisor(2, 1);
+		// glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+		// glBindVertexArray(0);
+		// glDepthMask(GL_TRUE);
+		// drawBufSmoke = 1 - drawBufSmoke;
+		// shaderParticlesSmoke.turnOff();
 
-		 /****************************+
-		  * Open AL sound data
-		  */
-		 source1Pos[0] = modelSmokeParticles[3].x;
-		 source1Pos[1] = modelSmokeParticles[3].y;
-		 source1Pos[2] = modelSmokeParticles[3].z;
-		 alSourcefv(source[1], AL_POSITION, source1Pos);
+		// /****************************+
+		//  * Open AL sound data
+		//  */
+		// source1Pos[0] = modelSmokeParticles[3].x;
+		// source1Pos[1] = modelSmokeParticles[3].y;
+		// source1Pos[2] = modelSmokeParticles[3].z;
+		// alSourcefv(source[1], AL_POSITION, source1Pos);
 
-		 /**********
-		  * End Render particles systems
-		  */
-		}
+		// /**********
+		//  * End Render particles systems
+		//  */
+		//}
 
-		else if (renderParticles && it->second.first.compare("Rain") == 0) {
+		//else if (renderParticles && it->second.first.compare("Smoke4") == 0) {
+		///**********
+		// * Init Render particles systems
+		// */
+		// lastTimeParticlesAnimationSmoke = currTimeParticlesAnimationSmoke;
+		// currTimeParticlesAnimationSmoke = TimeManager::Instance().GetTime();
+
+		// shaderParticlesSmoke.setInt("Pass", 1);
+		// shaderParticlesSmoke.setFloat("Time", currTimeParticlesAnimationSmoke);
+		// shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
+
+		// glActiveTexture(GL_TEXTURE1);
+		// glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+		// glEnable(GL_RASTERIZER_DISCARD);
+		// glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
+		// glBeginTransformFeedback(GL_POINTS);
+		// glBindVertexArray(particleArraySmoke[1 - drawBufSmoke]);
+		// glVertexAttribDivisor(0, 0);
+		// glVertexAttribDivisor(1, 0);
+		// glVertexAttribDivisor(2, 0);
+		// glDrawArrays(GL_POINTS, 0, nParticlesSmoke);
+		// glEndTransformFeedback();
+		// glDisable(GL_RASTERIZER_DISCARD);
+
+		// shaderParticlesSmoke.setInt("Pass", 2);
+		// glm::mat4 modelSmokeParticles = glm::mat4(1.0);
+		// modelSmokeParticles = glm::translate(modelSmokeParticles, it->second.second);
+		// modelSmokeParticles[3][1] = terrain.getHeightTerrain(modelSmokeParticles[3][0], modelSmokeParticles[3][2]);
+		// shaderParticlesSmoke.setMatrix4("model", 1, false, glm::value_ptr(modelSmokeParticles));
+
+		// shaderParticlesSmoke.turnOn();
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, textureParticleSmokeID);
+		// glDepthMask(GL_FALSE);
+		// glBindVertexArray(particleArraySmoke[drawBufSmoke]);
+		// glVertexAttribDivisor(0, 1);
+		// glVertexAttribDivisor(1, 1);
+		// glVertexAttribDivisor(2, 1);
+		// glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticlesSmoke);
+		// glBindVertexArray(0);
+		// glDepthMask(GL_TRUE);
+		// drawBufSmoke = 1 - drawBufSmoke;
+		// shaderParticlesSmoke.turnOff();
+
+		// /****************************+
+		//  * Open AL sound data
+		//  */
+		// source1Pos[0] = modelSmokeParticles[3].x;
+		// source1Pos[1] = modelSmokeParticles[3].y;
+		// source1Pos[2] = modelSmokeParticles[3].z;
+		// alSourcefv(source[1], AL_POSITION, source1Pos);
+
+		// /**********
+		//  * End Render particles systems
+		//  */
+		//}
+
+		if (renderParticles && it->second.first.compare("Rain") == 0) {
 		/**********
 		 * Init Render particles systems
 		 */
