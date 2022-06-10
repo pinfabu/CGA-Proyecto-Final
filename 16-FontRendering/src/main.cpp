@@ -61,17 +61,36 @@
 #define NUM_MASKS 8
 
 // Game states
-bool mainMenu = false;
+//bool mainMenu = true; // Merge with gameStarted? Can't go back to main menu after starting so no point
+//bool gameStarted = false;
+// 0 is running, 1 is won, 2 is game over
+//int gameFinished = 0;
+// 0 is main menu, 1 is running, 2 is won, 3 is game over - replaces mainMenu, gameStarted and gameFinished
+int gameState = 0;
 bool pauseMenu = false;
-bool gameStarted = false;
-bool isPaused = false;
+bool controlScreen = false;
+bool isPaused = true;
 bool isPausedCovidAudio = false;
-// 0 on start, 1 on exit, 
+// 0 on start, 1 on controls, 2 on exit
 int mainMenuState = 0;
 // 0 on restart, 1 on continue, 2 on exit
 int pauseMenuState = 0;
-// 0 is running, 1 is won, 2 is game over
-int gameFinished = 0;
+// 0 is controller, 1 is keyboard
+int controlScreenState = 0;
+// Priority between control screen and pause menu
+// 0 is none, 1 is pause menu, 2 is control screen
+int pauseScreenPriority = 0;
+
+bool auxKeyBack = true;				// Left (controls) buttons[6]
+bool auxKeyStart = true;			// Right (pause) buttons[7]
+bool auxKeyJoyA = true;				// buttons[0] (A)
+bool auxKeyCrucetaForward = true;	// buttons[12] (down) and buttons[11] (right)
+bool auxKeyCrucetaBackward = true;	// buttons[10] (up) and buttons[13] (left)
+bool auxKeyArrowsForward = true;
+bool auxKeyArrowsBack = true;
+bool auxKeyP = true;
+bool auxKeyO = true;
+bool auxKeyEnter = true;
 
 // Vida personaje
 int noHP = 3;
@@ -435,7 +454,158 @@ void resetGame() {
 	{
 		modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], covidPositions[i]);
 	}
+}
 
+// Direction true for forward, false for backward
+void navigateMenu(bool direction) {
+	// Main menu
+	if (gameState == 0) {
+		if (controlScreen) {
+			if (direction) {
+				controlScreenState += 1;
+				if (controlScreenState > 1) {
+					controlScreenState = 0;
+				}
+			}
+			else {
+				controlScreenState -= 1;
+				if (controlScreenState < 0) {
+					controlScreenState = 1;
+				}
+			}
+		}
+		else {
+			if (direction) {
+				mainMenuState += 1;
+				if (mainMenuState > 2) {
+					mainMenuState = 0;
+				}
+			}
+			else {
+				mainMenuState -= 1;
+				if (mainMenuState < 0) {
+					mainMenuState = 2;
+				}
+			}
+		}
+	}
+	// Control screen
+	else if (controlScreen) {
+		if (direction) {
+			controlScreenState += 1;
+			if (controlScreenState > 1) {
+				controlScreenState = 0;
+			}
+		}
+		else {
+			controlScreenState -= 1;
+			if (controlScreenState < 0) {
+				controlScreenState = 1;
+			}
+		}
+	}
+	// Pause menu
+	else if (pauseMenu) {
+		if (direction) {
+			pauseMenuState += 1;
+			if (pauseMenuState > 2) {
+				pauseMenuState = 0;
+			}
+		}
+		else {
+			pauseMenuState -= 1;
+			if (pauseMenuState < 0) {
+				pauseMenuState = 2;
+			}
+		}
+	}
+}
+
+void menuAccept() {
+	switch (gameState)
+	{
+		// Game is on main menu
+	case 0:
+		// Control screen open from main menu
+		if (controlScreen) {
+			controlScreen = false;
+			controlScreenState = 0;
+		}
+		// Main menu
+		else {
+			switch (mainMenuState)
+			{
+				// Start selected
+			case 0:
+				gameState = 1;
+				isPaused = false;
+				break;
+				// Controls selected
+			case 1:
+				controlScreen = true;
+				controlScreenState = 0;
+				break;
+				// Exit selected
+			case 2:
+				exitApp = true;
+				break;
+			default:
+				break;
+			}
+		}
+		break;
+		// Game is running
+	case 1:
+		// Game is paused
+		if (isPaused) {
+			// Game is in control screen
+			if (controlScreen) {
+				// Control screen was opened from pause menu
+				if (pauseMenu) {
+					controlScreen = false;
+					controlScreenState = 0;
+				}
+				// Control screen was opened with the game running
+				else {
+					controlScreen = false;
+					controlScreenState = 0;
+					isPaused = false;
+				}
+			}
+			// Game is on pause menu
+			else if (pauseMenu) {
+				controlScreen = false;
+				controlScreenState = 0;
+				switch (pauseMenuState)
+				{
+					// Restart selected
+				case 0:
+					resetGame();
+					// Continue selected
+				case 1:
+					isPaused = false;
+					break;
+					// Exit selected
+				case 2:
+					exitApp = true;
+					break;
+				default:
+					break;
+				}
+				pauseMenu = false;
+				pauseMenuState = 0;
+			}
+		}
+		break;
+		// Game is won and game over
+	case 2:
+	case 3:
+		resetGame();
+		gameState = 0;
+		break;
+	default:
+		break;
+	}
 }
 
 void initParticleBuffersSmoke() {
@@ -703,7 +873,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Iniciamos el Box de las pantallas
 	boxPantallas.init();
 	boxPantallas.setShader(&shaderTexture);
-	boxPantallas.setScale(glm::vec3(2.0,2.0,1.0));
+	boxPantallas.setScale(glm::vec3(2.0, 2.0, 1.0));
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -917,6 +1087,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureRain.freeImage(bitmap);
+
 	//***************************************************************************************************************************
 	// Texturas de pantallas
 	Texture textureStart("../Textures/Pantallas/Start.png");
@@ -953,9 +1124,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Texturas de pantallas
 	Texture textureControlsIni("../Textures/Pantallas/ControlsIni.png");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureStart.loadImage();
+	bitmap = textureControlsIni.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureStart.convertToData(bitmap, imageWidth, imageHeight);
+	data = textureControlsIni.convertToData(bitmap, imageWidth, imageHeight);
 	// Creando la textura con id 1
 	glGenTextures(1, &textureControlsIniID);
 	// Enlazar esa textura a una tipo de textura de 2D.
@@ -1742,7 +1913,91 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 		case GLFW_KEY_ESCAPE:
 			//exitApp = true;
 			//resetGame();
-			isPaused = !isPaused;
+			switch (gameState)
+			{
+			// Game is in main menu, exists game
+			case 0:
+				if (controlScreen) {
+					controlScreen = false;
+					controlScreenState = 0;
+				}
+				else {
+					exitApp = true;
+				}
+				break;
+			// Game is running
+			case 1:
+				// Game is not paused, enter pause menu
+				if (!isPaused) {
+					isPaused = true;
+					pauseMenu = true;
+					pauseMenuState = 0;
+				}
+				// Game is paused and on pause menu, resume game
+				else if (isPaused && pauseMenu) {
+					isPaused = false;
+					pauseMenu = false;
+					pauseMenuState = 0;
+				}
+				// Game is paused and on control screen, resume game
+				else if (isPaused && controlScreen) {
+					isPaused = false;
+					controlScreen = false;
+					controlScreenState = 0;
+				}
+				break;
+			// Game is won or in game over, back to main menu
+			case 2:
+			case 3:
+				gameState = 0;
+				isPaused = true;
+				mainMenuState = 0;
+				break;
+			default:
+				break;
+			}
+			//isPaused = !isPaused;
+			break;
+		case GLFW_KEY_UP:
+			if (isPaused) {
+				navigateMenu(false);
+			}
+			break;
+		case GLFW_KEY_RIGHT:
+			if (isPaused) {
+				navigateMenu(true);
+			}
+			break;
+		case GLFW_KEY_DOWN:
+			if (isPaused) {
+				navigateMenu(true);
+			}
+			break;
+		case GLFW_KEY_LEFT:
+			if (isPaused) {
+				navigateMenu(false);
+			}
+			break;
+		case GLFW_KEY_ENTER:
+			if (isPaused) {
+				menuAccept();
+			}
+			break;
+		case GLFW_KEY_P:
+			if (gameState == 1) {
+				isPaused = true;
+				pauseMenu = true;
+				pauseMenuState = 0;
+				controlScreen = false;
+				controlScreenState = 0;
+			}
+			break;
+		case GLFW_KEY_O:
+			if (gameState == 0 || gameState == 1) {
+				isPaused = true;
+				controlScreen = true;
+				controlScreenState = 0;
+			}
 			break;
 		}
 	}
@@ -1783,38 +2038,71 @@ bool processInput(bool continueApplication) {
 		return false;
 	}
 
-	if (!isPaused) {
-		if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
-			//std::cout << "Esta presente el joystick" << std::endl;
-			int axesCount, buttonCount;
-			const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-			/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
-			std::cout << "Left Stick X axis: " << axes[0] << std::endl;
-			std::cout << "Left Stick Y axis: " << axes[1] << std::endl;
-			std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
-			std::cout << "Right Stick X axis: " << axes[3] << std::endl;
-			std::cout << "Right Stick Y axis: " << axes[2] << std::endl;
-			std::cout << "Right Trigger/RT: " << axes[5] << std::endl;*/
+	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
+		//std::cout << "Esta presente el joystick" << std::endl;
+		int axesCount, buttonCount;
 
-			//Mover Adelante Atras
+		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
+			&buttonCount);
+		//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
+		if (buttons[0] == GLFW_PRESS)
+			std::cout << "Se presiona A" << std::endl;
+		if (buttons[1] == GLFW_PRESS)
+			std::cout << "Se presiona B" << std::endl;
+		if (buttons[3] == GLFW_PRESS)
+			std::cout << "Se presiona Y" << std::endl;
+		if (buttons[4] == GLFW_PRESS)
+			std::cout << "LB" << std::endl;
+		if (buttons[5] == GLFW_PRESS)
+			std::cout << "RB" << std::endl;
+		if (buttons[6] == GLFW_PRESS)
+			std::cout << "Back" << std::endl;
+		if (buttons[7] == GLFW_PRESS)
+			std::cout << "Start" << std::endl;
+		if (buttons[8] == GLFW_PRESS)
+			std::cout << "Stick Izquierdo" << std::endl;
+		if (buttons[9] == GLFW_PRESS)
+			std::cout << "Stick Derecho" << std::endl;
+		if (buttons[10] == GLFW_PRESS)
+			std::cout << "Cruceta Arriba" << std::endl;
+		if (buttons[11] == GLFW_PRESS)
+			std::cout << "Cruceta Derecha" << std::endl;
+		if (buttons[12] == GLFW_PRESS)
+			std::cout << "Cruceta Abajo" << std::endl;
+		if (buttons[13] == GLFW_PRESS)
+			std::cout << "Cruceta Izquierda" << std::endl;
+
+		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
+		/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
+		std::cout << "Left Stick X axis: " << axes[0] << std::endl;
+		std::cout << "Left Stick Y axis: " << axes[1] << std::endl;
+		std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
+		std::cout << "Right Stick X axis: " << axes[3] << std::endl;
+		std::cout << "Right Stick Y axis: " << axes[2] << std::endl;
+		std::cout << "Right Trigger/RT: " << axes[5] << std::endl;*/
+
+		// Game is running
+		if (!isPaused) {
+			// Mover Adelante Atras (Left Stick Y axis)
 			if (fabs(axes[1]) != 0.0) {
 				modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, axes[1] * 0.2));
 				animationIndex = 1;
 			}
 
-			//Mover Izquierda Derecha
+			// Mover Izquierda Derecha (Left Stick X axis)
 			if (fabs(axes[0]) != 0.0) {
 				modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(-axes[0] * 0.2, 0, 0));
 				animationIndex = 1;
 			}
 
-			//Girar Izquierda Derecha
+			// Girar Izquierda Derecha (Right Stick Y axis) ??
 			if (fabs(axes[2]) != 0.0) {
 				modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-axes[2] * 2), glm::vec3(0, 1, 0));
 				//camera->mouseMoveCamera(axes[2], 0, deltaTime);
 				animationIndex = 1;
 			}
-
+			
+			// Shoot (RT)
 			if (enableBulletFiring && axes[5] > 0) {
 				if (noBullets > 0) {
 					noBullets -= 1;
@@ -1830,58 +2118,109 @@ bool processInput(bool continueApplication) {
 				}
 			}
 
+			// Controls (Back)
+			if (auxKeyBack && buttons[6] == GLFW_PRESS) {
+				auxKeyBack = false;
+				isPaused = true;
+				controlScreen = true;
+				controlScreenState = 0;
+			}
+			else if (buttons[6] == GLFW_RELEASE) {
+				auxKeyBack = true;
+			}
 
-			/*if (fabs(axes[3]) > 0.2) {
-				camera->mouseMoveCamera(0.0, axes[3], deltaTime);
-			}*/
-			/*if (fabs(axes[4]) > 0.2) {
-				camera->mouseMoveCamera(0.0, axes[4], deltaTime);
-			}*/
+			// Pause menu (Start)
+			if (auxKeyStart && buttons[7] == GLFW_PRESS) {
+				auxKeyStart = false;
+				isPaused = true;
+				pauseMenu = true;
+				pauseMenuState = 0;
+				controlScreen = false;
+				controlScreenState = 0;
+			}
+			else if (buttons[7] == GLFW_RELEASE) {
+				auxKeyStart = true;
+			}
+		}
+		// Game is paused
+		else {
+			// Controls (Back)
+			if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
+				auxKeyBack = false;
+				isPaused = true;
+				controlScreen = true;
+				controlScreenState = 0;
+			}
+			else if (buttons[6] == GLFW_RELEASE) {
+				auxKeyBack = true;
+			}
 
-			const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
-				&buttonCount);
-			//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
-			if (buttons[0] == GLFW_PRESS)
-				std::cout << "Se presiona A" << std::endl;
-			if (buttons[1] == GLFW_PRESS)
-				std::cout << "Se presiona B" << std::endl;
-			if (buttons[3] == GLFW_PRESS)
-				std::cout << "Se presiona Y" << std::endl;
-			if (buttons[4] == GLFW_PRESS)
-				std::cout << "LB" << std::endl;
-			if (buttons[5] == GLFW_PRESS)
-				std::cout << "RB" << std::endl;
-			if (buttons[6] == GLFW_PRESS)
-				std::cout << "Back" << std::endl;
-			if (buttons[7] == GLFW_PRESS)
-				std::cout << "Start" << std::endl;
-			if (buttons[8] == GLFW_PRESS)
-				std::cout << "Stick Izquierdo" << std::endl;
-			if (buttons[9] == GLFW_PRESS)
-				std::cout << "Stick Derecho" << std::endl;
-			if (buttons[10] == GLFW_PRESS)
-				std::cout << "Cruceta Arriba" << std::endl;
-			if (buttons[11] == GLFW_PRESS)
-				std::cout << "Cruceta Derecha" << std::endl;
-			if (buttons[12] == GLFW_PRESS)
-				std::cout << "Cruceta Abajo" << std::endl;
-			if (buttons[13] == GLFW_PRESS)
-				std::cout << "Cruceta Izquierda" << std::endl;
+			// Pause menu (Start)
+			if (auxKeyStart && buttons[7] == GLFW_PRESS && gameState == 1) {
+				auxKeyStart = false;
+				isPaused = true;
+				pauseMenu = true;
+				pauseMenuState = 0;
+				controlScreen = false;
+				controlScreenState = 0;
+			}
+			else if (buttons[7] == GLFW_RELEASE) {
+				auxKeyStart = true;
+			}
+
+			// Accept (A)
+			if (auxKeyJoyA && buttons[0] == GLFW_PRESS) {
+				auxKeyJoyA = false;
+				menuAccept();
+			}
+			else if (buttons[0] == GLFW_RELEASE) {
+				auxKeyJoyA = true;
+			}
+
+			// Forward (Down and Right)
+			if (auxKeyCrucetaForward && (buttons[12] == GLFW_PRESS || buttons[11] == GLFW_PRESS)) {
+				auxKeyCrucetaForward = false;
+				navigateMenu(true);
+			}
+			else if (buttons[12] == GLFW_RELEASE || buttons[11] == GLFW_RELEASE) {
+				auxKeyCrucetaForward = true;
+			}
+
+			// Backward (Up and Left)
+			if (auxKeyCrucetaBackward && (buttons[10] == GLFW_PRESS || buttons[13] == GLFW_PRESS)) {
+				auxKeyCrucetaBackward = false;
+				navigateMenu(false);
+			}
+			else if (buttons[10] == GLFW_RELEASE || buttons[13] == GLFW_RELEASE) {
+				auxKeyCrucetaBackward = true;
+			}
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		/*if (fabs(axes[3]) > 0.2) {
+			camera->mouseMoveCamera(0.0, axes[3], deltaTime);
+		}*/
+		/*if (fabs(axes[4]) > 0.2) {
+			camera->mouseMoveCamera(0.0, axes[4], deltaTime);
+		}*/
+	}
+
+	if (!isPaused) {
+
+		// Osmosis movement
+		if (modelSelected == 0 && (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)) {
 			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, 0.2));
 		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		if (modelSelected == 0 && (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)) {
 			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, -0.2));
 		}
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(2.0f), glm::vec3(0, 1, 0));
+		if (modelSelected == 0 && (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f), glm::vec3(0, 1, 0));
 		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-2.0f), glm::vec3(0, 1, 0));
+		if (modelSelected == 0 && (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-3.0f), glm::vec3(0, 1, 0));
 		}
 
+		// Fire bullet
 		if (enableBulletFiring && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			if (noBullets > 0) {
 				noBullets -= 1;
@@ -1903,24 +2242,6 @@ bool processInput(bool continueApplication) {
 		//	camera->mouseMoveCamera(0.0, offsetY, deltaTime);
 		offsetX = 0;
 		offsetY = 0;
-
-		//Movimiento Osmosis
-		if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f),
-				glm::vec3(0, 1, 0));
-		}
-		else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-3.0f),
-				glm::vec3(0, 1, 0));
-		}
-		if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-				glm::vec3(0, 0, 0.2));
-		}
-		else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-				glm::vec3(0, 0, -0.2));
-		}
 	}
 
 	glfwPollEvents();
@@ -1960,11 +2281,120 @@ void applicationLoop() {
 
 	shadowBox = new ShadowBox(-lightPos, camera.get(), 15.0f, 0.1f, 45.0f);
 
-	//*********************************************************************************************************************
-	//Textura de pantalla activa
-	textureActiveID = textureHUDID;
-
 	while (psi) {
+
+		// GAME STATE
+		// Game over
+		if (noHP <= 0 || (noCovids > 0 && noMasks == 0 && noBullets == 0)) {
+			gameState = 3;
+			isPaused = true;
+		}
+		// Game won
+		else if (noCovids == 0) {
+			gameState = 2;
+			isPaused = true;
+		}
+
+		//*********************************************************************************************************************
+		//Textura de pantalla activa
+		switch (gameState)
+		{
+		// Game in main menu
+		case 0:
+			if (controlScreen) {
+				switch (controlScreenState)
+				{
+				case 0:
+					//std::cout << "GAME STATE 1 is paused control screen 0" << std::endl;
+					textureActiveID = textureControlsID;
+					break;
+				case 1:
+					//std::cout << "GAME STATE 1 is paused control screen 1" << std::endl;
+					textureActiveID = textureControls2ID;
+					break;
+				default:
+					break;
+				}
+			}
+			else {
+				switch (mainMenuState)
+				{
+				case 0:
+					//std::cout << "GAME STATE 0 main menu 0" << std::endl;
+					textureActiveID = textureStartID;
+					break;
+				case 1:
+					//std::cout << "GAME STATE 0 main menu 1" << std::endl;
+					textureActiveID = textureControlsIniID;
+					break;
+				case 2:
+					//std::cout << "GAME STATE 0 main menu 2" << std::endl;
+					textureActiveID = textureExitID;
+				default:
+					break;
+				}
+			}
+			break;
+		// Game has started
+		case 1:
+			// Game is paused
+			if (isPaused) {
+				// Game is in control screen
+				if (controlScreen) {
+					switch (controlScreenState)
+					{
+					case 0:
+						//std::cout << "GAME STATE 1 is paused control screen 0" << std::endl;
+						textureActiveID = textureControlsID;
+						break;
+					case 1:
+						//std::cout << "GAME STATE 1 is paused control screen 1" << std::endl;
+						textureActiveID = textureControls2ID;
+						break;
+					default:
+						break;
+					}
+				}
+				// Game is in pause menu
+				else if (pauseMenu) {
+					switch (pauseMenuState)
+					{
+					case 0:
+						//std::cout << "GAME STATE 1 is paused pause menu 0" << std::endl;
+						textureActiveID = textureRestartID;
+						break;
+					case 1:
+						//std::cout << "GAME STATE 1 is paused pause menu 1" << std::endl;
+						textureActiveID = textureContinueID;
+						break;
+					case 2:
+						//std::cout << "GAME STATE 1 is paused pause menu 2" << std::endl;
+						textureActiveID = textureExit2ID;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			// Game is running
+			else {
+				//std::cout << "GAME STATE 1 is running" << std::endl;
+				textureActiveID = textureHUDID;
+			}
+			break;
+		// Game is over
+		case 2:
+			//std::cout << "GAME STATE 2" << std::endl;
+			textureActiveID = textureYouWonID;
+			break;
+		// Game is won
+		case 3:
+			textureActiveID = textureGameOverID;
+			break;
+		default:
+			break;
+		}
+
 		currTime = TimeManager::Instance().GetTime();
 		if (currTime - lastTime < 0.016666667) {
 			glfwPollEvents();
@@ -2411,7 +2841,7 @@ void applicationLoop() {
 				maskCollider;
 		}
 
-		//Collider Osmosis
+		// Collider Osmosis
 		AbstractModel::OBB osmosisCollider;
 		glm::mat4 modelMatrixColliderOsmosis = glm::mat4(modelMatrixOsmosis);
 		modelMatrixColliderOsmosis = glm::rotate(modelMatrixColliderOsmosis, glm::radians(90.0f), glm::vec3(0, 1, 0));
@@ -2717,11 +3147,11 @@ void applicationLoop() {
 			//modelText2->render(cadena1, -.20, 0.9, 50, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
-		//else {
-		//	//modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 1.0, 1.0);
-		//	modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
-		//	glfwSwapBuffers(window);
-		//}
+		else {
+			//modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 1.0, 1.0);
+			modelText->render("", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
+			glfwSwapBuffers(window);
+		}
 
 		/****************************+
 		 * Open AL sound data
@@ -2771,12 +3201,14 @@ void applicationLoop() {
 			}
 			else {
 				if (i < NUM_COVID) {
-					if (sourcesPlay[i] && renderCovid[i]) {
-						sourcesPlay[i] = false;
-						alSourcePlay(source[i]);
-					}
-					else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
-						alSourceStop(source[i]);
+					if (!isPaused) {
+						if (sourcesPlay[i] && renderCovid[i]) {
+							sourcesPlay[i] = false;
+							alSourcePlay(source[i]);
+						}
+						else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
+							alSourceStop(source[i]);
+						}
 					}
 				}
 				else {
