@@ -61,11 +61,6 @@
 #define NUM_MASKS 8
 
 // Game states
-//bool mainMenu = true; // Merge with gameStarted? Can't go back to main menu after starting so no point
-//bool gameStarted = false;
-// 0 is running, 1 is won, 2 is game over
-//int gameFinished = 0;
-// 0 is main menu, 1 is running, 2 is won, 3 is game over - replaces mainMenu, gameStarted and gameFinished
 int gameState = 0;
 bool pauseMenu = false;
 bool controlScreen = false;
@@ -77,9 +72,6 @@ int mainMenuState = 0;
 int pauseMenuState = 0;
 // 0 is controller, 1 is keyboard
 int controlScreenState = 0;
-// Priority between control screen and pause menu
-// 0 is none, 1 is pause menu, 2 is control screen
-int pauseScreenPriority = 0;
 
 bool auxKeyBack = true;				// Left (controls) buttons[6]
 bool auxKeyStart = true;			// Right (pause) buttons[7]
@@ -921,9 +913,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Bullet
 	modelBulletAnimate.loadModel("../models/Osmosis/bala.fbx");
 	modelBulletAnimate.setShader(&shaderMulLighting);
-
-	//Camara en primera persona
-	//cameraFP->setPosition(glm::vec3(30.0f, 7.0f, -2.0f));
 
 	//Camara en tercera persona
 	camera->setPosition(glm::vec3(0.0, 5.0, 10.0));
