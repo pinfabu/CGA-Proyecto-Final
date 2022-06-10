@@ -60,7 +60,18 @@
 #define NUM_COVID 5
 #define NUM_MASKS 8
 
-// 
+// Game states
+bool mainMenu = false;
+bool pauseMenu = false;
+bool gameStarted = false;
+bool isPaused = false;
+bool isPausedCovidAudio = false;
+// 0 on start, 1 on exit, 
+int mainMenuState = 0;
+// 0 on restart, 1 on continue, 2 on exit
+int pauseMenuState = 0;
+// 0 is running, 1 is won, 2 is game over
+int gameFinished = 0;
 
 // Vida personaje
 int noHP = 3;
@@ -1697,7 +1708,8 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
 			//exitApp = true;
-			resetGame();
+			//resetGame();
+			isPaused = !isPaused;
 			break;
 		}
 	}
@@ -1738,142 +1750,144 @@ bool processInput(bool continueApplication) {
 		return false;
 	}
 
-	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
-		//std::cout << "Esta presente el joystick" << std::endl;
-		int axesCount, buttonCount;
-		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-		/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
-		std::cout << "Left Stick X axis: " << axes[0] << std::endl;
-		std::cout << "Left Stick Y axis: " << axes[1] << std::endl;
-		std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
-		std::cout << "Right Stick X axis: " << axes[3] << std::endl;
-		std::cout << "Right Stick Y axis: " << axes[2] << std::endl;
-		std::cout << "Right Trigger/RT: " << axes[5] << std::endl;*/
+	if (!isPaused) {
+		if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
+			//std::cout << "Esta presente el joystick" << std::endl;
+			int axesCount, buttonCount;
+			const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
+			/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
+			std::cout << "Left Stick X axis: " << axes[0] << std::endl;
+			std::cout << "Left Stick Y axis: " << axes[1] << std::endl;
+			std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
+			std::cout << "Right Stick X axis: " << axes[3] << std::endl;
+			std::cout << "Right Stick Y axis: " << axes[2] << std::endl;
+			std::cout << "Right Trigger/RT: " << axes[5] << std::endl;*/
 
-		//Mover Adelante Atras
-		if (fabs(axes[1]) != 0.0) {
-			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, axes[1] * 0.2));
-			animationIndex = 1;
+			//Mover Adelante Atras
+			if (fabs(axes[1]) != 0.0) {
+				modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, axes[1] * 0.2));
+				animationIndex = 1;
+			}
+
+			//Mover Izquierda Derecha
+			if (fabs(axes[0]) != 0.0) {
+				modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(-axes[0] * 0.2, 0, 0));
+				animationIndex = 1;
+			}
+
+			//Girar Izquierda Derecha
+			if (fabs(axes[2]) != 0.0) {
+				modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-axes[2] * 2), glm::vec3(0, 1, 0));
+				//camera->mouseMoveCamera(axes[2], 0, deltaTime);
+				animationIndex = 1;
+			}
+
+			if (enableBulletFiring && axes[5] > 0) {
+				if (noBullets > 0) {
+					noBullets -= 1;
+					enableBulletFiring = false;
+					bulletIsActive = true;
+					std::cout << "Bullet fired" << std::endl;
+				}
+				animationIndex = 1;
+			}
+			else if (axes[5] <= 0) {
+				if (!bulletIsActive) {
+					enableBulletFiring = true;
+				}
+			}
+
+
+			/*if (fabs(axes[3]) > 0.2) {
+				camera->mouseMoveCamera(0.0, axes[3], deltaTime);
+			}*/
+			/*if (fabs(axes[4]) > 0.2) {
+				camera->mouseMoveCamera(0.0, axes[4], deltaTime);
+			}*/
+
+			const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
+				&buttonCount);
+			//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
+			if (buttons[0] == GLFW_PRESS)
+				std::cout << "Se presiona A" << std::endl;
+			if (buttons[1] == GLFW_PRESS)
+				std::cout << "Se presiona B" << std::endl;
+			if (buttons[3] == GLFW_PRESS)
+				std::cout << "Se presiona Y" << std::endl;
+			if (buttons[4] == GLFW_PRESS)
+				std::cout << "LB" << std::endl;
+			if (buttons[5] == GLFW_PRESS)
+				std::cout << "RB" << std::endl;
+			if (buttons[6] == GLFW_PRESS)
+				std::cout << "Back" << std::endl;
+			if (buttons[7] == GLFW_PRESS)
+				std::cout << "Start" << std::endl;
+			if (buttons[8] == GLFW_PRESS)
+				std::cout << "Stick Izquierdo" << std::endl;
+			if (buttons[9] == GLFW_PRESS)
+				std::cout << "Stick Derecho" << std::endl;
+			if (buttons[10] == GLFW_PRESS)
+				std::cout << "Cruceta Arriba" << std::endl;
+			if (buttons[11] == GLFW_PRESS)
+				std::cout << "Cruceta Derecha" << std::endl;
+			if (buttons[12] == GLFW_PRESS)
+				std::cout << "Cruceta Abajo" << std::endl;
+			if (buttons[13] == GLFW_PRESS)
+				std::cout << "Cruceta Izquierda" << std::endl;
 		}
 
-		//Mover Izquierda Derecha
-		if (fabs(axes[0]) != 0.0) {
-			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(-axes[0] * 0.2, 0, 0));
-			animationIndex = 1;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, 0.2));
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, -0.2));
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(2.0f), glm::vec3(0, 1, 0));
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-2.0f), glm::vec3(0, 1, 0));
 		}
 
-		//Girar Izquierda Derecha
-		if (fabs(axes[2]) != 0.0) {
-			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-axes[2] * 2), glm::vec3(0, 1, 0));
-			//camera->mouseMoveCamera(axes[2], 0, deltaTime);
-			animationIndex = 1;
-		}
-
-		if (enableBulletFiring && axes[5] > 0) {
+		if (enableBulletFiring && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			if (noBullets > 0) {
 				noBullets -= 1;
 				enableBulletFiring = false;
 				bulletIsActive = true;
 				std::cout << "Bullet fired" << std::endl;
 			}
-			animationIndex = 1;
 		}
-		else if (axes[5] <= 0) {
+		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
 			if (!bulletIsActive) {
 				enableBulletFiring = true;
 			}
 		}
 
+		//Para que no pueda mover la camara el usuario
+		//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+		//	camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
+		//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+		//	camera->mouseMoveCamera(0.0, offsetY, deltaTime);
+		offsetX = 0;
+		offsetY = 0;
 
-		/*if (fabs(axes[3]) > 0.2) {
-			camera->mouseMoveCamera(0.0, axes[3], deltaTime);
-		}*/
-		/*if (fabs(axes[4]) > 0.2) {
-			camera->mouseMoveCamera(0.0, axes[4], deltaTime);
-		}*/
-
-		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
-			&buttonCount);
-		//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
-		if (buttons[0] == GLFW_PRESS)
-			std::cout << "Se presiona A" << std::endl;
-		if (buttons[1] == GLFW_PRESS)
-			std::cout << "Se presiona B" << std::endl;
-		if (buttons[3] == GLFW_PRESS)
-			std::cout << "Se presiona Y" << std::endl;
-		if (buttons[4] == GLFW_PRESS)
-			std::cout << "LB" << std::endl;
-		if (buttons[5] == GLFW_PRESS)
-			std::cout << "RB" << std::endl;
-		if (buttons[6] == GLFW_PRESS)
-			std::cout << "Back" << std::endl;
-		if (buttons[7] == GLFW_PRESS)
-			std::cout << "Start" << std::endl;
-		if (buttons[8] == GLFW_PRESS)
-			std::cout << "Stick Izquierdo" << std::endl;
-		if (buttons[9] == GLFW_PRESS)
-			std::cout << "Stick Derecho" << std::endl;
-		if (buttons[10] == GLFW_PRESS)
-			std::cout << "Cruceta Arriba" << std::endl;
-		if (buttons[11] == GLFW_PRESS)
-			std::cout << "Cruceta Derecha" << std::endl;
-		if (buttons[12] == GLFW_PRESS)
-			std::cout << "Cruceta Abajo" << std::endl;
-		if (buttons[13] == GLFW_PRESS)
-			std::cout << "Cruceta Izquierda" << std::endl;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, 0.2));
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, -0.2));
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(2.0f), glm::vec3(0, 1, 0));
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-2.0f), glm::vec3(0, 1, 0));
-	}
-
-	if (enableBulletFiring && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		if (noBullets > 0) {
-			noBullets -= 1;
-			enableBulletFiring = false;
-			bulletIsActive = true;
-			std::cout << "Bullet fired" << std::endl;
+		//Movimiento Osmosis
+		if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f),
+				glm::vec3(0, 1, 0));
 		}
-	}
-	else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
-		if (!bulletIsActive) {
-			enableBulletFiring = true;
+		else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-3.0f),
+				glm::vec3(0, 1, 0));
 		}
-	}
-
-	//Para que no pueda mover la camara el usuario
-	//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-	//	camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
-	//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-	//	camera->mouseMoveCamera(0.0, offsetY, deltaTime);
-	offsetX = 0;
-	offsetY = 0;
-
-	//Movimiento Osmosis
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(3.0f),
-			glm::vec3(0, 1, 0));
-	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(-3.0f),
-			glm::vec3(0, 1, 0));
-	}
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, 0.2));
-	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
-			glm::vec3(0, 0, -0.2));
+		if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
+				glm::vec3(0, 0, 0.2));
+		}
+		else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
+				glm::vec3(0, 0, -0.2));
+		}
 	}
 
 	glfwPollEvents();
@@ -2659,7 +2673,7 @@ void applicationLoop() {
 		cadena1 = "X" + std::to_string(noBullets);
 		cadena2 = "X" + std::to_string(noCovids);
 		cadena3 = "X" + std::to_string(noMasks);
-		if (noHP > 0) {
+		if (noHP > 0 && !isPaused) {
 			modelText->render(cadena, -.75, 0.8, 50, 1.0, 1.0, 1.0);
 			modelText2->render(cadena1, -.75, -0.95, 50, 1.0, 1.0, 1.0);
 			modelText3->render(cadena2, .9, 0.8, 50, 1.0, 1.0, 1.0);
@@ -2670,11 +2684,11 @@ void applicationLoop() {
 			//modelText2->render(cadena1, -.20, 0.9, 50, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
-		else {
-			//modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 1.0, 1.0);
-			modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
-			glfwSwapBuffers(window);
-		}
+		//else {
+		//	//modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 1.0, 1.0);
+		//	modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
+		//	glfwSwapBuffers(window);
+		//}
 
 		/****************************+
 		 * Open AL sound data
@@ -2698,33 +2712,59 @@ void applicationLoop() {
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
 		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
-			if (i < NUM_COVID) {
-				if (sourcesPlay[i] && renderCovid[i]) {
-					sourcesPlay[i] = false;
-					alSourcePlay(source[i]);
+			// If game is paused and hasn't paused Covid audios
+			if (isPaused && !isPausedCovidAudio) {
+				if (i < NUM_COVID) {
+					if (renderCovid[i]) {
+						std::cout << "SOUND paused " << i << std::endl;
+						alSourcePause(source[i]);
+					}
 				}
-				else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
-					alSourceStop(source[i]);
+				else {
+					isPausedCovidAudio = true;
+				}
+			}
+			// If game is unpaused and still has paused Covid audios
+			else if (!isPaused && isPausedCovidAudio) {
+				if (i < NUM_COVID) {
+					if (renderCovid[i]) {
+						std::cout << "SOUND activated " << i << std::endl;
+						alSourcePlay(source[i]);
+					}
+				}
+				else {
+					isPausedCovidAudio = false;
 				}
 			}
 			else {
-				if (sourcesPlay[i]) {
-					// Background, mask, player hit, win or game over
-					if (i > 4 && i != 6) {
-						sourcesPos[i][0] = modelMatrixOsmosis[3].x;
-						sourcesPos[i][1] = modelMatrixOsmosis[3].y;
-						sourcesPos[i][2] = modelMatrixOsmosis[3].z;
-						alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+				if (i < NUM_COVID) {
+					if (sourcesPlay[i] && renderCovid[i]) {
+						sourcesPlay[i] = false;
+						alSourcePlay(source[i]);
 					}
-					// Covid dead
-					else if (i == 6) {
-						sourcesPos[i][0] = modelMatrixOsmosis[3].x;
-						sourcesPos[i][1] = modelMatrixOsmosis[3].y;
-						sourcesPos[i][2] = modelMatrixOsmosis[3].z;
-						alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+					else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
+						alSourceStop(source[i]);
 					}
-					sourcesPlay[i] = false;
-					alSourcePlay(source[i]);
+				}
+				else {
+					if (sourcesPlay[i]) {
+						// Background, mask, player hit, win or game over
+						//if (i > 4 && i != 6) {
+							sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+							sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+							sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+							alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+						//}
+						// Covid dead
+						/*else if (i == 6) {
+							sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+							sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+							sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+							alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+						}*/
+						sourcesPlay[i] = false;
+						alSourcePlay(source[i]);
+					}
 				}
 			}
 		}
@@ -2970,50 +3010,53 @@ void renderScene(bool renderParticles) {
 	float individualStepSize[NUM_COVID] = { 0.07, 0.07, 0.08, 0.09, 0.09 };
 
 	// State machine for Covid
-	for (unsigned int i = 0; i < NUM_COVID; i++) {
-		switch (stateCovid[i])
-		{
-		case 0:
-			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][0]] * individualStepSize[i]);
-			stepCountCovid[i] += individualStepSize[i];
-			break;
-		case 1:
-			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][1]] * individualStepSize[i]);
-			stepCountCovid[i] += individualStepSize[i];
-			break;
-		case 2:
-			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][2]] * individualStepSize[i]);
-			stepCountCovid[i] += individualStepSize[i];
-			break;
-		case 3:
-			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][3]] * individualStepSize[i]);
-			stepCountCovid[i] += individualStepSize[i];
-			break;
-		case 4:
-			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][4]] * individualStepSize[i]);
-			stepCountCovid[i] += individualStepSize[i];
-			break;
-		case 5:
-			modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][5]] * individualStepSize[i]);
-			stepCountCovid[i] += individualStepSize[i];
-			break;
-		default:
-			break;
-		}
-		if (stepCountCovid[i] > maxSteps[i][stateCovid[i]])
-		{
-			stepCountCovid[i] = 0.0f;
-			stateCovid[i]++;
-			if (stateCovid[i] == 6) {
-				stateCovid[i] = 0;
+	if (!isPaused) {
+		for (unsigned int i = 0; i < NUM_COVID; i++) {
+			switch (stateCovid[i])
+			{
+			case 0:
+				modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][0]] * individualStepSize[i]);
+				stepCountCovid[i] += individualStepSize[i];
+				break;
+			case 1:
+				modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][1]] * individualStepSize[i]);
+				stepCountCovid[i] += individualStepSize[i];
+				break;
+			case 2:
+				modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][2]] * individualStepSize[i]);
+				stepCountCovid[i] += individualStepSize[i];
+				break;
+			case 3:
+				modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][3]] * individualStepSize[i]);
+				stepCountCovid[i] += individualStepSize[i];
+				break;
+			case 4:
+				modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][4]] * individualStepSize[i]);
+				stepCountCovid[i] += individualStepSize[i];
+				break;
+			case 5:
+				modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], direction[individualDirections[i][5]] * individualStepSize[i]);
+				stepCountCovid[i] += individualStepSize[i];
+				break;
+			default:
+				break;
 			}
-			if (i == 5 && stateCovid[i] == 4) {
-				stateCovid[i] = 0;
+			if (stepCountCovid[i] > maxSteps[i][stateCovid[i]])
+			{
+				stepCountCovid[i] = 0.0f;
+				stateCovid[i]++;
+				if (stateCovid[i] == 6) {
+					stateCovid[i] = 0;
+				}
+				if (i == 5 && stateCovid[i] == 4) {
+					stateCovid[i] = 0;
+				}
 			}
 		}
+
 	}
 
-	if (bulletIsActive)
+	if (bulletIsActive && !isPaused)
 	{
 		if (bulletMovement < bulletMaxMovement)
 		{
