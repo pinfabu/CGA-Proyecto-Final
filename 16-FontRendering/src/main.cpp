@@ -119,7 +119,11 @@ Shader shaderParticlesRain;
 Shader shaderTexture;
 
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromTarget = -0.5;
+float distTP = 2.0;
+float distFP = -0.5;
+float distanceFromTarget = distFP;
+bool selectCamera = true;
+bool liberaBotControl = false;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -135,8 +139,6 @@ ShadowBox* shadowBox;
 // Lamps
 Model modelLamp1;
 Model modelLamp2;
-// Hierba
-Model modelGrass;
 // Model animate instance
 // Osmosis
 Model modelOsmosisAnimate;
@@ -180,10 +182,8 @@ std::string mapDirs[27] = {
 };
 
 // Terrain model instance
-Terrain terrain(-1, -1, 200, 16, "../Textures/heightmap2.png");
+Terrain terrain(-1, -1, 200, 2, "../Textures/heightmap2.png");
 
-GLuint textureCespedID, textureWallID, textureWindowID, textureRainID,
-textureSmokeID;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID,
 textureTerrainBID, textureTerrainBlendMapID;
 GLuint textureParticleSmokeID, textureParticleRainID, texIdSmoke, texIdRain;
@@ -877,10 +877,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLamp2.loadModel("../models/Lamps/SpotLamp/SpotLamp2.fbx");
 	modelLamp2.setShader(&shaderMulLighting);
 
-	//Grass
-	modelGrass.loadModel("../models/grass/grassModel.obj");
-	modelGrass.setShader(&shaderMulLighting);
-
 	//Osmosis
 	modelOsmosisAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
@@ -948,134 +944,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			std::cout << "Failed to load texture" << std::endl;
 		skyboxTexture.freeImage(bitmap);
 	}
-
-	// Definiendo la textura a utilizar
-	Texture textureCesped("../Textures/cesped.jpg");
-	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureCesped.loadImage();
-	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureCesped.convertToData(bitmap, imageWidth, imageHeight);
-	// Creando la textura con id 1
-	glGenTextures(1, &textureCespedID);
-	// Enlazar esa textura a una tipo de textura de 2D.
-	glBindTexture(GL_TEXTURE_2D, textureCespedID);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Verifica si se pudo abrir la textura
-	if (data) {
-		// Transferis los datos de la imagen a memoria
-		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
-		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
-		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
-			GL_BGRA, GL_UNSIGNED_BYTE, data);
-		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-		std::cout << "Failed to load texture" << std::endl;
-	// Libera la memoria de la textura
-	textureCesped.freeImage(bitmap);
-
-	// Definiendo la textura a utilizar
-	Texture textureWall("../Textures/whiteWall.jpg");
-	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureWall.loadImage();
-	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureWall.convertToData(bitmap, imageWidth, imageHeight);
-	// Creando la textura con id 1
-	glGenTextures(1, &textureWallID);
-	// Enlazar esa textura a una tipo de textura de 2D.
-	glBindTexture(GL_TEXTURE_2D, textureWallID);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Verifica si se pudo abrir la textura
-	if (data) {
-		// Transferis los datos de la imagen a memoria
-		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
-		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
-		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
-			GL_BGRA, GL_UNSIGNED_BYTE, data);
-		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-		std::cout << "Failed to load texture" << std::endl;
-	// Libera la memoria de la textura
-	textureWall.freeImage(bitmap);
-
-	// Definiendo la textura a utilizar
-	Texture textureWindow("../Textures/ventana.png");
-	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureWindow.loadImage();
-	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureWindow.convertToData(bitmap, imageWidth, imageHeight);
-	// Creando la textura con id 1
-	glGenTextures(1, &textureWindowID);
-	// Enlazar esa textura a una tipo de textura de 2D.
-	glBindTexture(GL_TEXTURE_2D, textureWindowID);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Verifica si se pudo abrir la textura
-	if (data) {
-		// Transferis los datos de la imagen a memoria
-		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
-		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
-		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
-			GL_BGRA, GL_UNSIGNED_BYTE, data);
-		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-		std::cout << "Failed to load texture" << std::endl;
-	// Libera la memoria de la textura
-	textureWindow.freeImage(bitmap);
-
-	// Definiendo la textura a utilizar
-	Texture textureRain("../Textures/copo.png");
-	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
-	bitmap = textureRain.loadImage();
-	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
-	data = textureRain.convertToData(bitmap, imageWidth, imageHeight);
-	// Creando la textura con id 1
-	glGenTextures(1, &textureRainID);
-	// Enlazar esa textura a una tipo de textura de 2D.
-	glBindTexture(GL_TEXTURE_2D, textureRainID);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Verifica si se pudo abrir la textura
-	if (data) {
-		// Transferis los datos de la imagen a memoria
-		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
-		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
-		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
-			GL_BGRA, GL_UNSIGNED_BYTE, data);
-		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-		std::cout << "Failed to load texture" << std::endl;
-	// Libera la memoria de la textura
-	textureRain.freeImage(bitmap);
 
 	//***************************************************************************************************************************
 	// Texturas de pantallas
@@ -1431,7 +1299,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureHUD.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainBackground("../Textures/grassy2.png");
+	Texture textureTerrainBackground("../Textures/snow.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainBackground.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -1464,7 +1332,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureTerrainBackground.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainR("../Textures/mud.png");
+	Texture textureTerrainR("../Textures/piso.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainR.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -1496,7 +1364,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureTerrainR.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainG("../Textures/grassFlowers.png");
+	Texture textureTerrainG("../Textures/nieve.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainG.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -1528,7 +1396,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureTerrainG.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainB("../Textures/path.png");
+	Texture textureTerrainB("../Textures/nieve.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainB.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -1560,7 +1428,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureTerrainB.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainBlendMap("../Textures/blendMap.png");
+	Texture textureTerrainBlendMap("../Textures/blendMap2.png");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainBlendMap.loadImage(true);
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -1832,7 +1700,6 @@ void destroy() {
 	// Custom objects Delete
 	modelLamp1.destroy();
 	modelLamp2.destroy();
-	modelGrass.destroy();
 
 	// Custom objects animate
 	modelOsmosisAnimate.destroy();
@@ -1853,11 +1720,6 @@ void destroy() {
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDeleteTextures(1, &textureCespedID);
-	glDeleteTextures(1, &textureWallID);
-	glDeleteTextures(1, &textureWindowID);
-	glDeleteTextures(1, &textureRainID);
-	glDeleteTextures(1, &textureSmokeID);
 	glDeleteTextures(1, &textureTerrainBackgroundID);
 	glDeleteTextures(1, &textureTerrainRID);
 	glDeleteTextures(1, &textureTerrainGID);
@@ -2007,14 +1869,14 @@ void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod) {
 	if (state == GLFW_PRESS) {
 		switch (button) {
 		case GLFW_MOUSE_BUTTON_RIGHT:
-			std::cout << "lastMousePos.y:" << lastMousePosY << std::endl;
+			//std::cout << "lastMousePos.y:" << lastMousePosY << std::endl;
 			break;
 		case GLFW_MOUSE_BUTTON_LEFT:
-			std::cout << "lastMousePos.x:" << lastMousePosX << std::endl;
+			//std::cout << "lastMousePos.x:" << lastMousePosX << std::endl;
 			break;
 		case GLFW_MOUSE_BUTTON_MIDDLE:
-			std::cout << "lastMousePos.x:" << lastMousePosX << std::endl;
-			std::cout << "lastMousePos.y:" << lastMousePosY << std::endl;
+			//std::cout << "lastMousePos.x:" << lastMousePosX << std::endl;
+			//std::cout << "lastMousePos.y:" << lastMousePosY << std::endl;
 			break;
 		}
 	}
@@ -2032,7 +1894,7 @@ bool processInput(bool continueApplication) {
 		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
 			&buttonCount);
 		//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
-		if (buttons[0] == GLFW_PRESS)
+		/*if (buttons[0] == GLFW_PRESS)
 			std::cout << "Se presiona A" << std::endl;
 		if (buttons[1] == GLFW_PRESS)
 			std::cout << "Se presiona B" << std::endl;
@@ -2057,7 +1919,7 @@ bool processInput(bool continueApplication) {
 		if (buttons[12] == GLFW_PRESS)
 			std::cout << "Cruceta Abajo" << std::endl;
 		if (buttons[13] == GLFW_PRESS)
-			std::cout << "Cruceta Izquierda" << std::endl;
+			std::cout << "Cruceta Izquierda" << std::endl;*/
 
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
 		/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
@@ -2088,6 +1950,12 @@ bool processInput(bool continueApplication) {
 				//camera->mouseMoveCamera(axes[2], 0, deltaTime);
 				animationIndex = 1;
 			}
+
+			if (liberaBotControl && buttons[5] == GLFW_PRESS) {
+				selectCamera = !selectCamera;
+				liberaBotControl = false;
+			}else if (buttons[5] == GLFW_RELEASE)
+				liberaBotControl = true;
 			
 			// Shoot (RT)
 			if (enableBulletFiring && axes[5] > 0) {
@@ -2222,6 +2090,11 @@ bool processInput(bool continueApplication) {
 			}
 		}
 
+		if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+			if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+				selectCamera = !selectCamera;
+		}
+
 		//Para que no pueda mover la camara el usuario
 		//if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		//	camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
@@ -2269,7 +2142,10 @@ void applicationLoop() {
 	shadowBox = new ShadowBox(-lightPos, camera.get(), 15.0f, 0.1f, 45.0f);
 
 	while (psi) {
-
+		if (selectCamera)
+			distanceFromTarget = distFP;
+		else
+			distanceFromTarget = distTP;
 		// GAME STATE
 		// Game over
 		if (noHP <= 0 || (noCovids > 0 && noMasks == 0 && noBullets == 0)) {
@@ -2410,6 +2286,7 @@ void applicationLoop() {
 		if (axis.y < 0)
 			angleTarget = -angleTarget;
 		camera->setCameraTarget(target);
+		camera->setDistanceFromTarget(distanceFromTarget);
 		camera->setAngleTarget(angleTarget);
 		camera->updateCamera();
 		view = camera->getViewMatrix();
@@ -2480,9 +2357,9 @@ void applicationLoop() {
 		shaderMulLighting.setVectorFloat3("fogColor", glm::value_ptr(colorNeb));
 		shaderMulLighting.setFloat("density", 0.055);
 		shaderTerrain.setVectorFloat3("fogColor", glm::value_ptr(colorNeb));
-		shaderTerrain.setFloat("density", 0.08);
+		shaderTerrain.setFloat("density", 0.055);
 		shaderSkybox.setVectorFloat3("fogColor", glm::value_ptr(colorNeb));
-		shaderSkybox.setFloat("density", 0.08);
+		shaderSkybox.setFloat("density", 0.055);
 
 
 		/*******************************************
@@ -3233,9 +3110,6 @@ void prepareScene() {
 	modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.setShader(&shaderMulLighting);
 
-	//Grass
-	modelGrass.setShader(&shaderMulLighting);
-
 	//Osmosis
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
@@ -3271,9 +3145,6 @@ void prepareDepthScene() {
 	//Lamp models
 	modelLamp1.setShader(&shaderDepth);
 	modelLamp2.setShader(&shaderDepth);
-
-	//Grass
-	modelGrass.setShader(&shaderDepth);
 
 	// Osmosis
 	modelOsmosisAnimate.setShader(&shaderDepth);
@@ -3370,15 +3241,6 @@ void renderScene(bool renderParticles) {
 	modelMatrixBodyLamp2 = glm::translate(modelMatrixBodyLamp2, glm::vec3(69.0f, 10.0f, -19.0f));
 	modelMatrixBodyLamp2 = glm::rotate(modelMatrixBodyLamp2, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	modelLamp2.render(modelMatrixBodyLamp2);
-
-	// Grass
-	glDisable(GL_CULL_FACE);
-	glm::vec3 grassPosition = glm::vec3(0.0, 0.0, 0.0);
-	grassPosition.y = terrain.getHeightTerrain(grassPosition.x,
-		grassPosition.z);
-	modelGrass.setPosition(grassPosition);
-	modelGrass.render();
-	glEnable(GL_CULL_FACE);
 
 	/*******************************************
 	* Custom Anim objects obj
