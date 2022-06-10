@@ -424,54 +424,6 @@ void resetGame() {
 		modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], covidPositions[i]);
 	}
 
-	//for (unsigned int i = 0; i < NUM_SOURCES; i++) {
-	//	alSourcef(source[i], AL_PITCH, 1.0f);
-	//	alSourcef(source[i], AL_GAIN, gains[i]);
-	//	alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
-	//	alSourcefv(source[i], AL_VELOCITY, sourcesVel[i]);
-	//	alSourcei(source[i], AL_BUFFER, buffer[i]);
-	//	alSourcei(source[i], AL_LOOPING, loop[i]);
-	//	alSourcef(source[i], AL_MAX_DISTANCE, distance[i]);
-	//}
-
-	//modelSmokeParticles = glm::translate(modelSmokeParticles, glm::vec3(modelMatrixCovid[i][3].x, modelMatrixCovid[i][3].y, modelMatrixCovid[i][3].z));
-
-	//sourcesPos[i][0] = modelSmokeParticles[3].x;
-	//sourcesPos[i][1] = modelSmokeParticles[3].y;
-	//sourcesPos[i][2] = modelSmokeParticles[3].z;
-	//alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
-
-	//for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
-	//	if (i < NUM_COVID) {
-	//		if (sourcesPlay[i] && renderCovid[i]) {
-	//			sourcesPlay[i] = false;
-	//			alSourcePlay(source[i]);
-	//		}
-	//		else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
-	//			alSourceStop(source[i]);
-	//		}
-	//	}
-	//	else {
-	//		if (sourcesPlay[i]) {
-	//			// Background, mask, player hit, win or game over
-	//			if (i > 4 && i != 6) {
-	//				sourcesPos[i][0] = modelMatrixOsmosis[3].x;
-	//				sourcesPos[i][1] = modelMatrixOsmosis[3].y;
-	//				sourcesPos[i][2] = modelMatrixOsmosis[3].z;
-	//				alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
-	//			}
-	//			// Covid dead
-	//			else if (i == 6) {
-	//				sourcesPos[i][0] = modelMatrixOsmosis[3].x;
-	//				sourcesPos[i][1] = modelMatrixOsmosis[3].y;
-	//				sourcesPos[i][2] = modelMatrixOsmosis[3].z;
-	//				alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
-	//			}
-	//			sourcesPlay[i] = false;
-	//			alSourcePlay(source[i]);
-	//		}
-	//	}
-	//}
 }
 
 void initParticleBuffersSmoke() {
