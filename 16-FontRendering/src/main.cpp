@@ -178,7 +178,8 @@ textureTerrainBID, textureTerrainBlendMapID;
 GLuint textureParticleSmokeID, textureParticleRainID, texIdSmoke, texIdRain;
 GLuint skyboxTextureID;
 GLuint textureActiveID, textureStartID, textureExitID, textureContinueID, textureRestartID, 
-textureExit2ID, textureControlsID, textureControls2ID, textureHUDID, textureYouWonID, textureGameOverID;
+textureExit2ID, textureControlsID, textureControls2ID, textureHUDID, textureYouWonID, 
+textureGameOverID, textureControlsIniID;
 
 // Modelo para el redener de texto
 FontTypeRendering::FontTypeRendering* modelText;
@@ -948,6 +949,38 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureStart.freeImage(bitmap);
+
+	// Texturas de pantallas
+	Texture textureControlsIni("../Textures/Pantallas/ControlsIni.png");
+	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
+	bitmap = textureStart.loadImage();
+	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
+	data = textureStart.convertToData(bitmap, imageWidth, imageHeight);
+	// Creando la textura con id 1
+	glGenTextures(1, &textureControlsIniID);
+	// Enlazar esa textura a una tipo de textura de 2D.
+	glBindTexture(GL_TEXTURE_2D, textureControlsIniID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Verifica si se pudo abrir la textura
+	if (data) {
+		// Transferis los datos de la imagen a memoria
+		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
+		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
+		// a los datos
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	// Libera la memoria de la textura
+	textureControlsIni.freeImage(bitmap);
 
 	// Texturas de pantallas
 	Texture textureExit("../Textures/Pantallas/Exit.png");
