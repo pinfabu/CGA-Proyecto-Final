@@ -123,7 +123,7 @@ float distTP = 2.0;
 float distFP = -0.5;
 float distanceFromTarget = distFP;
 bool selectCamera = true;
-bool liberaBotControl = false;
+bool enableCameraChange = false;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -234,7 +234,7 @@ int modelSelected = 0;
 bool enableBulletFiring = true;
 bool bulletIsActive = false;
 float bulletMovement = 0.0;
-float bulletMaxMovement = 15.0;
+float bulletMaxMovement = 100.0;
 
 // Rendering flags
 bool renderMask[NUM_MASKS] = { true, true, true, true, true, true, true, true };
@@ -516,7 +516,7 @@ void navigateMenu(bool direction) {
 void menuAccept() {
 	switch (gameState)
 	{
-		// Game is on main menu
+	// Game is on main menu
 	case 0:
 		// Control screen open from main menu
 		if (controlScreen) {
@@ -546,7 +546,7 @@ void menuAccept() {
 			}
 		}
 		break;
-		// Game is running
+	// Game is running
 	case 1:
 		// Game is paused
 		if (isPaused) {
@@ -589,11 +589,103 @@ void menuAccept() {
 			}
 		}
 		break;
-		// Game is won and game over
+	// Game is won and game over
 	case 2:
 	case 3:
 		resetGame();
 		gameState = 0;
+		break;
+	default:
+		break;
+	}
+}
+
+void pauseMenuAction() {
+	switch (gameState)
+	{
+	// Game is running
+	case 1:
+		isPaused = !isPaused;
+		pauseMenu = !pauseMenu;
+		pauseMenuState = 0;
+		controlScreen = false;
+		controlScreenState = 0;
+		break;
+	default:
+		break;
+	}
+}
+
+void controlScreenAction() {
+	switch (gameState)
+	{
+	// Game is running
+	case 1:
+		// Game is paused
+		if (isPaused) {
+			// Control screen key was pressed while pause menu was active
+			if (pauseMenu) {
+				isPaused = true;
+				controlScreen = !controlScreen;
+				controlScreenState = 0;
+			}
+			// Control screen key was pressed after opening it directly
+			else {
+				isPaused = false;
+				controlScreen = false;
+				controlScreenState = 0;
+			}
+		}
+		// Control screen key was pressed with game running
+		else {
+			isPaused = true;
+			controlScreen = true;
+			controlScreenState = 0;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+void backAction() {
+	switch (gameState)
+	{
+	// Game is in main menu, exists game
+	case 0:
+		if (controlScreen) {
+			controlScreen = false;
+			controlScreenState = 0;
+		}
+		else {
+			exitApp = true;
+		}
+		break;
+	// Game is running
+	case 1:
+		// Game is not paused, enter pause menu
+		if (!isPaused) {
+			isPaused = true;
+			pauseMenu = true;
+			pauseMenuState = 0;
+		}
+		// Game is paused and on pause menu, resume game
+		else if (isPaused && pauseMenu) {
+			isPaused = false;
+			pauseMenu = false;
+			pauseMenuState = 0;
+		}
+		// Game is paused and on control screen, resume game
+		else if (isPaused && controlScreen) {
+			isPaused = false;
+			controlScreen = false;
+			controlScreenState = 0;
+		}
+		break;
+		// Game is won or in game over, back to main menu
+	case 2:
+	case 3:
+		menuAccept();
 		break;
 	default:
 		break;
@@ -1762,51 +1854,52 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
+			backAction();
 			//exitApp = true;
 			//resetGame();
-			switch (gameState)
-			{
-			// Game is in main menu, exists game
-			case 0:
-				if (controlScreen) {
-					controlScreen = false;
-					controlScreenState = 0;
-				}
-				else {
-					exitApp = true;
-				}
-				break;
-			// Game is running
-			case 1:
-				// Game is not paused, enter pause menu
-				if (!isPaused) {
-					isPaused = true;
-					pauseMenu = true;
-					pauseMenuState = 0;
-				}
-				// Game is paused and on pause menu, resume game
-				else if (isPaused && pauseMenu) {
-					isPaused = false;
-					pauseMenu = false;
-					pauseMenuState = 0;
-				}
-				// Game is paused and on control screen, resume game
-				else if (isPaused && controlScreen) {
-					isPaused = false;
-					controlScreen = false;
-					controlScreenState = 0;
-				}
-				break;
-			// Game is won or in game over, back to main menu
-			case 2:
-			case 3:
-				menuAccept();
-				break;
-			default:
-				break;
-			}
-			//isPaused = !isPaused;
-			break;
+			//switch (gameState)
+			//{
+			//// Game is in main menu, exists game
+			//case 0:
+			//	if (controlScreen) {
+			//		controlScreen = false;
+			//		controlScreenState = 0;
+			//	}
+			//	else {
+			//		exitApp = true;
+			//	}
+			//	break;
+			//// Game is running
+			//case 1:
+			//	// Game is not paused, enter pause menu
+			//	if (!isPaused) {
+			//		isPaused = true;
+			//		pauseMenu = true;
+			//		pauseMenuState = 0;
+			//	}
+			//	// Game is paused and on pause menu, resume game
+			//	else if (isPaused && pauseMenu) {
+			//		isPaused = false;
+			//		pauseMenu = false;
+			//		pauseMenuState = 0;
+			//	}
+			//	// Game is paused and on control screen, resume game
+			//	else if (isPaused && controlScreen) {
+			//		isPaused = false;
+			//		controlScreen = false;
+			//		controlScreenState = 0;
+			//	}
+			//	break;
+			//// Game is won or in game over, back to main menu
+			//case 2:
+			//case 3:
+			//	menuAccept();
+			//	break;
+			//default:
+			//	break;
+			//}
+			////isPaused = !isPaused;
+			//break;
 		case GLFW_KEY_UP:
 			if (isPaused) {
 				navigateMenu(false);
@@ -1833,20 +1926,22 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 			}
 			break;
 		case GLFW_KEY_P:
-			if (gameState == 1) {
+			pauseMenuAction();
+			/*if (gameState == 1) {
 				isPaused = true;
 				pauseMenu = true;
 				pauseMenuState = 0;
 				controlScreen = false;
 				controlScreenState = 0;
-			}
+			}*/
 			break;
 		case GLFW_KEY_O:
-			if (gameState == 0 || gameState == 1) {
+			controlScreenAction();
+			/*if (gameState == 0 || gameState == 1) {
 				isPaused = true;
 				controlScreen = true;
 				controlScreenState = 0;
-			}
+			}*/
 			break;
 		}
 	}
@@ -1951,11 +2046,13 @@ bool processInput(bool continueApplication) {
 				animationIndex = 1;
 			}
 
-			if (liberaBotControl && buttons[5] == GLFW_PRESS) {
+			// Change camera
+			if (enableCameraChange && buttons[5] == GLFW_PRESS) {
 				selectCamera = !selectCamera;
-				liberaBotControl = false;
-			}else if (buttons[5] == GLFW_RELEASE)
-				liberaBotControl = true;
+				enableCameraChange = false;
+			}
+			else if (buttons[5] == GLFW_RELEASE)
+				enableCameraChange = true;
 			
 			// Shoot (RT)
 			if (enableBulletFiring && axes[5] > 0) {
@@ -1973,98 +2070,153 @@ bool processInput(bool continueApplication) {
 				}
 			}
 
-			// Controls (Back)
-			if (auxKeyBack && buttons[6] == GLFW_PRESS) {
-				//std::cout << "BACK PRESS" << std::endl;
-				std::cout << buttons[6] << std::endl;
-				auxKeyBack = false;
-				isPaused = true;
-				controlScreen = true;
-				controlScreenState = 0;
-			}
-			else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
-				//std::cout << "BACK RELEASE" << std::endl;
-				auxKeyBack = true;
-			}
+			//// Controls (Back)
+			//if (auxKeyBack && buttons[6] == GLFW_PRESS) {
+			//	//std::cout << "BACK PRESS" << std::endl;
+			//	std::cout << buttons[6] << std::endl;
+			//	auxKeyBack = false;
+			//	isPaused = true;
+			//	controlScreen = true;
+			//	controlScreenState = 0;
+			//}
+			//else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
+			//	//std::cout << "BACK RELEASE" << std::endl;
+			//	auxKeyBack = true;
+			//}
 
-			// Pause menu (Start)
-			if (auxKeyStart && buttons[7] == GLFW_PRESS) {
-				//std::cout << "PAUSE PRESS" << std::endl;
-				auxKeyStart = false;
-				isPaused = true;
-				pauseMenu = true;
-				pauseMenuState = 0;
-				controlScreen = false;
-				controlScreenState = 0;
-			}
-			else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
-				//std::cout << "PAUSE RELEASE" << std::endl;
-				auxKeyStart = true;
-			}
+			//// Pause menu (Start)
+			//if (auxKeyStart && buttons[7] == GLFW_PRESS) {
+			//	//std::cout << "PAUSE PRESS" << std::endl;
+			//	auxKeyStart = false;
+			//	isPaused = true;
+			//	pauseMenu = true;
+			//	pauseMenuState = 0;
+			//	controlScreen = false;
+			//	controlScreenState = 0;
+			//}
+			//else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
+			//	//std::cout << "PAUSE RELEASE" << std::endl;
+			//	auxKeyStart = true;
+			//}
 		}
 		// Game is paused
-		else {
-			// Controls (Back)
-			if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
-				//std::cout << "BACK PRESS" << std::endl;
-				std::cout << buttons[6] << std::endl;
-				auxKeyBack = false;
-				isPaused = true;
-				controlScreen = true;
-				controlScreenState = 0;
-			}
-			else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
-				//std::cout << "BACK RELEASE" << std::endl;
-				auxKeyBack = true;
-			}
+		//else {
+		//	// Controls (Back)
+		//	if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
+		//		//std::cout << "BACK PRESS" << std::endl;
+		//		std::cout << buttons[6] << std::endl;
+		//		auxKeyBack = false;
+		//		isPaused = true;
+		//		controlScreen = true;
+		//		controlScreenState = 0;
+		//	}
+		//	else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
+		//		//std::cout << "BACK RELEASE" << std::endl;
+		//		auxKeyBack = true;
+		//	}
 
-			// Pause menu (Start)
-			if (auxKeyStart && buttons[7] == GLFW_PRESS && gameState == 1) {
-				//std::cout << "PAUSE PRESS" << std::endl;
-				auxKeyStart = false;
-				isPaused = true;
-				pauseMenu = true;
-				pauseMenuState = 0;
-				controlScreen = false;
-				controlScreenState = 0;
-			}
-			else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
-				//std::cout << "PAUSE RELEASE" << std::endl;
-				auxKeyStart = true;
-			}
+		//	// Pause menu (Start)
+		//	if (auxKeyStart && buttons[7] == GLFW_PRESS && gameState == 1) {
+		//		//std::cout << "PAUSE PRESS" << std::endl;
+		//		auxKeyStart = false;
+		//		isPaused = true;
+		//		pauseMenu = true;
+		//		pauseMenuState = 0;
+		//		controlScreen = false;
+		//		controlScreenState = 0;
+		//	}
+		//	else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
+		//		//std::cout << "PAUSE RELEASE" << std::endl;
+		//		auxKeyStart = true;
+		//	}
 
-			// Accept (A)
-			if (auxKeyJoyA && buttons[0] == GLFW_PRESS) {
-				//std::cout << "A PRESS" << std::endl;
-				auxKeyJoyA = false;
-				menuAccept();
-			}
-			else if (!auxKeyJoyA && buttons[0] == GLFW_RELEASE) {
-				//std::cout << "A RELEASE" << std::endl;
-				auxKeyJoyA = true;
-			}
+		//	// Accept (A)
+		//	if (auxKeyJoyA && buttons[0] == GLFW_PRESS) {
+		//		//std::cout << "A PRESS" << std::endl;
+		//		auxKeyJoyA = false;
+		//		menuAccept();
+		//	}
+		//	else if (!auxKeyJoyA && buttons[0] == GLFW_RELEASE) {
+		//		//std::cout << "A RELEASE" << std::endl;
+		//		auxKeyJoyA = true;
+		//	}
 
-			// Forward (Down and Right)
-			if (auxKeyCrucetaForward && (buttons[12] == GLFW_PRESS || buttons[11] == GLFW_PRESS)) {
-				//std::cout << "FORWARD PRESS" << std::endl;
-				auxKeyCrucetaForward = false;
-				navigateMenu(true);
-			}
-			else if (!auxKeyCrucetaForward && buttons[12] == GLFW_RELEASE && buttons[11] == GLFW_RELEASE) {
-				//std::cout << "FORWARD RELEASE" << std::endl;
-				auxKeyCrucetaForward = true;
-			}
+		//	// Forward (Down and Right)
+		//	if (auxKeyCrucetaForward && (buttons[12] == GLFW_PRESS || buttons[11] == GLFW_PRESS)) {
+		//		//std::cout << "FORWARD PRESS" << std::endl;
+		//		auxKeyCrucetaForward = false;
+		//		navigateMenu(true);
+		//	}
+		//	else if (!auxKeyCrucetaForward && buttons[12] == GLFW_RELEASE && buttons[11] == GLFW_RELEASE) {
+		//		//std::cout << "FORWARD RELEASE" << std::endl;
+		//		auxKeyCrucetaForward = true;
+		//	}
 
-			// Backward (Up and Left)
-			if (auxKeyCrucetaBackward && (buttons[10] == GLFW_PRESS || buttons[13] == GLFW_PRESS)) {
-				//std::cout << "BACKWARD PRESS" << std::endl;
-				auxKeyCrucetaBackward = false;
-				navigateMenu(false);
-			}
-			else if (!auxKeyCrucetaBackward && buttons[10] == GLFW_RELEASE && buttons[13] == GLFW_RELEASE) {
-				//std::cout << "BACKWARD RELEASE" << std::endl;
-				auxKeyCrucetaBackward = true;
-			}
+		//	// Backward (Up and Left)
+		//	if (auxKeyCrucetaBackward && (buttons[10] == GLFW_PRESS || buttons[13] == GLFW_PRESS)) {
+		//		//std::cout << "BACKWARD PRESS" << std::endl;
+		//		auxKeyCrucetaBackward = false;
+		//		navigateMenu(false);
+		//	}
+		//	else if (!auxKeyCrucetaBackward && buttons[10] == GLFW_RELEASE && buttons[13] == GLFW_RELEASE) {
+		//		//std::cout << "BACKWARD RELEASE" << std::endl;
+		//		auxKeyCrucetaBackward = true;
+		//	}
+		//}
+
+		// Controls (Back)
+		if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
+			//std::cout << "BACK PRESS" << std::endl;
+			auxKeyBack = false;
+			controlScreenAction();
+		}
+		else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
+			//std::cout << "BACK RELEASE" << std::endl;
+			auxKeyBack = true;
+		}
+
+		// Pause menu (Start)
+		if (auxKeyStart && buttons[7] == GLFW_PRESS && gameState == 1) {
+			//std::cout << "PAUSE PRESS" << std::endl;
+			auxKeyStart = false;
+			pauseMenuAction();
+		}
+		else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
+			//std::cout << "PAUSE RELEASE" << std::endl;
+			auxKeyStart = true;
+		}
+
+		// Accept (A)
+		if (auxKeyJoyA && buttons[0] == GLFW_PRESS) {
+			//std::cout << "A PRESS" << std::endl;
+			auxKeyJoyA = false;
+			menuAccept();
+		}
+		else if (!auxKeyJoyA && buttons[0] == GLFW_RELEASE) {
+			//std::cout << "A RELEASE" << std::endl;
+			auxKeyJoyA = true;
+		}
+
+		// Forward (Down and Right)
+		if (auxKeyCrucetaForward && (buttons[12] == GLFW_PRESS || buttons[11] == GLFW_PRESS)) {
+			//std::cout << "FORWARD PRESS" << std::endl;
+			auxKeyCrucetaForward = false;
+			navigateMenu(true);
+		}
+		else if (!auxKeyCrucetaForward && buttons[12] == GLFW_RELEASE && buttons[11] == GLFW_RELEASE) {
+			//std::cout << "FORWARD RELEASE" << std::endl;
+			auxKeyCrucetaForward = true;
+		}
+
+		// Backward (Up and Left)
+		if (auxKeyCrucetaBackward && (buttons[10] == GLFW_PRESS || buttons[13] == GLFW_PRESS)) {
+			//std::cout << "BACKWARD PRESS" << std::endl;
+			auxKeyCrucetaBackward = false;
+			navigateMenu(false);
+		}
+		else if (!auxKeyCrucetaBackward && buttons[10] == GLFW_RELEASE && buttons[13] == GLFW_RELEASE) {
+			//std::cout << "BACKWARD RELEASE" << std::endl;
+			auxKeyCrucetaBackward = true;
 		}
 
 		/*if (fabs(axes[3]) > 0.2) {
@@ -2938,10 +3090,9 @@ void applicationLoop() {
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersSBB.begin(); it != collidersSBB.end(); it++) {
 			bool isCollision = false;
-			std::map<std::string,
+			for (std::map<std::string,
 				std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator jt =
-				collidersOBB.begin();
-			for (; jt != collidersOBB.end(); jt++) {
+				collidersOBB.begin(); jt != collidersOBB.end(); jt++) {
 				if (testSphereOBox(std::get<0>(it->second),
 					std::get<0>(jt->second))) {
 					if (it->first.substr(0, 5) == "covid" && jt->first == "Osmosis") {
@@ -2972,6 +3123,15 @@ void applicationLoop() {
 							std::cout << "SOUND activated (player hit) " << 8 << " is " << sourcesPlay[8] << std::endl;
 						}
 					}
+					else if (it->first == "bullet" && jt->first.substr(0, 3) == "map") {
+						isCollision = true;
+						addOrUpdateCollisionDetection(collisionDetection, jt->first,
+							isCollision);
+						bulletIsActive = false;
+						bulletMovement = 0.0;
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
+					}
 				}
 			}
 			addOrUpdateCollisionDetection(collisionDetection, it->first,
@@ -2998,8 +3158,6 @@ void applicationLoop() {
 					addOrUpdateColliders(collidersOBB, jt->first);
 
 				else {
-					/*if (jt->first.compare("mayow") == 0)
-						modelMatrixMayow = std::get<1>(jt->second);*/
 					if (jt->first.compare("Osmosis") == 0) {
 						modelMatrixOsmosis = std::get<1>(jt->second);
 					}
