@@ -207,6 +207,7 @@ float bulletMaxMovement = 10.0;
 bool renderMask[NUM_MASKS] = { true, true, true, true, true, true, true, true };
 bool renderCovid[NUM_COVID] = { true, true, true, false, true };
 int freeCovid = 3;
+bool stopAudioCovid[NUM_COVID] = { false, false, false, false, false };
 
 // Var Covid machines
 float stepCountCovid[NUM_COVID] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
@@ -290,24 +291,24 @@ GLuint depthMap, depthMapFBO;
  */
 
  // OpenAL Defines
-// CHANGE BUFFERS TO 1, ONLY ONE PER COVID FOR TESTING
-#define NUM_BUFFERS NUM_COVID
-#define NUM_SOURCES NUM_COVID
+// One per covid, background, win, lose, covid dying, player losing a life, pick up mask
+#define NUM_SOURCES NUM_COVID + 6
+#define NUM_BUFFERS NUM_SOURCES
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-// Source for Covid
-ALfloat sourceCovidPos[NUM_COVID][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
-ALfloat sourceCovidVel[NUM_COVID][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
-// Source Covid dead
-//ALfloat sourceCovDeadPos[] = { 0.0, 0.0, 0.0 };
-//ALfloat sourceCovDeadVel[] = { 0.0, 0.0, 0.0 };
-// Source user dead
-//ALfloat sourceUserDeadPos[] = { 2.0, 0.0, 0.0 };
-//ALfloat sourceUserDeadVel[] = { 0.0, 0.0, 0.0 };
+// Sources 
+// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
+ALfloat sourcesPos[NUM_SOURCES][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
+	{ 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
+	{ 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
+ALfloat sourcesVel[NUM_SOURCES][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
+	{ 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
+	{ 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };
 // Buffers
+// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
 ALuint environment[NUM_ENVIRONMENTS];
@@ -317,7 +318,8 @@ ALenum format;
 ALvoid* data;
 int ch;
 ALboolean loop;
-std::vector<bool> sourcesPlay = { true, true, true, false, true };
+// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
+std::vector<bool> sourcesPlay = { true, true, true, false, true, true, false, false, false, false, false };
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes);
@@ -638,12 +640,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Inicialización de los shaders
 	shader.initialize("../Shaders/colorShader.vs", "../Shaders/colorShader.fs");
 	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
-	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_shadow.vs","../Shaders/multipleLights_shadow.fs");
-	shaderTerrain.initialize("../Shaders/terrain_shadow.vs","../Shaders/terrain_shadow.fs");
+	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_shadow.vs", "../Shaders/multipleLights_shadow.fs");
+	shaderTerrain.initialize("../Shaders/terrain_shadow.vs", "../Shaders/terrain_shadow.fs");
 	shaderParticlesSmoke.initialize("../Shaders/particlesSmoke.vs", "../Shaders/particlesSmoke.fs", { "Position", "Velocity", "Age" });
-	shaderParticlesRain.initialize("../Shaders/particlesRain.vs","../Shaders/particlesRain.fs", { "Position", "Velocity", "Age" });
-	shaderViewDepth.initialize("../Shaders/texturizado.vs","../Shaders/texturizado_depth_view.fs");
-	shaderDepth.initialize("../Shaders/shadow_mapping_depth.vs","../Shaders/shadow_mapping_depth.fs");
+	shaderParticlesRain.initialize("../Shaders/particlesRain.vs", "../Shaders/particlesRain.fs", { "Position", "Velocity", "Age" });
+	shaderViewDepth.initialize("../Shaders/texturizado.vs", "../Shaders/texturizado_depth_view.fs");
+	shaderDepth.initialize("../Shaders/shadow_mapping_depth.vs", "../Shaders/shadow_mapping_depth.fs");
 
 	// Inicializacion de los objetos.
 	skyboxSphere.init();
@@ -663,9 +665,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	boxLightViewBox.init();
 	boxLightViewBox.setShader(&shaderViewDepth);
-
-	/*modelRock.loadModel("../models/rock/rock.obj");
-	modelRock.setShader(&shaderMulLighting);*/
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -1116,7 +1115,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureParticleSmoke.freeImage(bitmap);
 
 	//Smoke
-	std::uniform_real_distribution<float> distr01 =	std::uniform_real_distribution<float>(0.0f, 1.0f);
+	std::uniform_real_distribution<float> distr01 = std::uniform_real_distribution<float>(0.0f, 1.0f);
 	std::mt19937 generator;
 	std::random_device rd;
 	generator.seed(rd());
@@ -1128,7 +1127,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glGenTextures(1, &texIdSmoke);
 	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
 	glTexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, size);
-	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size, GL_RED, GL_FLOAT,randData.data());
+	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size, GL_RED, GL_FLOAT, randData.data());
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -1177,17 +1176,17 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	basis[0] = glm::normalize(u);
 	basis[1] = glm::normalize(v);
 	basis[2] = glm::normalize(n);
-	shaderParticlesSmoke.setMatrix3("EmitterBasis", 1, false,glm::value_ptr(basis));
+	shaderParticlesSmoke.setMatrix3("EmitterBasis", 1, false, glm::value_ptr(basis));
 	shaderParticlesRain.setMatrix3("EmitterBasis", 1, false, glm::value_ptr(basis));
 
 	/*******************************************
 	 * Inicializacion de los buffers de la fuente
 	 *******************************************/
-	//initParticleBuffers();
+	 //initParticleBuffers();
 
-	/*******************************************
-	 * Inicializacion de los buffers del Smoke
-	 *******************************************/
+	 /*******************************************
+	  * Inicializacion de los buffers del Smoke
+	  *******************************************/
 	initParticleBuffersSmoke();
 
 	/*******************************************
@@ -1237,11 +1236,19 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Config source 0
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
-	buffer[0] = alutCreateBufferFromFile("../sounds/zero.wav");
-	buffer[1] = alutCreateBufferFromFile("../sounds/one.wav");
-	buffer[2] = alutCreateBufferFromFile("../sounds/two.wav");
-	buffer[3] = alutCreateBufferFromFile("../sounds/three.wav");
-	buffer[4] = alutCreateBufferFromFile("../sounds/four.wav");
+	// 0 covid, 1 background, 2 covid dying, 3 pick up mask, 4 player hit, 5 win, 6 game over
+	// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
+	buffer[0] = alutCreateBufferFromFile("../sounds/covid.wav");
+	buffer[1] = alutCreateBufferFromFile("../sounds/covid.wav");
+	buffer[2] = alutCreateBufferFromFile("../sounds/covid.wav");
+	buffer[3] = alutCreateBufferFromFile("../sounds/covid.wav");
+	buffer[4] = alutCreateBufferFromFile("../sounds/covid.wav");
+	buffer[5] = alutCreateBufferFromFile("../sounds/background.wav");
+	buffer[6] = alutCreateBufferFromFile("../sounds/covid_dead.wav");
+	buffer[7] = alutCreateBufferFromFile("../sounds/mask.wav");
+	buffer[8] = alutCreateBufferFromFile("../sounds/hp_loss.wav");
+	buffer[9] = alutCreateBufferFromFile("../sounds/win.wav");
+	buffer[10] = alutCreateBufferFromFile("../sounds/game_over.wav");
 	int errorAlut = alutGetError();
 	if (errorAlut != ALUT_ERROR_NO_ERROR) {
 		printf("- Error open files with alut %d !!\n", errorAlut);
@@ -1266,23 +1273,21 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	alSourcei(source[0], AL_LOOPING, AL_TRUE);
 	alSourcef(source[0], AL_MAX_DISTANCE, 2000);*/
 
-	for (unsigned int i = 0; i < NUM_COVID; i++) {
-		alSourcef(source[i], AL_PITCH, 1.0f);
-		alSourcef(source[i], AL_GAIN, 3.0f);
-		alSourcefv(source[i], AL_POSITION, sourceCovidPos[i]);
-		alSourcefv(source[i], AL_VELOCITY, sourceCovidVel[i]);
-		alSourcei(source[i], AL_BUFFER, buffer[i]);
-		alSourcei(source[i], AL_LOOPING, AL_TRUE);
-		alSourcef(source[i], AL_MAX_DISTANCE, 500);
-	}
+	// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
+	float gains[NUM_SOURCES] = { 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 0.15f, 1.5f, 1.0f, 1.5f, 3.0f, 3.0f };
+	//int bufferIdx[NUM_SOURCES] = { 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 };
+	bool loop[NUM_SOURCES] = { true, true, true, true, true, true, false, false, false, false, false };
+	int distance[NUM_SOURCES] = { 250, 250, 250, 250, 250, 500, 1000, 500, 500, 500, 500 };
 
-	/*alSourcef(source[2], AL_PITCH, 1.0f);
-	alSourcef(source[2], AL_GAIN, 0.3f);
-	alSourcefv(source[2], AL_POSITION, source2Pos);
-	alSourcefv(source[2], AL_VELOCITY, source2Vel);
-	alSourcei(source[2], AL_BUFFER, buffer[2]);
-	alSourcei(source[2], AL_LOOPING, AL_TRUE);
-	alSourcef(source[2], AL_MAX_DISTANCE, 500);*/
+	for (unsigned int i = 0; i < NUM_SOURCES; i++) {
+		alSourcef(source[i], AL_PITCH, 1.0f);
+		alSourcef(source[i], AL_GAIN, gains[i]);
+		alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+		alSourcefv(source[i], AL_VELOCITY, sourcesVel[i]);
+		alSourcei(source[i], AL_BUFFER, buffer[i]);
+		alSourcei(source[i], AL_LOOPING, loop[i]);
+		alSourcef(source[i], AL_MAX_DISTANCE, distance[i]);
+	}
 
 	// Se inicializa el modelo de texeles.
 	modelText = new FontTypeRendering::FontTypeRendering(screenWidth,
@@ -1446,13 +1451,13 @@ bool processInput(bool continueApplication) {
 
 		//Mover Adelante Atras
 		if (fabs(axes[1]) != 0.0) {
-			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,	glm::vec3(0, 0, axes[1] * 0.2));
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(0, 0, axes[1] * 0.2));
 			animationIndex = 1;
 		}
 
 		//Mover Izquierda Derecha
 		if (fabs(axes[0]) != 0.0) {
-			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(-axes[0] * 0.2,0,0));
+			modelMatrixOsmosis = glm::translate(modelMatrixOsmosis, glm::vec3(-axes[0] * 0.2, 0, 0));
 			animationIndex = 1;
 		}
 
@@ -1477,8 +1482,8 @@ bool processInput(bool continueApplication) {
 				enableBulletFiring = true;
 			}
 		}
-			
-			
+
+
 		/*if (fabs(axes[3]) > 0.2) {
 			camera->mouseMoveCamera(0.0, axes[3], deltaTime);
 		}*/
@@ -1568,7 +1573,7 @@ bool processInput(bool continueApplication) {
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
 			glm::vec3(0, 0, -0.2));
-	}		
+	}
 
 	glfwPollEvents();
 	return continueApplication;
@@ -1629,7 +1634,7 @@ void applicationLoop() {
 
 		axis = glm::axis(glm::quat_cast(modelMatrixOsmosis));
 		angleTarget = glm::angle(glm::quat_cast(modelMatrixOsmosis));
-		target = glm::vec3 (modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.25, modelMatrixOsmosis[3].z);
+		target = glm::vec3(modelMatrixOsmosis[3].x, modelMatrixOsmosis[3].y + 4.25, modelMatrixOsmosis[3].z);
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
@@ -1685,7 +1690,7 @@ void applicationLoop() {
 		// Settea la matriz de vista y projection al shader para el Smoke
 		shaderParticlesSmoke.setMatrix4("projection", 1, false, glm::value_ptr(projection));
 		shaderParticlesSmoke.setMatrix4("view", 1, false, glm::value_ptr(view));
-		shaderParticlesSmoke.setVectorFloat3("colorSmoke", glm::value_ptr(glm::vec3(1,1,1)));
+		shaderParticlesSmoke.setVectorFloat3("colorSmoke", glm::value_ptr(glm::vec3(1, 1, 1)));
 
 		if (hp <= 1)
 			colorLluvia = lluviaRoja;
@@ -1703,11 +1708,11 @@ void applicationLoop() {
 			colorNeb = neblinaRoja;
 		else
 			colorNeb = neblinaGris;
-		shaderMulLighting.setVectorFloat3("fogColor",glm::value_ptr(colorNeb));
+		shaderMulLighting.setVectorFloat3("fogColor", glm::value_ptr(colorNeb));
 		shaderMulLighting.setFloat("density", 0.055);
-		shaderTerrain.setVectorFloat3("fogColor",glm::value_ptr(colorNeb));
+		shaderTerrain.setVectorFloat3("fogColor", glm::value_ptr(colorNeb));
 		shaderTerrain.setFloat("density", 0.08);
-		shaderSkybox.setVectorFloat3("fogColor",glm::value_ptr(colorNeb));
+		shaderSkybox.setVectorFloat3("fogColor", glm::value_ptr(colorNeb));
 		shaderSkybox.setFloat("density", 0.08);
 
 
@@ -2096,7 +2101,7 @@ void applicationLoop() {
 			dxBullet = 0;
 			dyBullet = -100;
 			dzBullet = 0;
-		}		
+		}
 		modelMatrixColliderBullet = glm::translate(modelMatrixColliderBullet, bulletPosition);
 		bulletCollider.c = glm::vec3(modelMatrixColliderBullet[3]);
 		bulletCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.25;
@@ -2150,7 +2155,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		for (std::map<std::string,
+		/*for (std::map<std::string,
 			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersOBB.begin(); it != collidersOBB.end(); it++) {
 			glm::mat4 matrixCollider = glm::mat4(1.0);
@@ -2176,32 +2181,11 @@ void applicationLoop() {
 			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 			sphereCollider.enableWireMode();
 			sphereCollider.render(matrixCollider);
-		}
-
-		// Esto es para ilustrar la transformacion inversa de los coliders
-		/*glm::vec3 cinv = glm::inverse(mayowCollider.u) * glm::vec4(rockCollider.c, 1.0);
-		glm::mat4 invColliderS = glm::mat4(1.0);
-		invColliderS = glm::translate(invColliderS, cinv);
-		invColliderS =  invColliderS * glm::mat4(mayowCollider.u);
-		invColliderS = glm::scale(invColliderS, glm::vec3(rockCollider.ratio * 2.0, rockCollider.ratio * 2.0, rockCollider.ratio * 2.0));
-		sphereCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
-		sphereCollider.enableWireMode();
-		sphereCollider.render(invColliderS);
-		glm::vec3 cinv2 = glm::inverse(mayowCollider.u) * glm::vec4(mayowCollider.c, 1.0);
-		glm::mat4 invColliderB = glm::mat4(1.0);
-		invColliderB = glm::translate(invColliderB, cinv2);
-		invColliderB = glm::scale(invColliderB, mayowCollider.e * 2.0f);
-		boxCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
-		boxCollider.enableWireMode();
-		boxCollider.render(invColliderB);
-		// Se regresa el color blanco
-		sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-		boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));*/
+		}*/
 
 		/*******************************************
 		* Test Colisions
 		*******************************************/
-
 		// Box  vs Box
 		for (std::map<std::string,
 			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
@@ -2214,15 +2198,18 @@ void applicationLoop() {
 					&& testOBBOBB(std::get<0>(it->second),
 						std::get<0>(jt->second))
 					&& !(it->first.substr(0, 3) == "map"
-					&& jt->first.substr(0, 3) == "map")) {
+						&& jt->first.substr(0, 3) == "map")) {
 					isCollision = true;
 					if (it->first.substr(0, 4) == "mask" && jt->first == "Osmosis") {
 						bullets += 1;
 						int noMask = it->first.substr(5, 1)[0] - '0';
 						renderMask[noMask] = !renderMask[noMask];
+						// 7 is mask
+						sourcesPlay[7] = true;
 						std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
 						std::cout << "EXTRACTED " << noMask << " TYPE " << typeid(noMask).name() << std::endl;
+						std::cout << "SOUND activated (mask) " << 7 << " is " << sourcesPlay[7] << std::endl;
 					}
 				}
 			}
@@ -2231,6 +2218,7 @@ void applicationLoop() {
 		}
 
 		// Sphere vs Sphere
+		int auxNoCovid = 0;
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
 			collidersSBB.begin(); it != collidersSBB.end(); it++) {
@@ -2246,14 +2234,19 @@ void applicationLoop() {
 					isCollision = true;
 					if (it->first.substr(0, 5) == "covid" && jt->first == "bullet") {
 						int noCovid = it->first.substr(6, 1)[0] - '0';
+						auxNoCovid = noCovid;
 						bulletIsActive = false;
 						bulletMovement = 0.0;
 						renderCovid[noCovid] = !renderCovid[noCovid];
 						sourcesPlay[noCovid] = false;
+						stopAudioCovid[noCovid] = true;
+						// 6 is covid dying
+						sourcesPlay[6] = true;
 						std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
 						std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
 						std::cout << "SOUND deactivated " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
+						std::cout << "SOUND activated (covid dying) " << 6 << " is " << sourcesPlay[6] << std::endl;
 					}
 				}
 			}
@@ -2286,14 +2279,18 @@ void applicationLoop() {
 							hp -= 1;
 							renderCovid[noCovid] = !renderCovid[noCovid];
 							sourcesPlay[noCovid] = false;
+							stopAudioCovid[noCovid] = true;
 							renderCovid[freeCovid] = !renderCovid[freeCovid];
 							sourcesPlay[freeCovid] = true;
 							freeCovid = noCovid;
+							// 8 is player hit
+							sourcesPlay[8] = true;
 							std::cout << "Colision " << it->first << " with "
 								<< jt->first << std::endl;
 							std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
 							std::cout << "SOUND deactivated " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
 							std::cout << "SOUND activated " << freeCovid << " is " << sourcesPlay[freeCovid] << std::endl;
+							std::cout << "SOUND activated (player hit) " << 8 << " is " << sourcesPlay[8] << std::endl;
 						}
 					}
 				}
@@ -2354,6 +2351,7 @@ void applicationLoop() {
 		/****************************+
 		 * Open AL sound data
 		 */
+
 		listenerPos[0] = modelMatrixOsmosis[3].x;
 		listenerPos[1] = modelMatrixOsmosis[3].y;
 		listenerPos[2] = modelMatrixOsmosis[3].z;
@@ -2372,13 +2370,36 @@ void applicationLoop() {
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
 		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
-			if (sourcesPlay[i] && renderCovid[i]) {
-				sourcesPlay[i] = false;
-				alSourcePlay(source[i]);
+			if (i < NUM_COVID) {
+				if (sourcesPlay[i] && renderCovid[i]) {
+					sourcesPlay[i] = false;
+					alSourcePlay(source[i]);
+				}
+				else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
+					alSourceStop(source[i]);
+				}
 			}
-			else if (!sourcesPlay[i] && !renderCovid[i]) {
-				alSourceStop(source[i]);
+			else {
+				if (sourcesPlay[i]) {
+					// Background, mask, player hit, win or game over
+					if (i > 4 && i != 6) {
+						sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+						sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+						sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+						alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+					}
+					// Covid dead
+					else if (i == 6) {
+						sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+						sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+						sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+						alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+					}
+					sourcesPlay[i] = false;
+					alSourcePlay(source[i]);
+				}
 			}
+
 		}
 	}
 }
@@ -2669,7 +2690,7 @@ void renderScene(bool renderParticles) {
 	{
 		if (bulletMovement < bulletMaxMovement)
 		{
-			bulletMovement += 0.15;
+			bulletMovement += 0.2;
 		}
 		else
 		{
@@ -2690,9 +2711,9 @@ void renderScene(bool renderParticles) {
 	for (itblend = blendingUnsorted.begin(); itblend != blendingUnsorted.end();
 		itblend++) {
 		float distanceFromView = glm::length(
-		camera->getPosition() - itblend->second);
+			camera->getPosition() - itblend->second);
 		blendingSorted[distanceFromView] = std::make_pair(itblend->first,
-		itblend->second);
+			itblend->second);
 	}
 
 	/**********
@@ -2750,10 +2771,10 @@ void renderScene(bool renderParticles) {
 				/****************************+
 				 * Open AL sound data
 				 */
-				sourceCovidPos[i][0] = modelSmokeParticles[3].x;
-				sourceCovidPos[i][1] = modelSmokeParticles[3].y;
-				sourceCovidPos[i][2] = modelSmokeParticles[3].z;
-				alSourcefv(source[i], AL_POSITION, sourceCovidPos[i]);
+				sourcesPos[i][0] = modelSmokeParticles[3].x;
+				sourcesPos[i][1] = modelSmokeParticles[3].y;
+				sourcesPos[i][2] = modelSmokeParticles[3].z;
+				alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
 			}
 		}
 
