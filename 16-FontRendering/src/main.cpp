@@ -60,7 +60,9 @@
 #define NUM_COVID 5
 #define NUM_MASKS 8
 
-//Vida personaje
+// 
+
+// Vida personaje
 int noHP = 3;
 int noBullets = 0;
 int noCovids = 4;
