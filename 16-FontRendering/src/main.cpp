@@ -126,32 +126,32 @@ Model modelBulletAnimate;
 Model modelMapTest;
 Model mapArray[27];
 std::string mapDirs[27] = {
-	"../models/Map/L_HortBackLeft.obj",		//0
-	"../models/Map/L_HortBackRight.obj",	//1
-	"../models/Map/L_HortFrontLeft.obj",	//2
-	"../models/Map/L_HortFrontRight.obj",	//3
-	"../models/Map/L_VertBackLeft.obj",		//4
-	"../models/Map/L_VertBackRight.obj",	//5
+	"../models/Map/L_HortBackLeft.obj",
+	"../models/Map/L_HortBackRight.obj",
+	"../models/Map/L_HortFrontLeft.obj",
+	"../models/Map/L_HortFrontRight.obj",
+	"../models/Map/L_VertBackLeft.obj",
+	"../models/Map/L_VertBackRight.obj",
 	"../models/Map/L_VertFrontLeft.obj",
 	"../models/Map/L_VertFrontRight.obj",
 	"../models/Map/Small_BackLeft.obj",
 	"../models/Map/Small_BackRight.obj",
-	"../models/Map/Small_FrontLeft.obj",	//10
+	"../models/Map/Small_FrontLeft.obj",
 	"../models/Map/Small_FrontRight.obj",
 	"../models/Map/Square_FrontLeft.obj",
 	"../models/Map/Square_FrontRight.obj",
 	"../models/Map/Square_Left.obj",
-	"../models/Map/Square_Middle.obj",		//15
+	"../models/Map/Square_Middle.obj",
 	"../models/Map/Square_Right.obj",
 	"../models/Map/Wall_InBackLeft.obj",
 	"../models/Map/Wall_InBackMiddle.obj",
 	"../models/Map/Wall_InBackRight.obj",
-	"../models/Map/Wall_InFrontLeft.obj",	//20
+	"../models/Map/Wall_InFrontLeft.obj",
 	"../models/Map/Wall_InFrontMiddle.obj",
 	"../models/Map/Wall_InFrontRight.obj",
 	"../models/Map/Wall_OutBack.obj",
 	"../models/Map/Wall_OutFront.obj",
-	"../models/Map/Wall_OutLeft.obj",		//25
+	"../models/Map/Wall_OutLeft.obj",
 	"../models/Map/Wall_OutRight.obj"
 };
 
@@ -204,7 +204,6 @@ glm::mat4 modelMatrixMap = glm::mat4(1.0f);
 
 int animationIndex = 1;
 int modelSelected = 0;
-bool enableCountSelected = true;
 
 // Bullet states
 bool enableBulletFiring = true;
@@ -300,10 +299,18 @@ GLuint depthMap, depthMapFBO;
  */
 
  // OpenAL Defines
-// One per covid, background, win, lose, covid dying, player losing a life, pick up mask
+ // One per covid, background, win, lose, covid dying, player losing a life, pick up mask
 #define NUM_SOURCES NUM_COVID + 6
 #define NUM_BUFFERS NUM_SOURCES
 #define NUM_ENVIRONMENTS 1
+
+// Audio variables
+// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
+float gains[NUM_SOURCES] = { 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 0.15f, 1.5f, 1.0f, 1.5f, 3.0f, 3.0f };
+//int bufferIdx[NUM_SOURCES] = { 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 };
+bool loop[NUM_SOURCES] = { true, true, true, true, true, true, false, false, false, false, false };
+int distance[NUM_SOURCES] = { 200, 200, 200, 200, 200, 500, 1000, 500, 500, 500, 500 };
+
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
@@ -326,7 +333,7 @@ ALsizei size, freq;
 ALenum format;
 ALvoid* data;
 int ch;
-ALboolean loop;
+//ALboolean loop;
 // 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
 std::vector<bool> sourcesPlay = { true, true, true, false, true, true, false, false, false, false, false };
 
@@ -345,73 +352,124 @@ void prepareScene();
 void prepareDepthScene();
 void renderScene(bool renderParticles = true);
 
-//void initParticleBuffers() {
-//	// Generate the buffers
-//	glGenBuffers(1, &initVel);   // Initial velocity buffer
-//	glGenBuffers(1, &startTime); // Start time buffer
-//
-//	// Allocate space for all buffers
-//	int size = nParticles * 3 * sizeof(float);
-//	glBindBuffer(GL_ARRAY_BUFFER, initVel);
-//	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
-//	glBindBuffer(GL_ARRAY_BUFFER, startTime);
-//	glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(float), NULL,
-//		GL_STATIC_DRAW);
-//
-//	// Fill the first velocity buffer with random velocities
-//	glm::vec3 v(0.0f);
-//	float velocity, theta, phi;
-//	GLfloat* data = new GLfloat[nParticles * 3];
-//	for (unsigned int i = 0; i < nParticles; i++) {
-//
-//		theta = glm::mix(0.0f, glm::pi<float>() / 6.0f,
-//			((float)rand() / RAND_MAX));
-//		phi = glm::mix(0.0f, glm::two_pi<float>(), ((float)rand() / RAND_MAX));
-//
-//		v.x = 5 * sinf(theta) * 5 * cosf(phi);
-//		v.y = 5 * cosf(theta);
-//		v.z = 5 * sinf(theta) * 5 * sinf(phi);
-//
-//		velocity = glm::mix(2.0f, 1.0f, ((float)rand() / RAND_MAX));
-//		v = glm::normalize(v) * velocity;
-//
-//		data[3 * i] = v.x;
-//		data[3 * i + 1] = v.y;
-//		data[3 * i + 2] = v.z;
-//	}
-//	glBindBuffer(GL_ARRAY_BUFFER, initVel);
-//	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
-//
-//	// Fill the start time buffer
-//	delete[] data;
-//	data = new GLfloat[nParticles];
-//	float time = 0.0f;
-//	float rate = 0.00075f;
-//	for (unsigned int i = 0; i < nParticles; i++) {
-//		data[i] = time;
-//		time += rate;
-//	}
-//	glBindBuffer(GL_ARRAY_BUFFER, startTime);
-//	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(float), data);
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, 0);
-//	delete[] data;
-//
-//	glGenVertexArrays(1, &VAOParticles);
-//	glBindVertexArray(VAOParticles);
-//	glBindBuffer(GL_ARRAY_BUFFER, initVel);
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-//	glEnableVertexAttribArray(0);
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, startTime);
-//	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, NULL);
-//	glEnableVertexAttribArray(1);
-//
-//	glBindVertexArray(0);
-//}
-
 void resetGame() {
+	noHP = 3;
+	noBullets = 0;
+	noCovids = 4;
+	noMasks = 8;
+	cadena = "";
+	cadena1 = "";
+	cadena2 = "";
+	cadena3 = "";
 
+	modelMatrixOsmosis = glm::mat4(1.0f);
+	modelMatrixMask = glm::mat4(1.0f);
+	modelMatrixBullet = glm::mat4(1.0f);
+	modelMatrixBulletBody = glm::mat4(1.0f);
+	modelMatrixBulletRef = glm::mat4(1.0f);
+	modelMatrixMapTest = glm::mat4(1.0f);
+	modelMatrixMap = glm::mat4(1.0f);
+
+	enableBulletFiring = true;
+	bulletIsActive = false;
+	bulletMovement = 0.0;
+	bulletMaxMovement = 10.0;
+
+	for (unsigned int i = 0; i < NUM_MASKS; i++) {
+		renderMask[i] = true;
+	}
+
+	for (unsigned int i = 0; i < NUM_COVID; i++) {
+		modelMatrixCovid[i] = glm::mat4(1.0f);
+		if (i == 3) {
+			renderCovid[i] = false;
+		}
+		else {
+			renderCovid[i] = true;
+		}
+		stopAudioCovid[i] = false;
+		stepCountCovid[i] = 0.0f;
+		stateCovid[i] = 0;
+	}
+
+	sourcesPlay = { true, true, true, false, true, true, false, false, false, false, false };
+
+	freeCovid = 3;
+
+	// Covid positions
+	// Left Down, Left Up, Right Down, Right Up, Middle
+	covidPositions = { glm::vec3(-69.0f, 0.1684f, 35.0f), glm::vec3(-69.0f, 0.1684f, -32.0f), glm::vec3(69.0f, 0.1684f, 35.0f),
+		glm::vec3(69.0f, 0.1684f, -32.0f), glm::vec3(-30.0f, 0.1684f, -15.0f) };
+
+	// Mask positions
+	maskPositions = { glm::vec3(0.0f, 0.0f, -32.0f), glm::vec3(0.0f, 0.0f, 35.0f), glm::vec3(-40.0f, 0.0f, 2.0f),
+		glm::vec3(40.0f, 0.0f, 2.0f), glm::vec3(-69.0f, 0.0f, 1.0f), glm::vec3(69.0f, 0.0f, 1.0f), glm::vec3(12.0f, 0.0f, 1.0f),
+		glm::vec3(0.0f, 0.0f, 18.5f) };
+
+	camera->setPosition(glm::vec3(0.0, 5.0, 10.0));
+	camera->setDistanceFromTarget(distanceFromTarget);
+	camera->setSensitivity(1.0);
+
+	// Ubicación Osmosis
+	modelMatrixOsmosis = glm::translate(modelMatrixOsmosis,
+		glm::vec3(0.0f, 0.0f, 0.0f));
+	modelMatrixOsmosis = glm::rotate(modelMatrixOsmosis, glm::radians(180.0f),
+		glm::vec3(0, 1, 0));
+
+	// Covid
+	for (unsigned int i = 0; i < NUM_COVID; i++)
+	{
+		modelMatrixCovid[i] = glm::translate(modelMatrixCovid[i], covidPositions[i]);
+	}
+
+	//for (unsigned int i = 0; i < NUM_SOURCES; i++) {
+	//	alSourcef(source[i], AL_PITCH, 1.0f);
+	//	alSourcef(source[i], AL_GAIN, gains[i]);
+	//	alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+	//	alSourcefv(source[i], AL_VELOCITY, sourcesVel[i]);
+	//	alSourcei(source[i], AL_BUFFER, buffer[i]);
+	//	alSourcei(source[i], AL_LOOPING, loop[i]);
+	//	alSourcef(source[i], AL_MAX_DISTANCE, distance[i]);
+	//}
+
+	//modelSmokeParticles = glm::translate(modelSmokeParticles, glm::vec3(modelMatrixCovid[i][3].x, modelMatrixCovid[i][3].y, modelMatrixCovid[i][3].z));
+
+	//sourcesPos[i][0] = modelSmokeParticles[3].x;
+	//sourcesPos[i][1] = modelSmokeParticles[3].y;
+	//sourcesPos[i][2] = modelSmokeParticles[3].z;
+	//alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+
+	//for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
+	//	if (i < NUM_COVID) {
+	//		if (sourcesPlay[i] && renderCovid[i]) {
+	//			sourcesPlay[i] = false;
+	//			alSourcePlay(source[i]);
+	//		}
+	//		else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
+	//			alSourceStop(source[i]);
+	//		}
+	//	}
+	//	else {
+	//		if (sourcesPlay[i]) {
+	//			// Background, mask, player hit, win or game over
+	//			if (i > 4 && i != 6) {
+	//				sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+	//				sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+	//				sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+	//				alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+	//			}
+	//			// Covid dead
+	//			else if (i == 6) {
+	//				sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+	//				sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+	//				sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+	//				alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
+	//			}
+	//			sourcesPlay[i] = false;
+	//			alSourcePlay(source[i]);
+	//		}
+	//	}
+	//}
 }
 
 void initParticleBuffersSmoke() {
@@ -680,9 +738,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	boxPantallas.init();
 	boxPantallas.setShader(&shaderTexture);
 	boxPantallas.setScale(glm::vec3(2.0,2.0,1.0));
-
-	/*modelRock.loadModel("../models/rock/rock.obj");
-	modelRock.setShader(&shaderMulLighting);*/
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -1485,11 +1540,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	shaderParticlesSmoke.setMatrix3("EmitterBasis", 1, false, glm::value_ptr(basis));
 	shaderParticlesRain.setMatrix3("EmitterBasis", 1, false, glm::value_ptr(basis));
 
-	/*******************************************
-	 * Inicializacion de los buffers de la fuente
-	 *******************************************/
-	 //initParticleBuffers();
-
 	 /*******************************************
 	  * Inicializacion de los buffers del Smoke
 	  *******************************************/
@@ -1502,7 +1552,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	/*******************************************
 	 * Inicializacion del framebuffer para
-	 * almacenar el buffer de profunidadad
+	 * almacenar el buffer de profundidad
 	 *******************************************/
 	glGenFramebuffers(1, &depthMapFBO);
 	glGenTextures(1, &depthMap);
@@ -1571,19 +1621,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else {
 		printf("init - no errors after alGenSources\n");
 	}
-	/*alSourcef(source[0], AL_PITCH, 1.0f);
-	alSourcef(source[0], AL_GAIN, 3.0f);
-	alSourcefv(source[0], AL_POSITION, source0Pos);
-	alSourcefv(source[0], AL_VELOCITY, source0Vel);
-	alSourcei(source[0], AL_BUFFER, buffer[0]);
-	alSourcei(source[0], AL_LOOPING, AL_TRUE);
-	alSourcef(source[0], AL_MAX_DISTANCE, 2000);*/
-
-	// 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
-	float gains[NUM_SOURCES] = { 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 0.15f, 1.5f, 1.0f, 1.5f, 3.0f, 3.0f };
-	//int bufferIdx[NUM_SOURCES] = { 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 };
-	bool loop[NUM_SOURCES] = { true, true, true, true, true, true, false, false, false, false, false };
-	int distance[NUM_SOURCES] = { 200, 200, 200, 200, 200, 500, 1000, 500, 500, 500, 500 };
 
 	for (unsigned int i = 0; i < NUM_SOURCES; i++) {
 		alSourcef(source[i], AL_PITCH, 1.0f);
@@ -1705,7 +1742,8 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
-			exitApp = true;
+			//exitApp = true;
+			resetGame();
 			break;
 		}
 	}
@@ -2735,7 +2773,6 @@ void applicationLoop() {
 					alSourcePlay(source[i]);
 				}
 			}
-
 		}
 	}
 }
