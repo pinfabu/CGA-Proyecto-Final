@@ -1938,9 +1938,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 			// Game is won or in game over, back to main menu
 			case 2:
 			case 3:
-				gameState = 0;
-				isPaused = true;
-				mainMenuState = 0;
+				menuAccept();
 				break;
 			default:
 				break;
