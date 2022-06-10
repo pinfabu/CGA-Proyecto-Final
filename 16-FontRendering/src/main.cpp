@@ -234,7 +234,7 @@ int modelSelected = 0;
 bool enableBulletFiring = true;
 bool bulletIsActive = false;
 float bulletMovement = 0.0;
-float bulletMaxMovement = 10.0;
+float bulletMaxMovement = 15.0;
 
 // Rendering flags
 bool renderMask[NUM_MASKS] = { true, true, true, true, true, true, true, true };
@@ -2032,7 +2032,7 @@ bool processInput(bool continueApplication) {
 		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
 			&buttonCount);
 		//std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
-		if (buttons[0] == GLFW_PRESS)
+		/*if (buttons[0] == GLFW_PRESS)
 			std::cout << "Se presiona A" << std::endl;
 		if (buttons[1] == GLFW_PRESS)
 			std::cout << "Se presiona B" << std::endl;
@@ -2057,7 +2057,7 @@ bool processInput(bool continueApplication) {
 		if (buttons[12] == GLFW_PRESS)
 			std::cout << "Cruceta Abajo" << std::endl;
 		if (buttons[13] == GLFW_PRESS)
-			std::cout << "Cruceta Izquierda" << std::endl;
+			std::cout << "Cruceta Izquierda" << std::endl;*/
 
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
 		/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
@@ -2107,17 +2107,21 @@ bool processInput(bool continueApplication) {
 
 			// Controls (Back)
 			if (auxKeyBack && buttons[6] == GLFW_PRESS) {
+				//std::cout << "BACK PRESS" << std::endl;
+				std::cout << buttons[6] << std::endl;
 				auxKeyBack = false;
 				isPaused = true;
 				controlScreen = true;
 				controlScreenState = 0;
 			}
-			else if (buttons[6] == GLFW_RELEASE) {
+			else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
+				//std::cout << "BACK RELEASE" << std::endl;
 				auxKeyBack = true;
 			}
 
 			// Pause menu (Start)
 			if (auxKeyStart && buttons[7] == GLFW_PRESS) {
+				//std::cout << "PAUSE PRESS" << std::endl;
 				auxKeyStart = false;
 				isPaused = true;
 				pauseMenu = true;
@@ -2125,7 +2129,8 @@ bool processInput(bool continueApplication) {
 				controlScreen = false;
 				controlScreenState = 0;
 			}
-			else if (buttons[7] == GLFW_RELEASE) {
+			else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
+				//std::cout << "PAUSE RELEASE" << std::endl;
 				auxKeyStart = true;
 			}
 		}
@@ -2133,17 +2138,21 @@ bool processInput(bool continueApplication) {
 		else {
 			// Controls (Back)
 			if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
+				//std::cout << "BACK PRESS" << std::endl;
+				std::cout << buttons[6] << std::endl;
 				auxKeyBack = false;
 				isPaused = true;
 				controlScreen = true;
 				controlScreenState = 0;
 			}
-			else if (buttons[6] == GLFW_RELEASE) {
+			else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
+				//std::cout << "BACK RELEASE" << std::endl;
 				auxKeyBack = true;
 			}
 
 			// Pause menu (Start)
 			if (auxKeyStart && buttons[7] == GLFW_PRESS && gameState == 1) {
+				//std::cout << "PAUSE PRESS" << std::endl;
 				auxKeyStart = false;
 				isPaused = true;
 				pauseMenu = true;
@@ -2151,34 +2160,41 @@ bool processInput(bool continueApplication) {
 				controlScreen = false;
 				controlScreenState = 0;
 			}
-			else if (buttons[7] == GLFW_RELEASE) {
+			else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
+				//std::cout << "PAUSE RELEASE" << std::endl;
 				auxKeyStart = true;
 			}
 
 			// Accept (A)
 			if (auxKeyJoyA && buttons[0] == GLFW_PRESS) {
+				//std::cout << "A PRESS" << std::endl;
 				auxKeyJoyA = false;
 				menuAccept();
 			}
-			else if (buttons[0] == GLFW_RELEASE) {
+			else if (!auxKeyJoyA && buttons[0] == GLFW_RELEASE) {
+				//std::cout << "A RELEASE" << std::endl;
 				auxKeyJoyA = true;
 			}
 
 			// Forward (Down and Right)
 			if (auxKeyCrucetaForward && (buttons[12] == GLFW_PRESS || buttons[11] == GLFW_PRESS)) {
+				//std::cout << "FORWARD PRESS" << std::endl;
 				auxKeyCrucetaForward = false;
 				navigateMenu(true);
 			}
-			else if (buttons[12] == GLFW_RELEASE || buttons[11] == GLFW_RELEASE) {
+			else if (!auxKeyCrucetaForward && buttons[12] == GLFW_RELEASE && buttons[11] == GLFW_RELEASE) {
+				//std::cout << "FORWARD RELEASE" << std::endl;
 				auxKeyCrucetaForward = true;
 			}
 
 			// Backward (Up and Left)
 			if (auxKeyCrucetaBackward && (buttons[10] == GLFW_PRESS || buttons[13] == GLFW_PRESS)) {
+				//std::cout << "BACKWARD PRESS" << std::endl;
 				auxKeyCrucetaBackward = false;
 				navigateMenu(false);
 			}
-			else if (buttons[10] == GLFW_RELEASE || buttons[13] == GLFW_RELEASE) {
+			else if (!auxKeyCrucetaBackward && buttons[10] == GLFW_RELEASE && buttons[13] == GLFW_RELEASE) {
+				//std::cout << "BACKWARD RELEASE" << std::endl;
 				auxKeyCrucetaBackward = true;
 			}
 		}
