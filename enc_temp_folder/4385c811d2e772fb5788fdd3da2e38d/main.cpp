@@ -1900,6 +1900,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 			break;
 		case GLFW_KEY_UP:
 			if (isPaused) {
+				std::cout << "UP PRESSED" << std::endl;
 				navigateMenu(false);
 			}
 			break;
@@ -2330,6 +2331,8 @@ void applicationLoop() {
 			gameState = 2;
 			isPaused = true;
 		}
+
+		//std::cout << "GAME STATE 1 is paused pause menu " << pauseMenuState << std::endl;
 
 		//*********************************************************************************************************************
 		//Textura de pantalla activa
