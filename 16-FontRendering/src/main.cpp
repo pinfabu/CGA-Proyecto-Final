@@ -61,11 +61,14 @@
 #define NUM_MASKS 8
 
 // Game states
+// 0 is main menu, 1 is running, 2 is won, 3 is game over - replaces mainMenu, gameStarted and gameFinished
 int gameState = 0;
 bool pauseMenu = false;
 bool controlScreen = false;
 bool isPaused = true;
 bool isPausedCovidAudio = false;
+// 0 is none, 2 is won, 3 is game over
+int endGameAudioOn = 0;
 // 0 on start, 1 on controls, 2 on exit
 int mainMenuState = 0;
 // 0 on restart, 1 on continue, 2 on exit
@@ -126,7 +129,7 @@ Sphere sphereCollider(10, 10);
 Box boxViewDepth;
 Box boxLightViewBox;
 //Box para las pantallas
-Box boxPantallas;
+Box boxScreens;
 
 ShadowBox* shadowBox;
 
@@ -134,6 +137,11 @@ ShadowBox* shadowBox;
 // Lamps
 Model modelLamp1;
 Model modelLamp2;
+// Map
+Model mapArray[27];
+// Bullet
+Model modelBullet;
+
 // Model animate instance
 // Osmosis
 Model modelOsmosisAnimate;
@@ -141,11 +149,7 @@ Model modelOsmosisAnimate;
 Model covidArray[NUM_COVID];
 // Masks
 Model maskArray[NUM_MASKS];
-// Bullet
-Model modelBulletAnimate;
-// Map
-Model modelMapTest;
-Model mapArray[27];
+
 std::string mapDirs[27] = {
 	"../models/Map/L_HortBackLeft.obj",
 	"../models/Map/L_HortBackRight.obj",
@@ -181,7 +185,7 @@ Terrain terrain(-1, -1, 200, 2, "../Textures/heightmap2.png");
 
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID,
 textureTerrainBID, textureTerrainBlendMapID;
-GLuint textureParticleSmokeID, textureParticleRainID, texIdSmoke, texIdRain;
+GLuint textureParticleSmokeID, textureParticleRainID, texIDSmoke, texIDRain;
 GLuint skyboxTextureID;
 GLuint textureActiveID, textureStartID, textureExitID, textureContinueID, textureRestartID, 
 textureExit2ID, textureControlsID, textureControls2ID, textureHUDID, textureYouWonID, 
@@ -219,7 +223,6 @@ glm::mat4 modelMatrixMask = glm::mat4(1.0f);
 glm::mat4 modelMatrixBullet = glm::mat4(1.0f);
 glm::mat4 modelMatrixBulletBody = glm::mat4(1.0f);
 glm::mat4 modelMatrixBulletRef = glm::mat4(1.0f);
-glm::mat4 modelMatrixMapTest = glm::mat4(1.0f);
 glm::mat4 modelMatrixMap = glm::mat4(1.0f);
 
 int animationIndex = 1;
@@ -387,7 +390,6 @@ void resetGame() {
 	modelMatrixBullet = glm::mat4(1.0f);
 	modelMatrixBulletBody = glm::mat4(1.0f);
 	modelMatrixBulletRef = glm::mat4(1.0f);
-	modelMatrixMapTest = glm::mat4(1.0f);
 	modelMatrixMap = glm::mat4(1.0f);
 
 	enableBulletFiring = true;
@@ -661,16 +663,10 @@ void backAction() {
 		// Game is not paused, enter pause menu
 		if (!isPaused) {
 			pauseMenuAction();
-			/*isPaused = true;
-			pauseMenu = true;
-			pauseMenuState = 0;*/
 		}
 		// Game is paused and on pause menu, resume game
 		else if (isPaused && pauseMenu) {
 			pauseMenuAction();
-			/*isPaused = false;
-			pauseMenu = false;
-			pauseMenuState = 0;*/
 		}
 		// Game is paused and on control screen, resume game
 		else if (isPaused && controlScreen) {
@@ -953,9 +949,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	boxLightViewBox.setShader(&shaderViewDepth);
 
 	//Iniciamos el Box de las pantallas
-	boxPantallas.init();
-	boxPantallas.setShader(&shaderTexture);
-	boxPantallas.setScale(glm::vec3(2.0, 2.0, 1.0));
+	boxScreens.init();
+	boxScreens.setShader(&shaderTexture);
+	boxScreens.setScale(glm::vec3(2.0, 2.0, 1.0));
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -966,16 +962,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLamp1.setShader(&shaderMulLighting);
 	modelLamp2.loadModel("../models/Lamps/SpotLamp/SpotLamp2.fbx");
 	modelLamp2.setShader(&shaderMulLighting);
-
+	
 	//Osmosis
 	modelOsmosisAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
 	//Map
-	modelMapTest.loadModel("../models/Map/Map.obj");
-	modelMapTest.setShader(&shaderMulLighting);
-
-
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		mapArray[i].loadModel(mapDirs[i]);
@@ -997,8 +989,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 
 	// Bullet
-	modelBulletAnimate.loadModel("../models/Osmosis/bala.fbx");
-	modelBulletAnimate.setShader(&shaderMulLighting);
+	modelBullet.loadModel("../models/Osmosis/bala.fbx");
+	modelBullet.setShader(&shaderMulLighting);
 
 	//Camara en tercera persona
 	camera->setPosition(glm::vec3(0.0, 5.0, 10.0));
@@ -1411,7 +1403,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0,
 			GL_BGRA, GL_UNSIGNED_BYTE, data);
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -1443,7 +1435,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0,
 			GL_BGRA, GL_UNSIGNED_BYTE, data);
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -1475,7 +1467,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0,
 			GL_BGRA, GL_UNSIGNED_BYTE, data);
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -1486,7 +1478,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureTerrainG.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainB("../Textures/nieve.jpg");
+	Texture textureTerrainB("../Textures/grumos.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainB.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -1507,7 +1499,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
 		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
 		// a los datos
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0,
 			GL_BGRA, GL_UNSIGNED_BYTE, data);
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -1601,8 +1593,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	for (int i = 0; i < randData.size(); i++) {
 		randData[i] = distr01(generator);
 	}
-	glGenTextures(1, &texIdSmoke);
-	glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+	glGenTextures(1, &texIDSmoke);
+	glBindTexture(GL_TEXTURE_1D, texIDSmoke);
 	glTexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, size);
 	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size, GL_RED, GL_FLOAT, randData.data());
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1626,8 +1618,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	for (int i = 0; i < randData2.size(); i++) {
 		randData2[i] = distr02(generator2);
 	}
-	glGenTextures(1, &texIdRain);
-	glBindTexture(GL_TEXTURE_1D, texIdRain);
+	glGenTextures(1, &texIDRain);
+	glBindTexture(GL_TEXTURE_1D, texIDRain);
 	glTexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, size2);
 	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, size2, GL_RED, GL_FLOAT, randData2.data());
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1771,11 +1763,14 @@ void destroy() {
 
 	// Shaders Delete
 	shader.destroy();
-	shaderMulLighting.destroy();
 	shaderSkybox.destroy();
+	shaderMulLighting.destroy();
 	shaderTerrain.destroy();
+	shaderViewDepth.destroy();
+	shaderDepth.destroy();
 	shaderParticlesSmoke.destroy();
 	shaderParticlesRain.destroy();
+	shaderTexture.destroy();
 
 	// Basic objects Delete
 	skyboxSphere.destroy();
@@ -1783,6 +1778,7 @@ void destroy() {
 	sphereCollider.destroy();
 	boxViewDepth.destroy();
 	boxLightViewBox.destroy();
+	boxScreens.destroy();
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -1790,6 +1786,11 @@ void destroy() {
 	// Custom objects Delete
 	modelLamp1.destroy();
 	modelLamp2.destroy();
+	modelBullet.destroy();
+	for (unsigned int i = 0; i < 27; i++)
+	{
+		mapArray[i].destroy();
+	}
 
 	// Custom objects animate
 	modelOsmosisAnimate.destroy();
@@ -1801,12 +1802,6 @@ void destroy() {
 	{
 		maskArray[i].destroy();
 	}
-	modelBulletAnimate.destroy();
-	modelMapTest.destroy();
-	for (unsigned int i = 0; i < 27; i++)
-	{
-		mapArray[i].destroy();
-	}
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1816,6 +1811,22 @@ void destroy() {
 	glDeleteTextures(1, &textureTerrainBID);
 	glDeleteTextures(1, &textureTerrainBlendMapID);
 	glDeleteTextures(1, &textureParticleSmokeID);
+	glDeleteTextures(1, &textureParticleRainID);
+	glDeleteTextures(1, &texIDSmoke);
+	glDeleteTextures(1, &texIDRain);
+	glDeleteTextures(1, &skyboxTextureID);
+	glDeleteTextures(1, &textureActiveID);
+	glDeleteTextures(1, &textureStartID);
+	glDeleteTextures(1, &textureExitID);
+	glDeleteTextures(1, &textureContinueID);
+	glDeleteTextures(1, &textureRestartID);
+	glDeleteTextures(1, &textureExit2ID);
+	glDeleteTextures(1, &textureControlsID);
+	glDeleteTextures(1, &textureControls2ID);
+	glDeleteTextures(1, &textureHUDID);
+	glDeleteTextures(1, &textureYouWonID);
+	glDeleteTextures(1, &textureGameOverID);
+	glDeleteTextures(1, &textureControlsIniID);
 
 	// Cube Maps Delete
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -1853,50 +1864,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
 			backAction();
-			//exitApp = true;
-			//resetGame();
-			//switch (gameState)
-			//{
-			//// Game is in main menu, exists game
-			//case 0:
-			//	if (controlScreen) {
-			//		controlScreen = false;
-			//		controlScreenState = 0;
-			//	}
-			//	else {
-			//		exitApp = true;
-			//	}
-			//	break;
-			//// Game is running
-			//case 1:
-			//	// Game is not paused, enter pause menu
-			//	if (!isPaused) {
-			//		isPaused = true;
-			//		pauseMenu = true;
-			//		pauseMenuState = 0;
-			//	}
-			//	// Game is paused and on pause menu, resume game
-			//	else if (isPaused && pauseMenu) {
-			//		isPaused = false;
-			//		pauseMenu = false;
-			//		pauseMenuState = 0;
-			//	}
-			//	// Game is paused and on control screen, resume game
-			//	else if (isPaused && controlScreen) {
-			//		isPaused = false;
-			//		controlScreen = false;
-			//		controlScreenState = 0;
-			//	}
-			//	break;
-			//// Game is won or in game over, back to main menu
-			//case 2:
-			//case 3:
-			//	menuAccept();
-			//	break;
-			//default:
-			//	break;
-			//}
-			////isPaused = !isPaused;
 			break;
 		case GLFW_KEY_UP:
 			if (isPaused) {
@@ -1925,21 +1892,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 			break;
 		case GLFW_KEY_P:
 			pauseMenuAction();
-			/*if (gameState == 1) {
-				isPaused = true;
-				pauseMenu = true;
-				pauseMenuState = 0;
-				controlScreen = false;
-				controlScreenState = 0;
-			}*/
 			break;
 		case GLFW_KEY_O:
 			controlScreenAction();
-			/*if (gameState == 0 || gameState == 1) {
-				isPaused = true;
-				controlScreen = true;
-				controlScreenState = 0;
-			}*/
 			break;
 		}
 	}
@@ -2062,7 +2017,7 @@ bool processInput(bool continueApplication) {
 					noBullets -= 1;
 					enableBulletFiring = false;
 					bulletIsActive = true;
-					std::cout << "Bullet fired" << std::endl;
+					std::cout << "Bullet fired by controller" << std::endl;
 				}
 				animationIndex = 1;
 			}
@@ -2071,101 +2026,8 @@ bool processInput(bool continueApplication) {
 					enableBulletFiring = true;
 				}
 			}
-
-			//// Controls (Back)
-			//if (auxKeyBack && buttons[6] == GLFW_PRESS) {
-			//	//std::cout << "BACK PRESS" << std::endl;
-			//	std::cout << buttons[6] << std::endl;
-			//	auxKeyBack = false;
-			//	isPaused = true;
-			//	controlScreen = true;
-			//	controlScreenState = 0;
-			//}
-			//else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
-			//	//std::cout << "BACK RELEASE" << std::endl;
-			//	auxKeyBack = true;
-			//}
-
-			//// Pause menu (Start)
-			//if (auxKeyStart && buttons[7] == GLFW_PRESS) {
-			//	//std::cout << "PAUSE PRESS" << std::endl;
-			//	auxKeyStart = false;
-			//	isPaused = true;
-			//	pauseMenu = true;
-			//	pauseMenuState = 0;
-			//	controlScreen = false;
-			//	controlScreenState = 0;
-			//}
-			//else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
-			//	//std::cout << "PAUSE RELEASE" << std::endl;
-			//	auxKeyStart = true;
-			//}
 		}
-		// Game is paused
-		//else {
-		//	// Controls (Back)
-		//	if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
-		//		//std::cout << "BACK PRESS" << std::endl;
-		//		std::cout << buttons[6] << std::endl;
-		//		auxKeyBack = false;
-		//		isPaused = true;
-		//		controlScreen = true;
-		//		controlScreenState = 0;
-		//	}
-		//	else if (!auxKeyBack && buttons[6] == GLFW_RELEASE) {
-		//		//std::cout << "BACK RELEASE" << std::endl;
-		//		auxKeyBack = true;
-		//	}
-
-		//	// Pause menu (Start)
-		//	if (auxKeyStart && buttons[7] == GLFW_PRESS && gameState == 1) {
-		//		//std::cout << "PAUSE PRESS" << std::endl;
-		//		auxKeyStart = false;
-		//		isPaused = true;
-		//		pauseMenu = true;
-		//		pauseMenuState = 0;
-		//		controlScreen = false;
-		//		controlScreenState = 0;
-		//	}
-		//	else if (!auxKeyStart && buttons[7] == GLFW_RELEASE) {
-		//		//std::cout << "PAUSE RELEASE" << std::endl;
-		//		auxKeyStart = true;
-		//	}
-
-		//	// Accept (A)
-		//	if (auxKeyJoyA && buttons[0] == GLFW_PRESS) {
-		//		//std::cout << "A PRESS" << std::endl;
-		//		auxKeyJoyA = false;
-		//		menuAccept();
-		//	}
-		//	else if (!auxKeyJoyA && buttons[0] == GLFW_RELEASE) {
-		//		//std::cout << "A RELEASE" << std::endl;
-		//		auxKeyJoyA = true;
-		//	}
-
-		//	// Forward (Down and Right)
-		//	if (auxKeyCrucetaForward && (buttons[12] == GLFW_PRESS || buttons[11] == GLFW_PRESS)) {
-		//		//std::cout << "FORWARD PRESS" << std::endl;
-		//		auxKeyCrucetaForward = false;
-		//		navigateMenu(true);
-		//	}
-		//	else if (!auxKeyCrucetaForward && buttons[12] == GLFW_RELEASE && buttons[11] == GLFW_RELEASE) {
-		//		//std::cout << "FORWARD RELEASE" << std::endl;
-		//		auxKeyCrucetaForward = true;
-		//	}
-
-		//	// Backward (Up and Left)
-		//	if (auxKeyCrucetaBackward && (buttons[10] == GLFW_PRESS || buttons[13] == GLFW_PRESS)) {
-		//		//std::cout << "BACKWARD PRESS" << std::endl;
-		//		auxKeyCrucetaBackward = false;
-		//		navigateMenu(false);
-		//	}
-		//	else if (!auxKeyCrucetaBackward && buttons[10] == GLFW_RELEASE && buttons[13] == GLFW_RELEASE) {
-		//		//std::cout << "BACKWARD RELEASE" << std::endl;
-		//		auxKeyCrucetaBackward = true;
-		//	}
-		//}
-
+		
 		// Controls (Back)
 		if (auxKeyBack && buttons[6] == GLFW_PRESS && gameState == 1) {
 			//std::cout << "BACK PRESS" << std::endl;
@@ -2251,7 +2113,7 @@ bool processInput(bool continueApplication) {
 				noBullets -= 1;
 				enableBulletFiring = false;
 				bulletIsActive = true;
-				std::cout << "Bullet fired" << std::endl;
+				std::cout << "Bullet fired by keyboard" << std::endl;
 			}
 		}
 		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
@@ -2324,11 +2186,13 @@ void applicationLoop() {
 		if (noHP <= 0 || (noCovids > 0 && noMasks == 0 && noBullets == 0)) {
 			gameState = 3;
 			isPaused = true;
+			sourcesPlay[10] = true;
 		}
 		// Game won
 		else if (noCovids == 0) {
 			gameState = 2;
 			isPaused = true;
+			sourcesPlay[9] = true;
 		}
 
 		//*********************************************************************************************************************
@@ -2788,7 +2652,7 @@ void applicationLoop() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureActiveID);
 		shaderTexture.setInt("outTexture", 0);
-		boxPantallas.render();
+		boxScreens.render();
 		//glfwSwapBuffers(window);
 
 		/*******************************************
@@ -2816,34 +2680,6 @@ void applicationLoop() {
 		// Covid colliders
 		for (unsigned int i = 0; i < NUM_COVID; i++)
 		{
-			/*glm::vec3 scale;
-			glm::vec3 position;
-			float ratio;
-			float height;
-			if (renderCovid[i])
-			{
-				scale = glm::vec3(0.001, 0.001, 0.001);
-				position = glm::vec3(covidArray[i].getSbb().c.x, covidArray[i].getSbb().c.y + 25 * 100, covidArray[i].getSbb().c.z);
-				ratio = 0.03;
-				height = 0.0f;
-			}
-			else
-			{
-				scale = glm::vec3(0.0, 0.0, 0.0);
-				position = glm::vec3(0.0f, -100.0f * (i + 1), 0.0f);
-				ratio = 0.0;
-				height = -10.f;
-			}
-			AbstractModel::SBB covidCollider;
-			glm::mat4 modelMatrixColliderCovid = glm::mat4(modelMatrixCovid[i]);
-			modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
-				scale);
-			modelMatrixColliderCovid = glm::translate(modelMatrixColliderCovid,
-				position);
-			covidCollider.c = glm::vec3(modelMatrixColliderCovid[3].x, modelMatrixColliderCovid[3].y - height, modelMatrixColliderCovid[3].z);
-			covidCollider.ratio = covidArray[i].getSbb().ratio * ratio;
-			addOrUpdateColliders(collidersSBB, "covid-" + std::to_string(i),
-				covidCollider, modelMatrixCovid[i]);*/
 			if (renderCovid[i]) {
 				AbstractModel::SBB covidCollider;
 				glm::mat4 modelMatrixColliderCovid = glm::mat4(modelMatrixCovid[i]);
@@ -2852,7 +2688,7 @@ void applicationLoop() {
 				modelMatrixColliderCovid = glm::translate(modelMatrixColliderCovid,
 					glm::vec3(covidArray[i].getSbb().c.x, covidArray[i].getSbb().c.y + 25 * 100, covidArray[i].getSbb().c.z));
 				covidCollider.c = glm::vec3(modelMatrixColliderCovid[3].x, modelMatrixColliderCovid[3].y, modelMatrixColliderCovid[3].z);
-				covidCollider.ratio = covidArray[i].getSbb().ratio * 0.03;
+				covidCollider.ratio = covidArray[i].getSbb().ratio * 0.04;
 				addOrUpdateColliders(collidersSBB, "covid-" + std::to_string(i),
 					covidCollider, modelMatrixCovid[i]);
 			}
@@ -2864,33 +2700,6 @@ void applicationLoop() {
 		// Mask colliders
 		for (unsigned int i = 0; i < NUM_MASKS; i++)
 		{
-			/*glm::vec3 scale;
-			glm::vec3 position;
-			if (renderMask[i])
-			{
-				scale = glm::vec3(0.28, 0.30, 0.18);
-				position = glm::vec3(maskPositions[i].x - 0.8, maskPositions[i].y + 2.0, maskPositions[i].z - 0.2);
-			}
-			else
-			{
-				scale = glm::vec3(0.0, 0.0, 0.0);
-				position = glm::vec3(0.0f, -10.0f * (i + 1), 0.0f);
-			}
-			AbstractModel::OBB maskCollider;
-			glm::mat4 modelMatrixColliderMask = glm::mat4(modelMatrixMask);
-			modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
-				position);
-			modelMatrixColliderMask = glm::rotate(modelMatrixColliderMask,
-				glm::radians(90.0f), glm::vec3(0, 1, 0));
-			addOrUpdateColliders(collidersOBB, "mask-" + std::to_string(i),
-				maskCollider, modelMatrixColliderMask);
-			maskCollider.u = glm::quat_cast(modelMatrixColliderMask);
-			modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
-				glm::vec3(maskArray[i].getObb().c));
-			maskCollider.e = mapArray[i].getObb().e * scale;
-			maskCollider.c = glm::vec3(modelMatrixColliderMask[3]);
-			std::get<0>(collidersOBB.find("mask-" + std::to_string(i))->second) =
-				maskCollider;*/
 			if (renderMask[i]) {
 				AbstractModel::OBB maskCollider;
 				glm::mat4 modelMatrixColliderMask = glm::mat4(modelMatrixMask);
@@ -2925,7 +2734,7 @@ void applicationLoop() {
 			glm::vec3(modelOsmosisAnimate.getObb().c.x - 12.5,
 				modelOsmosisAnimate.getObb().c.y + 22,
 				modelOsmosisAnimate.getObb().c.z + 2));
-		osmosisCollider.e = modelOsmosisAnimate.getObb().e * glm::vec3(0.1, 0.1, 0.1) * glm::vec3(0.5, 0.75, 0.5);
+		osmosisCollider.e = modelOsmosisAnimate.getObb().e * glm::vec3(0.09, 0.09, 0.09) * glm::vec3(0.5, 0.75, 0.5);
 		osmosisCollider.c = glm::vec3(modelMatrixColliderOsmosis[3]);
 		addOrUpdateColliders(collidersOBB, "Osmosis", osmosisCollider, modelMatrixOsmosis);
 
@@ -2950,27 +2759,13 @@ void applicationLoop() {
 			AbstractModel::SBB bulletCollider;
 			glm::mat4 modelMatrixColliderBullet;
 			glm::vec3 bulletPosition;
-			/*if (bulletIsActive)
-			{
-				modelMatrixColliderBullet = glm::mat4(modelMatrixBulletBody);
-				bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
-					modelBulletAnimate.getSbb().c.y,
-					modelBulletAnimate.getSbb().c.z);
-			}
-			else
-			{
-				modelMatrixColliderBullet = glm::mat4(1.0f);
-				bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
-					modelBulletAnimate.getSbb().c.y - 100,
-					modelBulletAnimate.getSbb().c.z + 1.5);
-			}*/
 			modelMatrixColliderBullet = glm::mat4(modelMatrixBulletBody);
-			bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
-				modelBulletAnimate.getSbb().c.y,
-				modelBulletAnimate.getSbb().c.z);
+			bulletPosition = glm::vec3(modelBullet.getSbb().c.x,
+				modelBullet.getSbb().c.y,
+				modelBullet.getSbb().c.z);
 			modelMatrixColliderBullet = glm::translate(modelMatrixColliderBullet, bulletPosition);
 			bulletCollider.c = glm::vec3(modelMatrixColliderBullet[3]);
-			bulletCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.25;
+			bulletCollider.ratio = modelBullet.getSbb().ratio * 0.25;
 			addOrUpdateColliders(collidersSBB, "bullet", bulletCollider, modelMatrixBulletBody);
 		}
 		else {
@@ -3071,16 +2866,16 @@ void applicationLoop() {
 						&& jt->first.substr(0, 3) == "map")) {
 					isCollision = true;
 					if (it->first.substr(0, 4) == "mask" && jt->first == "Osmosis") {
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
 						noBullets += 1;
 						int noMask = it->first.substr(5, 1)[0] - '0';
+						//std::cout << "EXTRACTED " << noMask << " TYPE " << typeid(noMask).name() << std::endl;
 						renderMask[noMask] = !renderMask[noMask];
 						noMasks -= 1;
 						// 7 is mask
 						sourcesPlay[7] = true;
-						std::cout << "Colision " << it->first << " with "
-							<< jt->first << std::endl;
-						std::cout << "EXTRACTED " << noMask << " TYPE " << typeid(noMask).name() << std::endl;
-						std::cout << "SOUND activated (mask) " << 7 << " is " << sourcesPlay[7] << std::endl;
+						std::cout << "SOUND flagged (mask) " << 7 << " is " << sourcesPlay[7] << std::endl;
 					}
 				}
 			}
@@ -3100,25 +2895,27 @@ void applicationLoop() {
 				if (it != jt
 					&& testSphereSphereIntersection(std::get<0>(it->second),
 						std::get<0>(jt->second))) {
-					std::cout << "Colision " << it->first << " with "
-						<< jt->first << std::endl;
+					//std::cout << "Colision " << it->first << " with "
+					//	<< jt->first << std::endl;
 					isCollision = true;
 					if (it->first.substr(0, 5) == "covid" && jt->first == "bullet") {
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
 						int noCovid = it->first.substr(6, 1)[0] - '0';
+						//std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
 						auxNoCovid = noCovid;
 						bulletIsActive = false;
 						bulletMovement = 0.0;
 						renderCovid[noCovid] = !renderCovid[noCovid];
-						sourcesPlay[noCovid] = false;
+						//sourcesPlay[noCovid] = false;
 						stopAudioCovid[noCovid] = true;
+						std::cout << "SOUND flagged to stop " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
 						noCovids -= 1;
-						// 6 is covid dying
-						sourcesPlay[6] = true;
-						std::cout << "Colision " << it->first << " with "
-							<< jt->first << std::endl;
-						std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
-						std::cout << "SOUND deactivated " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
-						std::cout << "SOUND activated (covid dying) " << 6 << " is " << sourcesPlay[6] << std::endl;
+						if (noCovids > 0) {
+							// 6 is covid dying
+							sourcesPlay[6] = true;
+							std::cout << "SOUND flagged (covid dying) " << 6 << " is " << sourcesPlay[6] << std::endl;
+						}
 					}
 				}
 			}
@@ -3137,31 +2934,29 @@ void applicationLoop() {
 				if (testSphereOBox(std::get<0>(it->second),
 					std::get<0>(jt->second))) {
 					if (it->first.substr(0, 5) == "covid" && jt->first == "Osmosis") {
+						std::cout << "Colision " << it->first << " with "
+							<< jt->first << std::endl;
 						isCollision = true;
 						addOrUpdateCollisionDetection(collisionDetection, jt->first,
 							isCollision);
 						int noCovid = it->first.substr(6, 1)[0] - '0';
-						std::cout << "Colision " << it->first << " with "
-							<< jt->first << std::endl;
-						std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
-						std::cout << renderCovid[noCovid] << std::endl;
+						//std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
 						if (renderCovid[noCovid])
 						{
 							noHP -= 1;
 							renderCovid[noCovid] = !renderCovid[noCovid];
-							sourcesPlay[noCovid] = false;
+							//sourcesPlay[noCovid] = false;
+							//std::cout << "SOUND unflagged " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
 							stopAudioCovid[noCovid] = true;
-							renderCovid[freeCovid] = !renderCovid[freeCovid];
-							sourcesPlay[freeCovid] = true;
-							freeCovid = noCovid;
-							// 8 is player hit
-							sourcesPlay[8] = true;
-							std::cout << "Colision " << it->first << " with "
-								<< jt->first << std::endl;
-							std::cout << "EXTRACTED " << noCovid << " TYPE " << typeid(noCovid).name() << std::endl;
-							std::cout << "SOUND deactivated " << noCovid << " is " << sourcesPlay[noCovid] << std::endl;
-							std::cout << "SOUND activated " << freeCovid << " is " << sourcesPlay[freeCovid] << std::endl;
-							std::cout << "SOUND activated (player hit) " << 8 << " is " << sourcesPlay[8] << std::endl;
+							if (noHP > 0) {
+								renderCovid[freeCovid] = !renderCovid[freeCovid];
+								sourcesPlay[freeCovid] = true;
+								freeCovid = noCovid;
+								std::cout << "SOUND flagged " << freeCovid << " is " << sourcesPlay[freeCovid] << std::endl;
+								// 8 is player hit
+								sourcesPlay[8] = true;
+								std::cout << "SOUND flagged (player hit) " << 8 << " is " << sourcesPlay[8] << std::endl;
+							}
 						}
 					}
 					else if (it->first == "bullet" && jt->first.substr(0, 3) == "map") {
@@ -3259,6 +3054,7 @@ void applicationLoop() {
 				if (i < NUM_COVID) {
 					if (renderCovid[i]) {
 						std::cout << "SOUND paused " << i << std::endl;
+						//sourcesPlay[i] = true;
 						alSourcePause(source[i]);
 					}
 				}
@@ -3271,6 +3067,7 @@ void applicationLoop() {
 				if (i < NUM_COVID) {
 					if (renderCovid[i]) {
 						std::cout << "SOUND activated " << i << std::endl;
+						sourcesPlay[i] = false;
 						alSourcePlay(source[i]);
 					}
 				}
@@ -3278,36 +3075,49 @@ void applicationLoop() {
 					isPausedCovidAudio = false;
 				}
 			}
+			else if (gameState == 2 && !endGameAudioOn && i == 9) {
+				endGameAudioOn = 2;
+				sourcesPlay[i] = false;
+				std::cout << "SOUND activated (state 2) " << i << std::endl;
+				alSourcePlay(source[endGameAudioOn + 7]);
+			}
+			else if (gameState == 3 && !endGameAudioOn && i == 10) {
+				endGameAudioOn = 3;
+				sourcesPlay[i] = false;
+				std::cout << "SOUND activated (state 3) " << i << std::endl;
+				alSourcePlay(source[i]);
+			}
+			else if (gameState != 2 && gameState != 3 && endGameAudioOn) {
+				std::cout << "SOUND deactivated " << endGameAudioOn + 7 << std::endl;
+				alSourceStop(source[endGameAudioOn + 7]);
+				endGameAudioOn = 0;
+			}
 			else {
 				if (i < NUM_COVID) {
 					if (!isPaused) {
 						if (sourcesPlay[i] && renderCovid[i]) {
 							sourcesPlay[i] = false;
+							std::cout << "SOUND activated " << i << std::endl;
 							alSourcePlay(source[i]);
 						}
 						else if (!sourcesPlay[i] && !renderCovid[i] && stopAudioCovid[i]) {
+							stopAudioCovid[i] = false;
+							std::cout << "SOUND deactivated " << i << std::endl;
 							alSourceStop(source[i]);
 						}
 					}
 				}
-				else {
-					if (sourcesPlay[i]) {
-						// Background, mask, player hit, win or game over
-						//if (i > 4 && i != 6) {
-							sourcesPos[i][0] = modelMatrixOsmosis[3].x;
-							sourcesPos[i][1] = modelMatrixOsmosis[3].y;
-							sourcesPos[i][2] = modelMatrixOsmosis[3].z;
-							alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
-						//}
-						// Covid dead
-						/*else if (i == 6) {
-							sourcesPos[i][0] = modelMatrixOsmosis[3].x;
-							sourcesPos[i][1] = modelMatrixOsmosis[3].y;
-							sourcesPos[i][2] = modelMatrixOsmosis[3].z;
-							alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
-						}*/
+				else if (i < 9) {
+					if (sourcesPlay[i] && i != 9 && i != 10) {
+						sourcesPos[i][0] = modelMatrixOsmosis[3].x;
+						sourcesPos[i][1] = modelMatrixOsmosis[3].y;
+						sourcesPos[i][2] = modelMatrixOsmosis[3].z;
+						alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
 						sourcesPlay[i] = false;
-						alSourcePlay(source[i]);
+						//if (!(i == 6 && noCovids <= 0) || (i == 8 && noHP <= 0)) {
+							std::cout << "SOUND activated " << i << std::endl;
+							alSourcePlay(source[i]);
+						//}
 					}
 				}
 			}
@@ -3341,10 +3151,9 @@ void prepareScene() {
 	}
 
 	// Bullet
-	modelBulletAnimate.setShader(&shaderMulLighting);
+	modelBullet.setShader(&shaderMulLighting);
 
 	//Map
-	modelMapTest.setShader(&shaderMulLighting);
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		mapArray[i].setShader(&shaderMulLighting);
@@ -3377,10 +3186,9 @@ void prepareDepthScene() {
 	}
 
 	// Bullet
-	modelBulletAnimate.setShader(&shaderDepth);
+	modelBullet.setShader(&shaderDepth);
 
 	// Map
-	modelMapTest.setShader(&shaderDepth);
 	for (unsigned int i = 0; i < 27; i++)
 	{
 		mapArray[i].setShader(&shaderDepth);
@@ -3511,7 +3319,7 @@ void renderScene(bool renderParticles) {
 	}
 	modelMatrixBulletBody = glm::scale(modelMatrixBulletBody, glm::vec3(0.25, 0.25, 0.25));
 	if (bulletIsActive) {
-		modelBulletAnimate.render(modelMatrixBulletBody);
+		modelBullet.render(modelMatrixBulletBody);
 	}
 
 	// Left Down, Left Up, Right Down, Right Up, Middle
@@ -3635,7 +3443,7 @@ void renderScene(bool renderParticles) {
 				shaderParticlesSmoke.setFloat("DeltaT", currTimeParticlesAnimationSmoke - lastTimeParticlesAnimationSmoke);
 
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_1D, texIdSmoke);
+				glBindTexture(GL_TEXTURE_1D, texIDSmoke);
 				glEnable(GL_RASTERIZER_DISCARD);
 				glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackSmoke[drawBufSmoke]);
 				glBeginTransformFeedback(GL_POINTS);
@@ -3689,7 +3497,7 @@ void renderScene(bool renderParticles) {
 			shaderParticlesRain.setFloat("DeltaT", currTimeParticlesAnimationRain - lastTimeParticlesAnimationRain);
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_1D, texIdRain);
+			glBindTexture(GL_TEXTURE_1D, texIDRain);
 			glEnable(GL_RASTERIZER_DISCARD);
 			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedbackRain[drawBufRain]);
 			glBeginTransformFeedback(GL_POINTS);
