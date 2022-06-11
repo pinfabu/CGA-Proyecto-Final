@@ -2816,7 +2816,7 @@ void applicationLoop() {
 		// Covid colliders
 		for (unsigned int i = 0; i < NUM_COVID; i++)
 		{
-			glm::vec3 scale;
+			/*glm::vec3 scale;
 			glm::vec3 position;
 			float ratio;
 			float height;
@@ -2843,13 +2843,28 @@ void applicationLoop() {
 			covidCollider.c = glm::vec3(modelMatrixColliderCovid[3].x, modelMatrixColliderCovid[3].y - height, modelMatrixColliderCovid[3].z);
 			covidCollider.ratio = covidArray[i].getSbb().ratio * ratio;
 			addOrUpdateColliders(collidersSBB, "covid-" + std::to_string(i),
-				covidCollider, modelMatrixCovid[i]);
+				covidCollider, modelMatrixCovid[i]);*/
+			if (renderCovid[i]) {
+				AbstractModel::SBB covidCollider;
+				glm::mat4 modelMatrixColliderCovid = glm::mat4(modelMatrixCovid[i]);
+				modelMatrixColliderCovid = glm::scale(modelMatrixColliderCovid,
+					glm::vec3(0.001, 0.001, 0.001));
+				modelMatrixColliderCovid = glm::translate(modelMatrixColliderCovid,
+					glm::vec3(covidArray[i].getSbb().c.x, covidArray[i].getSbb().c.y + 25 * 100, covidArray[i].getSbb().c.z));
+				covidCollider.c = glm::vec3(modelMatrixColliderCovid[3].x, modelMatrixColliderCovid[3].y, modelMatrixColliderCovid[3].z);
+				covidCollider.ratio = covidArray[i].getSbb().ratio * 0.03;
+				addOrUpdateColliders(collidersSBB, "covid-" + std::to_string(i),
+					covidCollider, modelMatrixCovid[i]);
+			}
+			else {
+				collidersSBB.erase("covid-" + std::to_string(i));
+			}
 		}
 
 		// Mask colliders
 		for (unsigned int i = 0; i < NUM_MASKS; i++)
 		{
-			glm::vec3 scale;
+			/*glm::vec3 scale;
 			glm::vec3 position;
 			if (renderMask[i])
 			{
@@ -2875,7 +2890,28 @@ void applicationLoop() {
 			maskCollider.e = mapArray[i].getObb().e * scale;
 			maskCollider.c = glm::vec3(modelMatrixColliderMask[3]);
 			std::get<0>(collidersOBB.find("mask-" + std::to_string(i))->second) =
-				maskCollider;
+				maskCollider;*/
+			if (renderMask[i]) {
+				AbstractModel::OBB maskCollider;
+				glm::mat4 modelMatrixColliderMask = glm::mat4(modelMatrixMask);
+				modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
+					glm::vec3(maskPositions[i].x - 0.8, maskPositions[i].y + 2.0, maskPositions[i].z - 0.2));
+				modelMatrixColliderMask = glm::rotate(modelMatrixColliderMask,
+					glm::radians(90.0f), glm::vec3(0, 1, 0));
+				addOrUpdateColliders(collidersOBB, "mask-" + std::to_string(i),
+					maskCollider, modelMatrixColliderMask);
+				maskCollider.u = glm::quat_cast(modelMatrixColliderMask);
+				modelMatrixColliderMask = glm::translate(modelMatrixColliderMask,
+					glm::vec3(maskArray[i].getObb().c));
+				maskCollider.e = mapArray[i].getObb().e * glm::vec3(0.28, 0.30, 0.18);
+				maskCollider.c = glm::vec3(modelMatrixColliderMask[3]);
+				std::get<0>(collidersOBB.find("mask-" + std::to_string(i))->second) =
+					maskCollider;
+			}
+			else {
+				collidersOBB.erase("mask-" + std::to_string(i));
+			}
+			
 		}
 
 		// Collider Osmosis
@@ -2910,36 +2946,36 @@ void applicationLoop() {
 		}
 
 		// Collider Bullet
-		AbstractModel::SBB bulletCollider;
-		glm::mat4 modelMatrixColliderBullet;
-		glm::vec3 bulletPosition;
-		float dxBullet;
-		float dyBullet;
-		float dzBullet;
-		if (bulletIsActive)
-		{
+		if (bulletIsActive) {
+			AbstractModel::SBB bulletCollider;
+			glm::mat4 modelMatrixColliderBullet;
+			glm::vec3 bulletPosition;
+			/*if (bulletIsActive)
+			{
+				modelMatrixColliderBullet = glm::mat4(modelMatrixBulletBody);
+				bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
+					modelBulletAnimate.getSbb().c.y,
+					modelBulletAnimate.getSbb().c.z);
+			}
+			else
+			{
+				modelMatrixColliderBullet = glm::mat4(1.0f);
+				bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
+					modelBulletAnimate.getSbb().c.y - 100,
+					modelBulletAnimate.getSbb().c.z + 1.5);
+			}*/
 			modelMatrixColliderBullet = glm::mat4(modelMatrixBulletBody);
 			bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
 				modelBulletAnimate.getSbb().c.y,
 				modelBulletAnimate.getSbb().c.z);
-			dxBullet = -0.5;
-			dyBullet = 4;
-			dzBullet = 1 + bulletMovement;
+			modelMatrixColliderBullet = glm::translate(modelMatrixColliderBullet, bulletPosition);
+			bulletCollider.c = glm::vec3(modelMatrixColliderBullet[3]);
+			bulletCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.25;
+			addOrUpdateColliders(collidersSBB, "bullet", bulletCollider, modelMatrixBulletBody);
 		}
-		else
-		{
-			modelMatrixColliderBullet = glm::mat4(1.0f);
-			bulletPosition = glm::vec3(modelBulletAnimate.getSbb().c.x,
-				modelBulletAnimate.getSbb().c.y - 100,
-				modelBulletAnimate.getSbb().c.z + 1.5);
-			dxBullet = 0;
-			dyBullet = -100;
-			dzBullet = 0;
+		else {
+			collidersSBB.erase("bullet");
 		}
-		modelMatrixColliderBullet = glm::translate(modelMatrixColliderBullet, bulletPosition);
-		bulletCollider.c = glm::vec3(modelMatrixColliderBullet[3]);
-		bulletCollider.ratio = modelBulletAnimate.getSbb().ratio * 0.25;
-		addOrUpdateColliders(collidersSBB, "bullet", bulletCollider, modelMatrixBulletBody);
 
 		// Lamps1 colliders
 		//for (int i = 0; i < lamp1Position.size(); i++) {
@@ -2987,7 +3023,7 @@ void applicationLoop() {
 		//}
 
 		/*******************************************
-		 * Render de colliders
+		 * Render the colliders
 		 *******************************************/
 		/*for (std::map<std::string,
 			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
