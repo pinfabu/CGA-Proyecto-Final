@@ -964,7 +964,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLamp2.setShader(&shaderMulLighting);
 	
 	//Osmosis
-	modelOsmosisAnimate.loadModel("../models/Osmosis/OsmosisDisparo.fbx");
+	modelOsmosisAnimate.loadModel("../models/Osmosis/OsmosisPose.fbx");
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
 	//Map
