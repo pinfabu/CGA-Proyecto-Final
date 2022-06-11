@@ -2585,8 +2585,6 @@ void applicationLoop() {
 				+ "].quadratic", 0.02);
 		}
 
-		//Enteoria aqui va lo de las pantallas de inicio xd
-
 		/*******************************************
 		 * 1.- We render the depth buffer
 		 *******************************************/
@@ -3015,14 +3013,9 @@ void applicationLoop() {
 			modelText2->render(cadena1, -.75, -0.95, 50, 1.0, 1.0, 1.0);
 			modelText3->render(cadena2, .9, 0.8, 50, 1.0, 1.0, 1.0);
 			modelText4->render(cadena3, .9, -0.95, 50, 1.0, 1.0, 1.0);
-			//modelText->render(cadena, -.95, 0.9, 50, 0.0, 0.63, 0.16);
-			//modelText2->render(cadena1, -.15, 0.9, 50, 0.9, 0.0, 0.0);
-			//modelText->render(cadena, -.95, 0.9, 50, 1.0, 1.0, 1.0);
-			//modelText2->render(cadena1, -.20, 0.9, 50, 1.0, 1.0, 1.0);
 			glfwSwapBuffers(window);
 		}
 		else {
-			//modelText->render("GAME OVER!", -0.55, 0.0, 160, 1.0, 1.0, 1.0);
 			modelText->render("", -0.55, 0.0, 160, 1.0, 0.0, 0.0);
 			glfwSwapBuffers(window);
 		}
@@ -3114,10 +3107,8 @@ void applicationLoop() {
 						sourcesPos[i][2] = modelMatrixOsmosis[3].z;
 						alSourcefv(source[i], AL_POSITION, sourcesPos[i]);
 						sourcesPlay[i] = false;
-						//if (!(i == 6 && noCovids <= 0) || (i == 8 && noHP <= 0)) {
-							std::cout << "SOUND activated " << i << std::endl;
-							alSourcePlay(source[i]);
-						//}
+						std::cout << "SOUND activated " << i << std::endl;
+						alSourcePlay(source[i]);
 					}
 				}
 			}
