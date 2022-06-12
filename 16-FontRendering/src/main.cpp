@@ -2185,7 +2185,7 @@ void applicationLoop() {
 	while (psi) {
 		// GAME STATE
 		// Game over
-		if (noHP <= 0 || (noCovids > 0 && noMasks == 0 && noBullets == 0)) {
+		if (noHP <= 0 || (noCovids > (noMasks + noBullets))) {
 			gameState = 3;
 			isPaused = true;
 			sourcesPlay[10] = true;
