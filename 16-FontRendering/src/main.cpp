@@ -1610,7 +1610,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	std::random_device rd2;
 	generator2.seed(rd2());
 	int size2 = nParticlesRain * 2;
-	std::vector<GLfloat> randData2(size);
+	std::vector<GLfloat> randData2(size2);
 	for (int i = 0; i < randData2.size(); i++) {
 		randData2[i] = distr02(generator2);
 	}
@@ -2402,9 +2402,9 @@ void applicationLoop() {
 		*******************************************/
 		shaderTerrain.setVectorFloat3("viewPos",
 			glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
-		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
-		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.15, 0.15, 0.15)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.707106781, -0.707106781, 0.0)));
 
 		/*******************************************
