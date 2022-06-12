@@ -343,7 +343,7 @@ GLuint depthMap, depthMapFBO;
 
 // Audio variables
 // 0 - 4 covid, 5 background, 6 covid dying, 7 pick up mask, 8 player hit, 9 win, 10 game over
-float gains[NUM_SOURCES] = { 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 0.15f, 1.5f, 1.0f, 1.5f, 3.0f, 3.0f };
+float gains[NUM_SOURCES] = { 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 0.20f, 1.5f, 1.0f, 1.5f, 3.0f, 3.0f };
 //int bufferIdx[NUM_SOURCES] = { 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 };
 bool loop[NUM_SOURCES] = { true, true, true, true, true, true, false, false, false, false, false };
 int distance[NUM_SOURCES] = { 200, 200, 200, 200, 200, 500, 1000, 500, 500, 500, 500 };
