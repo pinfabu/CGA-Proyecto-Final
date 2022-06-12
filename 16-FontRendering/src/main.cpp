@@ -616,8 +616,13 @@ void pauseMenuAction() {
 	{
 	// Game is running
 	case 1:
-		isPaused = !isPaused;
-		pauseMenu = !pauseMenu;
+		if (controlScreen) {
+			pauseMenu = true;
+		}
+		else {
+			isPaused = !isPaused;
+			pauseMenu = !pauseMenu;
+		}
 		pauseMenuState = 0;
 		controlScreen = false;
 		controlScreenState = 0;
