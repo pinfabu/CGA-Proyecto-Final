@@ -3136,16 +3136,6 @@ void renderScene(bool renderParticles) {
 		modelLamp2.render();
 	}
 
-	glm::mat4 modelMatrixBodyLamp1 = glm::mat4(1.0);
-	modelMatrixBodyLamp1 = glm::translate(modelMatrixBodyLamp1, glm::vec3(69.0f, 10.0f, -13.0f));
-	modelMatrixBodyLamp1 = glm::rotate(modelMatrixBodyLamp1, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-	modelLamp1.render(modelMatrixBodyLamp1);
-
-	glm::mat4 modelMatrixBodyLamp2 = glm::mat4(1.0);
-	modelMatrixBodyLamp2 = glm::translate(modelMatrixBodyLamp2, glm::vec3(69.0f, 10.0f, -19.0f));
-	modelMatrixBodyLamp2 = glm::rotate(modelMatrixBodyLamp2, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-	modelLamp2.render(modelMatrixBodyLamp2);
-
 	/*******************************************
 	* Custom Anim objects obj
 	*******************************************/
