@@ -59,8 +59,7 @@
 
 #define NUM_COVID 5
 #define NUM_MASKS 8
-#define NUM_SPOTLIGHTS 4
-#define NUM_POINTLIGHTS 4
+#define NUM_MAP_PIECES 35
 
 // Game states
 // 0 is main menu, 1 is running, 2 is won, 3 is game over - replaces mainMenu, gameStarted and gameFinished
@@ -140,7 +139,7 @@ ShadowBox* shadowBox;
 Model modelLamp1;
 Model modelLamp2;
 // Map
-Model mapArray[27];
+Model mapArray[NUM_MAP_PIECES];
 // Bullet
 Model modelBullet;
 
@@ -152,7 +151,7 @@ Model modelCovid;
 // Masks
 Model modelMask;
 
-std::string mapDirs[27] = {
+std::string mapDirs[NUM_MAP_PIECES] = {
 	"../models/Map/L_HortBackLeft.obj",
 	"../models/Map/L_HortBackRight.obj",
 	"../models/Map/L_HortFrontLeft.obj",
@@ -176,10 +175,18 @@ std::string mapDirs[27] = {
 	"../models/Map/Wall_InFrontLeft.obj",
 	"../models/Map/Wall_InFrontMiddle.obj",
 	"../models/Map/Wall_InFrontRight.obj",
-	"../models/Map/Wall_OutBack.obj",
-	"../models/Map/Wall_OutFront.obj",
-	"../models/Map/Wall_OutLeft.obj",
-	"../models/Map/Wall_OutRight.obj"
+	"../models/Map/Wall_OutBackLeft01.obj",
+	"../models/Map/Wall_OutBackLeft02.obj",
+	"../models/Map/Wall_OutBackRight01.obj",
+	"../models/Map/Wall_OutBackRight02.obj",
+	"../models/Map/Wall_OutFrontLeft01.obj",
+	"../models/Map/Wall_OutFrontLeft02.obj",
+	"../models/Map/Wall_OutFrontRight01.obj",
+	"../models/Map/Wall_OutFrontRight02.obj",
+	"../models/Map/Wall_OutLeftBack.obj",
+	"../models/Map/Wall_OutLeftFront.obj",
+	"../models/Map/Wall_OutRightBack.obj",
+	"../models/Map/Wall_OutRightFront.obj"
 };
 
 // Terrain model instance
@@ -975,7 +982,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelOsmosisAnimate.setShader(&shaderMulLighting);
 
 	//Map
-	for (unsigned int i = 0; i < 27; i++)
+	for (unsigned int i = 0; i < NUM_MAP_PIECES; i++)
 	{
 		mapArray[i].loadModel(mapDirs[i]);
 		mapArray[i].setShader(&shaderMulLighting);
@@ -1788,7 +1795,7 @@ void destroy() {
 	modelLamp1.destroy();
 	modelLamp2.destroy();
 	modelBullet.destroy();
-	for (unsigned int i = 0; i < 27; i++)
+	for (unsigned int i = 0; i < NUM_MAP_PIECES; i++)
 	{
 		mapArray[i].destroy();
 	}
@@ -2397,9 +2404,9 @@ void applicationLoop() {
 		* Propiedades Luz direccional
 		*******************************************/
 		shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.15, 0.15, 0.15)));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.025, 0.025, 0.025)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.075, 0.075, 0.075)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.025, 0.025, 0.025)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.707106781, -0.707106781, 0.0)));
 
 		/*******************************************
@@ -2407,9 +2414,9 @@ void applicationLoop() {
 		*******************************************/
 		shaderTerrain.setVectorFloat3("viewPos",
 			glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
-		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.15, 0.15, 0.15)));
-		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.025, 0.025, 0.025)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.075, 0.075, 0.075)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.025, 0.025, 0.025)));
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.707106781, -0.707106781, 0.0)));
 
 		glm::vec3 activeLightsSpot[3];
@@ -2638,7 +2645,7 @@ void applicationLoop() {
 		addOrUpdateColliders(collidersOBB, "Osmosis", osmosisCollider, modelMatrixOsmosis);
 
 		// Map colliders
-		for (unsigned int i = 0; i < 27; i++)
+		for (unsigned int i = 0; i < NUM_MAP_PIECES; i++)
 		{
 			AbstractModel::OBB mapCollider;
 			glm::mat4 modelMatrixColliderMap = glm::mat4(1.0f);
@@ -3040,7 +3047,7 @@ void prepareScene() {
 	modelBullet.setShader(&shaderMulLighting);
 
 	//Map
-	for (unsigned int i = 0; i < 27; i++)
+	for (unsigned int i = 0; i < NUM_MAP_PIECES; i++)
 	{
 		mapArray[i].setShader(&shaderMulLighting);
 	}
@@ -3069,7 +3076,7 @@ void prepareDepthScene() {
 	modelBullet.setShader(&shaderDepth);
 
 	// Map
-	for (unsigned int i = 0; i < 27; i++)
+	for (unsigned int i = 0; i < NUM_MAP_PIECES; i++)
 	{
 		mapArray[i].setShader(&shaderDepth);
 	}
@@ -3150,7 +3157,7 @@ void renderScene(bool renderParticles) {
 	modelOsmosisAnimate.render(modelMatrixOsmosisBody);
 
 	// Map
-	for (unsigned int i = 0; i < 27; i++)
+	for (unsigned int i = 0; i < NUM_MAP_PIECES; i++)
 	{
 		modelMatrixMap[3][1] = terrain.getHeightTerrain(modelMatrixMap[3][0], modelMatrixMap[3][2]);
 		mapArray[i].render(modelMatrixMap);
